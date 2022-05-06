@@ -25,6 +25,10 @@ public class Configuration {
         return props.get(key);
     }
 
+    public Integer serverPort() {
+        return (Integer) props.get("flora.rpc.server.port");
+    }
+
     public static Configuration load(String location) {
         InputStream is = null;
         try {
@@ -32,7 +36,7 @@ public class Configuration {
             return new Configuration(is);
         } catch (IOException e) {
             e.printStackTrace();
-            throw new RuntimeException("fail to load configuration");
+            throw new RuntimeException("fail to load configuration: " + location);
         }
     }
 }

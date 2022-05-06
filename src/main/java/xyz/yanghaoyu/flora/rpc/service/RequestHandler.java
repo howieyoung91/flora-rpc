@@ -5,8 +5,8 @@
 
 package xyz.yanghaoyu.flora.rpc.service;
 
-import java.net.InetSocketAddress;
+import xyz.yanghaoyu.flora.rpc.transport.dto.Request;
 
-public interface ServiceRegistry {
-    void register(String serviceName, InetSocketAddress address);
+public interface RequestHandler {
+    Object handle(Request request);
 }

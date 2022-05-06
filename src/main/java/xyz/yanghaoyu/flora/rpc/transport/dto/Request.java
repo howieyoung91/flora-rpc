@@ -1,3 +1,8 @@
+/*
+ * Copyright ©2022-2022 Howie Young, All rights reserved.
+ * Copyright ©2022-2022 杨浩宇，保留所有权利。
+ */
+
 package xyz.yanghaoyu.flora.rpc.transport.dto;
 
 import java.io.Serializable;
@@ -7,6 +12,16 @@ public class Request implements Serializable {
     private String     methodName;
     private Object[]   params;
     private Class<?>[] paramTypes;
+    private String     version;
+    private String     group;
+
+    public String getVersion() {
+        return version;
+    }
+
+    public String getGroup() {
+        return group;
+    }
 
     public String getInterfaceName() {
         return interfaceName;
