@@ -1,0 +1,5 @@
+flora:
+  framework:
+    autoconfiguration:
+      - xyz.yanghaoyu.flora.rpc.server.autoconfiguration.FloraRpcServerAutoConfiguration
+      - xyz.yanghaoyu.flora.rpc.server.autoconfiguration.ZooKeeperAutoConfiguration
