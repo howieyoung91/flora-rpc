@@ -8,6 +8,8 @@ package xyz.yanghaoyu.flora.rpc.base.transport.protocol;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SmartSerializer;
 import xyz.yanghaoyu.flora.rpc.base.serialize.support.KryoSerializer;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcMessage;
@@ -27,7 +29,9 @@ import java.util.Arrays;
  * ...     body
  */
 public class MessageDecoder extends LengthFieldBasedFrameDecoder {
-    SmartSerializer serializer = new KryoSerializer();
+    private static final Logger logger = LoggerFactory.getLogger(MessageDecoder.class);
+
+    private SmartSerializer serializer = new KryoSerializer();
 
     public MessageDecoder() {
         super(RpcMessage.MAX_FRAME_LENGTH,
@@ -38,6 +42,7 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
+        logger.info("receive message {}", ctx.channel());
         Object decoded = super.decode(ctx, in);
         if (decoded instanceof ByteBuf) {
             ByteBuf frame = (ByteBuf) decoded;

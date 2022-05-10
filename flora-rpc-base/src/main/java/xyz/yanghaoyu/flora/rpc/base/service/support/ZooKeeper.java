@@ -9,50 +9,58 @@ import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
-import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.zookeeper.CreateMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xyz.yanghaoyu.flora.rpc.base.exception.ServiceException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public final class ZooKeeper {
     private static final Logger logger = LoggerFactory.getLogger(ZooKeeper.class);
 
-    public ZooKeeper(int baseSleepTime, int maxRetries, String zookeeperAddress, String namespace, RetryPolicy retryPolicy) {
-        this.baseSleepTime = baseSleepTime;
-        this.maxRetries = maxRetries;
+    private          String           zookeeperAddress;
+    private          RetryPolicy      retryPolicy;
+    private volatile CuratorFramework zookeeperClient;
+
+    ZooKeeper(String zookeeperAddress, RetryPolicy retryPolicy) {
         this.zookeeperAddress = zookeeperAddress;
-        this.namespace = namespace;
         this.retryPolicy = retryPolicy;
         client();
     }
 
-    private          int              baseSleepTime;
-    private          int              maxRetries;
-    private          String           zookeeperAddress;
-    private          String           namespace;
-    private          RetryPolicy      retryPolicy = new ExponentialBackoffRetry(baseSleepTime, maxRetries);
-    private volatile CuratorFramework zookeeperClient;
-
     public void createPersistentNode(String path) {
         try {
             if (!canCreateNode(path)) {
-                logger.warn(
-                        "fail to create persistent node: {} cause: {}",
-                        path, "this node already exists!"
-                );
+                logger.warn("fail to create persistent node: {} cause: {}", path, "this node already exists!");
             }
 
-            zookeeperClient.create()
-                    .creatingParentsIfNeeded()
-                    .withMode(CreateMode.PERSISTENT)
-                    .forPath(path);
+            zookeeperClient.create().creatingParentsIfNeeded()
+                    .withMode(CreateMode.PERSISTENT).forPath(path);
         } catch (Exception e) {
             e.printStackTrace();
             logger.warn("fail to create persistent node: {}", path);
+        }
+    }
+
+    public List<String> getChildrenNodes(String path) {
+        List<String> result = doGetChildrenNodes(path, client());
+        return result == null ? new ArrayList<>(0) : result;
+    }
+
+    public void registerPathChildrenWatcher(String path, Consumer<PathChildrenCacheEvent> consumer) {
+        PathChildrenCache pathChildrenCache =
+                new PathChildrenCache(client(), path, true);
+        pathChildrenCache.getListenable().addListener((curator, event) -> consumer.accept(event));
+
+        try {
+            pathChildrenCache.start();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -60,16 +68,13 @@ public final class ZooKeeper {
         return zookeeperClient.checkExists().forPath(path) == null;
     }
 
-    public List<String> getChildrenNodes(String serviceName) {
-        List<String> result      = null;
-        String       servicePath = namespace + "/" + serviceName;
+    private List<String> doGetChildrenNodes(String servicePath, CuratorFramework client) {
         try {
-            result = client().getChildren().forPath(servicePath);
+            return client.getChildren().forPath(servicePath);
         } catch (Exception e) {
             e.printStackTrace();
-            logger.error("fail to get children nodes: {}", servicePath);
+            throw new ServiceException("fail to create persistent node: " + servicePath);
         }
-        return result == null ? new ArrayList<>(0) : result;
     }
 
     private CuratorFramework client() {
@@ -99,18 +104,5 @@ public final class ZooKeeper {
             e.printStackTrace();
         }
         return zookeeperClient;
-    }
-
-    private void registerWatcher(String rpcServiceName, CuratorFramework zkClient) throws Exception {
-        String servicePath = namespace + "/" + rpcServiceName;
-        PathChildrenCache pathChildrenCache
-                = new PathChildrenCache(zkClient, servicePath, true);
-        pathChildrenCache.getListenable().addListener(
-                (curatorFramework, pathChildrenCacheEvent) -> {
-                    List<String> serviceAddresses =
-                            curatorFramework.getChildren().forPath(servicePath);
-                    // SERVICE_ADDRESS_MAP.put(rpcServiceName, serviceAddresses);
-                });
-        pathChildrenCache.start();
     }
 }

@@ -7,7 +7,7 @@ package xyz.yanghaoyu.flora.rpc.client.proxy;
 
 import cn.hutool.core.lang.Snowflake;
 import cn.hutool.core.util.IdUtil;
-import xyz.yanghaoyu.flora.rpc.base.exception.ClientException;
+import xyz.yanghaoyu.flora.rpc.base.exception.RpcClientException;
 import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceConfig;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequest;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponse;
@@ -49,13 +49,13 @@ public class ServiceReferenceProxy implements InvocationHandler {
         RpcResponse response = promise.get();
 
         if (response == null) {
-            throw new ClientException("response is null. method: " + request.getMethodName());
+            throw new RpcClientException("response is null. method: " + request.getMethodName());
         }
         if (!Objects.equals(request.getId(), response.getRequestId())) {
-            throw new ClientException("not matched response. method: " + request.getMethodName());
+            throw new RpcClientException("not matched response. method: " + request.getMethodName());
         }
         if (response.getCode() != 200) {
-            throw new ClientException("something in server went wrong. method: " + request.getMethodName());
+            throw new RpcClientException("something in server went wrong. method: " + request.getMethodName());
         }
         return response.getData();
     }

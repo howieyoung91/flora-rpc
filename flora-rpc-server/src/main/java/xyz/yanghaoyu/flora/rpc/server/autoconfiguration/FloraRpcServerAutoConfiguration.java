@@ -11,22 +11,22 @@ import xyz.yanghaoyu.flora.annotation.Enable;
 import xyz.yanghaoyu.flora.annotation.Inject;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceHandler;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceRegistry;
-import xyz.yanghaoyu.flora.rpc.base.service.support.DefaultServiceHandler;
 import xyz.yanghaoyu.flora.rpc.base.service.support.ZooKeeper;
-import xyz.yanghaoyu.flora.rpc.base.service.support.ZooKeeperServiceRegistry;
+import xyz.yanghaoyu.flora.rpc.server.service.DefaultServiceHandler;
+import xyz.yanghaoyu.flora.rpc.server.service.ZooKeeperServiceRegistry;
 
 @Configuration
 @Enable.ComponentScan(basePackages = "xyz.yanghaoyu.flora.rpc.server.autoconfiguration")
 public class FloraRpcServerAutoConfiguration {
-    @Inject.ByName("serverZooKeeper")
+    @Inject.ByName("floraRpcServer$ZooKeeper$")
     private ZooKeeper zooKeeper;
 
-    @Bean("serverServiceRegistry")
+    @Bean("floraRpcServer$ServiceRegistry$")
     public ServiceRegistry registry() {
         return new ZooKeeperServiceRegistry(zooKeeper);
     }
 
-    @Bean("serverServiceHandler")
+    @Bean("floraRpcServer$ServiceHandler$")
     public ServiceHandler handler() {
         return new DefaultServiceHandler(registry());
     }

@@ -5,14 +5,14 @@
 
 package xyz.yanghaoyu.flora.rpc.base.util;
 
-import xyz.yanghaoyu.flora.rpc.base.annotation.RpcService;
-import xyz.yanghaoyu.flora.rpc.base.annotation.RpcServiceReference;
-import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceConfig;
-
 import java.net.InetSocketAddress;
 
 public abstract class ServiceUtil {
-    public static String buildServicePath(String namespace, String serviceName, InetSocketAddress inetSocketAddress) {
+    public static String buildNamespacedServiceNodePath(String namespace, String serviceName) {
+        return namespace + "/" + serviceName;
+    }
+
+    public static String buildServicePathWithAddress(String namespace, String serviceName, InetSocketAddress inetSocketAddress) {
         return "/" + namespace + "/" + serviceName + inetSocketAddress.toString();
     }
 
@@ -20,24 +20,14 @@ public abstract class ServiceUtil {
         return interfaceName + '-' + group + '@' + version;
     }
 
-    public static ServiceConfig buildServiceConfig(RpcServiceReference rpcServiceReference) {
-        return new ServiceConfig(
-                rpcServiceReference.namespace(),
-                rpcServiceReference.interfaceName(),
-                rpcServiceReference.group(),
-                rpcServiceReference.version()
-        );
+    public static InetSocketAddress buildAddress(String addressString) {
+        return buildAddress(addressString.split(":"));
     }
 
-    public static ServiceConfig buildServiceConfig(RpcService rpcServiceAnn) {
-        return new ServiceConfig(
-                rpcServiceAnn.namespace(),
-                rpcServiceAnn.interfaceName(),
-                rpcServiceAnn.group(),
-                rpcServiceAnn.version()
-        );
+    public static InetSocketAddress buildAddress(String[] socketAddressArray) {
+        String host = socketAddressArray[0];
+        int    port = Integer.parseInt(socketAddressArray[1]);
+        return new InetSocketAddress(host, port);
     }
-
-
 }
 

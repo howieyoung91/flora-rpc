@@ -27,25 +27,22 @@ import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
 public class RpcServer {
+    private int             port;
     private ServiceRegistry registry;
     private ServiceHandler  serviceHandler;
-
-    // @Value(value = "${flora.rpc.server.port}")
-    private int port;
-
-    public void setPort(int port) {
-        this.port = port;
-    }
 
     public RpcServer(ServiceRegistry registry, ServiceHandler serviceHandler) {
         this.registry = registry;
         this.serviceHandler = serviceHandler;
     }
 
+    private NioEventLoopGroup bossGroup = new NioEventLoopGroup();
+    private NioEventLoopGroup workGroup = new NioEventLoopGroup();
+
     public void start() {
         ServerBootstrap serverBootstrap = new ServerBootstrap()
                 .channel(NioServerSocketChannel.class)
-                .group(new NioEventLoopGroup(), new NioEventLoopGroup())
+                .group(bossGroup, workGroup)
                 .option(ChannelOption.SO_BACKLOG, 256)
                 .option(ChannelOption.SO_KEEPALIVE, true) // 开启心跳检测
                 .childOption(ChannelOption.TCP_NODELAY, true)
@@ -59,6 +56,7 @@ public class RpcServer {
 
                         pipeline.addLast(new MessageEncoder());
                         pipeline.addLast(new MessageDecoder());
+                        // todo 可以调用服务交给另一个线程完成
                         pipeline.addLast(new RpcRequestHandler(serviceHandler));
                     }
                 });
@@ -68,6 +66,9 @@ public class RpcServer {
             future.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             e.printStackTrace();
+        } finally {
+            bossGroup.shutdownGracefully();
+            workGroup.shutdownGracefully();
         }
     }
 
@@ -79,4 +80,8 @@ public class RpcServer {
         }
     }
 
+
+    void setPort(int port) {
+        this.port = port;
+    }
 }

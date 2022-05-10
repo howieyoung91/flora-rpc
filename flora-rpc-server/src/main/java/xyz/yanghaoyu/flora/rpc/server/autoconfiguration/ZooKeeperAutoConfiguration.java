@@ -25,14 +25,11 @@ public class ZooKeeperAutoConfiguration {
     private Integer     maxRetries    = 3;
     private RetryPolicy retryPolicy   = new ExponentialBackoffRetry(baseSleepTime, maxRetries);
 
-    @Bean("serverZooKeeper")
+    @Bean("floraRpcServer$ZooKeeper$")
     public ZooKeeper zooKeeper() {
-        return ZooKeeperBuilder.aZooKeeper()
+        return ZooKeeperBuilder.aNewZooKeeper()
                 .zookeeperAddress(address)
-                .baseSleepTime(baseSleepTime)
-                .maxRetries(maxRetries)
-                .namespace(namespace)
-                .retryPolicy(retryPolicy)
+                .retryPolicy(new ExponentialBackoffRetry(baseSleepTime, maxRetries))
                 .build();
     }
 }

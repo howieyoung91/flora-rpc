@@ -12,10 +12,10 @@ import xyz.yanghaoyu.flora.core.beans.factory.ConfigurableListableBeanFactory;
 import xyz.yanghaoyu.flora.core.beans.factory.PropertyValues;
 import xyz.yanghaoyu.flora.core.beans.factory.config.SmartInstantiationAwareBeanPostProcessor;
 import xyz.yanghaoyu.flora.exception.BeansException;
-import xyz.yanghaoyu.flora.rpc.base.annotation.RpcServiceReference;
-import xyz.yanghaoyu.flora.rpc.base.util.ServiceUtil;
-import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
+import xyz.yanghaoyu.flora.rpc.client.annotation.RpcServiceReference;
 import xyz.yanghaoyu.flora.rpc.client.proxy.ServiceReferenceProxyFactory;
+import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
+import xyz.yanghaoyu.flora.rpc.client.util.RpcServiceClientUtil;
 import xyz.yanghaoyu.flora.util.ReflectUtil;
 
 import java.lang.reflect.Field;
@@ -45,7 +45,7 @@ public class ClientStubBeanPostProcessor
                 initClientIfNecessary();
                 // 生成 ClientStub
                 Object proxy = proxyFactory.getProxy(
-                        fieldClass, ServiceUtil.buildServiceConfig(rpcServiceReferenceAnn)
+                        fieldClass, RpcServiceClientUtil.buildServiceConfig(rpcServiceReferenceAnn)
                 );
                 field.setAccessible(true);
                 // inject
@@ -68,7 +68,7 @@ public class ClientStubBeanPostProcessor
     }
 
     private void initClient() {
-        client = beanFactory.getBean("rpcClient", RpcClient.class);
+        client = beanFactory.getBean(RpcClientFactoryBean.BEAN_NAME, RpcClient.class);
         proxyFactory = new ServiceReferenceProxyFactory(client);
     }
 

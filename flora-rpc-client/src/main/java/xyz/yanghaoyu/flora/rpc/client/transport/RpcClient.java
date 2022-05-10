@@ -14,7 +14,7 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xyz.yanghaoyu.flora.rpc.base.exception.ClientException;
+import xyz.yanghaoyu.flora.rpc.base.exception.RpcClientException;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcMessage;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequest;
@@ -42,24 +42,26 @@ public class RpcClient {
         discovery = serviceDiscovery;
         group = new NioEventLoopGroup();
         bootstrap = buildBootstrap(group);
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
     }
 
     public CompletableFuture<RpcResponse> send(RpcRequest request) {
         InetSocketAddress serviceAddress = discoverService(request);
         Channel           channel        = connectService(serviceAddress);
-        RpcMessage        message        = buildMessage(request);
 
         // 返回 CompletableFuture， 让调用线程去阻塞，提升客户端的吞吐量
-        return doSend(request.getId(), message, channel);
+        return doSend(request.getId(), request, channel);
     }
 
-    private CompletableFuture<RpcResponse> doSend(String requestId, RpcMessage message, Channel channel) {
+    private CompletableFuture<RpcResponse> doSend(String requestId, RpcRequest request, Channel channel) {
+
         CompletableFuture<RpcResponse> promise = new CompletableFuture<>();
         waitingRequests.put(requestId, promise);
 
+        RpcMessage message = buildMessage(request);
         channel.writeAndFlush(message).addListener((ChannelFutureListener) future -> {
             if (future.isSuccess()) {
-                logger.info("send message {}", message);
+                logger.info("request service [{}]", request.getServiceConfig());
                 return;
             }
 
@@ -84,28 +86,25 @@ public class RpcClient {
             return bootstrap.connect(serviceAddress).sync().channel();
         } catch (InterruptedException e) {
             e.printStackTrace();
+            throw new RpcClientException("fail to connect " + serviceAddress);
         }
-        throw new ClientException("fail to connect " + serviceAddress);
     }
 
     private InetSocketAddress discoverService(RpcRequest request) {
-        return discovery.discover(request.getServiceConfig().getServiceName());
+        return discovery.discover(request.getServiceConfig());
     }
 
     private Bootstrap buildBootstrap(NioEventLoopGroup group) {
         return new Bootstrap()
                 .group(group)
                 .channel(NioSocketChannel.class)
-                .handler(new LoggingHandler(LogLevel.INFO))
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+                .handler(new LoggingHandler(LogLevel.INFO))
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
                         ChannelPipeline pipeline = ch.pipeline();
-                        pipeline.addLast(new IdleStateHandler(
-                                        0, 5, 0, TimeUnit.SECONDS
-                                )
-                        );
+                        pipeline.addLast(new IdleStateHandler(0, 5, 0, TimeUnit.SECONDS));
                         pipeline.addLast(new MessageEncoder());
                         pipeline.addLast(new MessageDecoder());
                         pipeline.addLast(new RpcResponseHandler(waitingRequests));
@@ -114,6 +113,7 @@ public class RpcClient {
     }
 
     public void close() {
+        logger.info("rpc client close");
         group.shutdownGracefully();
     }
 }

@@ -44,4 +44,9 @@ public class ServiceConfig {
     public String getNamespace() {
         return namespace;
     }
+
+    @Override
+    public String toString() {
+        return getServiceName();
+    }
 }

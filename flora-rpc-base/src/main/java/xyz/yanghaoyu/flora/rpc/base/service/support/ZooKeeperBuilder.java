@@ -6,39 +6,20 @@
 package xyz.yanghaoyu.flora.rpc.base.service.support;
 
 import org.apache.curator.RetryPolicy;
-import org.apache.curator.retry.ExponentialBackoffRetry;
 
 public final class ZooKeeperBuilder {
-    private int         baseSleepTime;
-    private int         maxRetries;
     private String      zookeeperAddress;
-    private String      namespace;
-    private RetryPolicy retryPolicy = new ExponentialBackoffRetry(baseSleepTime, maxRetries);
+    private RetryPolicy retryPolicy;
 
     private ZooKeeperBuilder() {
     }
 
-    public static ZooKeeperBuilder aZooKeeper() {
+    public static ZooKeeperBuilder aNewZooKeeper() {
         return new ZooKeeperBuilder();
-    }
-
-    public ZooKeeperBuilder baseSleepTime(int baseSleepTime) {
-        this.baseSleepTime = baseSleepTime;
-        return this;
-    }
-
-    public ZooKeeperBuilder maxRetries(int maxRetries) {
-        this.maxRetries = maxRetries;
-        return this;
     }
 
     public ZooKeeperBuilder zookeeperAddress(String zookeeperAddress) {
         this.zookeeperAddress = zookeeperAddress;
-        return this;
-    }
-
-    public ZooKeeperBuilder namespace(String namespace) {
-        this.namespace = namespace;
         return this;
     }
 
@@ -48,6 +29,6 @@ public final class ZooKeeperBuilder {
     }
 
     public ZooKeeper build() {
-        return new ZooKeeper(baseSleepTime, maxRetries, zookeeperAddress, namespace, retryPolicy);
+        return new ZooKeeper(zookeeperAddress, retryPolicy);
     }
 }
