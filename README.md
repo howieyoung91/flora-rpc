@@ -1,7 +1,6 @@
 # flora-rpc
 
-一个 rpc 框架，为`flora-framework` 提供了远程过程调用的能力
-
+一个 rpc 框架，为 [flora-framework](https://github.com/howieyoung91/flora-framework) 提供了远程过程调用的能力
 ![flora-rpc](./assets/img/flora-rpc-structure.png)
 
 0. RPC Server 把 Service 注册到注册中心
