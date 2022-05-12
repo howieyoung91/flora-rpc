@@ -13,7 +13,6 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.zookeeper.CreateMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xyz.yanghaoyu.flora.rpc.base.exception.ServiceException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,9 +72,11 @@ public final class ZooKeeper {
             return client.getChildren().forPath(servicePath);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new ServiceException("fail to create persistent node: " + servicePath);
+            // throw new ServiceException("fail to get persistent node: " + servicePath);
         }
+        return new ArrayList<>(0);
     }
+
 
     private CuratorFramework client() {
         // double check

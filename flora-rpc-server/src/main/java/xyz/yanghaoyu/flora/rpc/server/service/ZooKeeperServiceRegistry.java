@@ -6,9 +6,8 @@
 package xyz.yanghaoyu.flora.rpc.server.service;
 
 import xyz.yanghaoyu.flora.rpc.base.exception.ServiceException;
-import xyz.yanghaoyu.flora.rpc.base.service.ServiceRegistry;
-import xyz.yanghaoyu.flora.rpc.base.service.config.Service;
-import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceConfig;
+import xyz.yanghaoyu.flora.rpc.server.config.Service;
+import xyz.yanghaoyu.flora.rpc.server.config.ServiceConfig;
 import xyz.yanghaoyu.flora.rpc.base.service.support.ZooKeeper;
 import xyz.yanghaoyu.flora.rpc.base.util.ServiceUtil;
 
@@ -26,7 +25,7 @@ public class ZooKeeperServiceRegistry implements ServiceRegistry {
 
     @Override
     public void register(InetSocketAddress address, Service service) {
-        ServiceConfig serviceConfig = service.getConfig();
+        ServiceConfig serviceConfig = service.getServiceConfig();
         String        namespace     = serviceConfig.getNamespace();
         String        serviceName   = serviceConfig.getServiceName();
         String        path          = ServiceUtil.buildServicePathWithAddress(namespace, serviceName, address);

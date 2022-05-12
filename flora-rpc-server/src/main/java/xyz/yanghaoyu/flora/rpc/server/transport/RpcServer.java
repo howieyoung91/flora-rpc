@@ -15,11 +15,11 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceHandler;
-import xyz.yanghaoyu.flora.rpc.base.service.ServiceRegistry;
-import xyz.yanghaoyu.flora.rpc.base.service.config.Service;
-import xyz.yanghaoyu.flora.rpc.base.transport.handler.RpcRequestHandler;
+import xyz.yanghaoyu.flora.rpc.server.service.ServiceRegistry;
+import xyz.yanghaoyu.flora.rpc.server.config.Service;
 import xyz.yanghaoyu.flora.rpc.base.transport.protocol.MessageDecoder;
 import xyz.yanghaoyu.flora.rpc.base.transport.protocol.MessageEncoder;
+import xyz.yanghaoyu.flora.rpc.server.config.ServerConfig;
 
 import java.net.Inet4Address;
 import java.net.InetSocketAddress;
@@ -27,11 +27,12 @@ import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
 public class RpcServer {
-    private int             port;
-    private ServiceRegistry registry;
-    private ServiceHandler  serviceHandler;
+    private final ServerConfig    serverConfig;
+    private final ServiceRegistry registry;
+    private final ServiceHandler  serviceHandler;
 
-    public RpcServer(ServiceRegistry registry, ServiceHandler serviceHandler) {
+    public RpcServer(ServerConfig serverConfig, ServiceRegistry registry, ServiceHandler serviceHandler) {
+        this.serverConfig = serverConfig;
         this.registry = registry;
         this.serviceHandler = serviceHandler;
     }
@@ -53,16 +54,15 @@ public class RpcServer {
                         pipeline.addLast(new IdleStateHandler(
                                 30, 0, 0, TimeUnit.SECONDS)
                         );
-
-                        pipeline.addLast(new MessageEncoder());
-                        pipeline.addLast(new MessageDecoder());
+                        pipeline.addLast(new MessageEncoder(serverConfig.getSerializers()));
+                        pipeline.addLast(new MessageDecoder(serverConfig.getDeserializers()));
                         // todo 可以调用服务交给另一个线程完成
                         pipeline.addLast(new RpcRequestHandler(serviceHandler));
                     }
                 });
 
         try {
-            ChannelFuture future = serverBootstrap.bind(port);
+            ChannelFuture future = serverBootstrap.bind(serverConfig.port());
             future.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -72,16 +72,11 @@ public class RpcServer {
         }
     }
 
-    public void publishService(Service serviceConfig) {
+    public void publishService(Service service) {
         try {
-            registry.register(new InetSocketAddress(Inet4Address.getLocalHost().getHostAddress(), port), serviceConfig);
+            registry.register(new InetSocketAddress(Inet4Address.getLocalHost().getHostAddress(), serverConfig.port()), service);
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
-    }
-
-
-    void setPort(int port) {
-        this.port = port;
     }
 }

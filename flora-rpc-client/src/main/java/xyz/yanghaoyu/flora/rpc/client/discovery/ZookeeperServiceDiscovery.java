@@ -7,13 +7,13 @@ package xyz.yanghaoyu.flora.rpc.client.discovery;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xyz.yanghaoyu.flora.rpc.base.exception.ServiceException;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
-import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceConfig;
+import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceReferenceConfig;
 import xyz.yanghaoyu.flora.rpc.base.service.support.ZooKeeper;
 import xyz.yanghaoyu.flora.rpc.base.util.ServiceUtil;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcServiceReference;
-import xyz.yanghaoyu.flora.rpc.client.discovery.config.DefaultDiscoveryConfig;
+import xyz.yanghaoyu.flora.rpc.client.config.DiscoveryConfig;
+import xyz.yanghaoyu.flora.rpc.base.service.ServiceNotFoundException;
 import xyz.yanghaoyu.flora.rpc.client.strategy.loadbalance.ServiceLoadBalance;
 
 import java.net.InetSocketAddress;
@@ -30,18 +30,19 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
 
     private Map<String, List<String>> cache = new ConcurrentHashMap<>();
 
-    private final DefaultDiscoveryConfig config;
-    private final ZooKeeper              zooKeeper;
-    private final ServiceLoadBalance     loadBalance;
+    private final DiscoveryConfig    config;
+    private final ZooKeeper          zooKeeper;
+    private final ServiceLoadBalance loadBalance;
 
-    public ZookeeperServiceDiscovery(DefaultDiscoveryConfig config, ZooKeeper newZooKeeper, ServiceLoadBalance loadBalance) {
+    public ZookeeperServiceDiscovery(DiscoveryConfig config, ZooKeeper newZooKeeper, ServiceLoadBalance loadBalance) {
         this.config = config;
         this.zooKeeper = newZooKeeper;
         this.loadBalance = loadBalance;
     }
 
     @Override
-    public InetSocketAddress discover(ServiceConfig serviceConfig) {
+    public InetSocketAddress discover(ServiceReferenceConfig serviceConfig)
+            throws ServiceNotFoundException {
         String       serviceName = serviceConfig.getServiceName();
         String       namespace   = getNamespace(serviceConfig);
         String       servicePath = ServiceUtil.buildNamespacedServiceNodePath(namespace, serviceName);
@@ -50,16 +51,16 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
         String addressString = loadBalance.select(serviceConfig, addresses);
 
         if (addressString == null) {
-            throw new ServiceException("discovered no service named " + serviceConfig);
+            throw new ServiceNotFoundException("discovered no service [" + serviceConfig.getServiceName() + "] in namespace [" + serviceConfig.getNamespace() + "]");
         }
 
         logger.info("discovered service [{}] at [{}]", serviceConfig, addressString);
         return ServiceUtil.buildAddress(addressString);
     }
 
-    private String getNamespace(ServiceConfig serviceConfig) {
+    private String getNamespace(ServiceReferenceConfig serviceConfig) {
         String namespace = serviceConfig.getNamespace();
-        if (serviceConfig.getServiceName().equals(RpcServiceReference.EMPTY_NAMESPACE)) {
+        if (serviceConfig.getNamespace().equals(RpcServiceReference.EMPTY_NAMESPACE)) {
             namespace = config.getNamespace();
         }
         return namespace;

@@ -10,13 +10,14 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xyz.yanghaoyu.flora.rpc.base.serialize.SmartSerializer;
-import xyz.yanghaoyu.flora.rpc.base.serialize.support.KryoSerializer;
+import xyz.yanghaoyu.flora.rpc.base.serialize.Deserializer;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcMessage;
-import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequest;
-import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponse;
+import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestBody;
+import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * [0,3]   magic number
@@ -31,12 +32,16 @@ import java.util.Arrays;
 public class MessageDecoder extends LengthFieldBasedFrameDecoder {
     private static final Logger logger = LoggerFactory.getLogger(MessageDecoder.class);
 
-    private SmartSerializer serializer = new KryoSerializer();
+    // todo inject deserializers;
+    private Map<Byte, Deserializer> deserializers;
 
-    public MessageDecoder() {
+    public MessageDecoder(Map<String, Deserializer> deserializers) {
         super(RpcMessage.MAX_FRAME_LENGTH,
                 12, 4,
                 -16, 0
+        );
+        this.deserializers = deserializers.entrySet().stream().collect(
+                Collectors.toMap(e -> e.getValue().code(), Map.Entry::getValue)
         );
     }
 
@@ -70,49 +75,47 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
     private Object decodeFrame(ByteBuf in) {
         checkMagicNumber(in);
         checkVersion(in);
-        byte messageType  = in.readByte();
-        byte codecType    = in.readByte();
-        byte compressType = in.readByte();
-        int  id           = in.readInt();
+        byte         messageType  = in.readByte();
+        Deserializer deserializer = getDeserializer(in.readByte());
+        byte         compressType = in.readByte();
+        int          id           = in.readInt();
+        int          length       = in.readInt();
 
-        int length = in.readInt();
-
-        RpcMessage message = new RpcMessage();
-        message.setMessageType(messageType);
-        message.setCodec(codecType);
-        message.setCompress(compressType);
-        message.setId(id);
+        // todo handle heartbeat
         switch (messageType) {
             case RpcMessage.HEARTBEAT_REQUEST_MESSAGE_TYPE: {
-                message.setData("ping");
-                return message;
+
             }
             case RpcMessage.HEARTBEAT_RESPONSE_MESSAGE_TYPE: {
-                message.setData("pong");
-                return message;
+
             }
         }
 
+        // handle rpc
         int bodyLength = length - RpcMessage.HEADER_LENGTH;
-
-        if (bodyLength > 0) {
-            byte[] data = new byte[bodyLength];
-            in.readBytes(data);
-            // todo decompress
-
-            deserialize(messageType, message, data);
+        if (bodyLength == 0) {
+            return null;
         }
-        return message;
+
+        byte[] body = new byte[bodyLength];
+        in.readBytes(body);
+
+        // request
+        if (messageType == RpcMessage.REQUEST_MESSAGE_TYPE) {
+            return deserializer.deserialize(body, RpcRequestBody.class);
+        }
+        // response
+        else {
+            return deserializer.deserialize(body, RpcResponseBody.class);
+        }
     }
 
-    private void deserialize(byte messageType, RpcMessage message, byte[] bs) {
-        if (messageType == RpcMessage.REQUEST_MESSAGE_TYPE) {
-            RpcRequest tmpValue = serializer.deserialize(bs, RpcRequest.class);
-            message.setData(tmpValue);
-        } else {
-            RpcResponse tmpValue = serializer.deserialize(bs, RpcResponse.class);
-            message.setData(tmpValue);
+    private Deserializer getDeserializer(byte codecType) {
+        Deserializer deserializer = deserializers.get(codecType);
+        if (deserializer == null) {
+            deserializer = deserializers.get(0);
         }
+        return deserializer;
     }
 
     private void checkVersion(ByteBuf in) {

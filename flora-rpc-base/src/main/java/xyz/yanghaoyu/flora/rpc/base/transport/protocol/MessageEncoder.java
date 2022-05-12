@@ -8,10 +8,10 @@ package xyz.yanghaoyu.flora.rpc.base.transport.protocol;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
-import xyz.yanghaoyu.flora.rpc.base.serialize.SmartSerializer;
-import xyz.yanghaoyu.flora.rpc.base.serialize.support.KryoSerializer;
+import xyz.yanghaoyu.flora.rpc.base.serialize.Serializer;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcMessage;
 
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /*
@@ -34,16 +34,24 @@ import java.util.concurrent.atomic.AtomicInteger;
   8. body               报文数据
  */
 public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
-    AtomicInteger   ID_GENERATOR = new AtomicInteger(0);
-    SmartSerializer serializer   = new KryoSerializer();
+    private       AtomicInteger           ID_GENERATOR = new AtomicInteger(0);
+    private final Map<String, Serializer> serializers;
+
+    public MessageEncoder(Map<String, Serializer> serializers) {
+        this.serializers = serializers;
+    }
 
     @Override
     protected void encode(ChannelHandlerContext context, RpcMessage message, ByteBuf byteBuf) {
         byteBuf.writeBytes(RpcMessage.MAGIC_NUMBER);
         byteBuf.writeByte(RpcMessage.VERSION);
+
         byte messageType = message.getMessageType();
-        byteBuf.writeByte(messageType);
-        byteBuf.writeByte(message.getCodec());
+        byteBuf.writeByte(message.getMessageType());
+
+        Serializer serializer = getSerializer(message);
+        byteBuf.writeByte(serializer.code());
+
         byteBuf.writeByte(message.getCompress());
         byteBuf.writeInt(ID_GENERATOR.getAndIncrement());
 
@@ -52,11 +60,11 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
         byteBuf.writerIndex(byteBuf.writerIndex() + 4);
 
         int length = RpcMessage.HEADER_LENGTH;
-        if (messageType != RpcMessage.HEARTBEAT_REQUEST_MESSAGE_TYPE
-            && messageType != RpcMessage.HEARTBEAT_RESPONSE_MESSAGE_TYPE
-        ) {
+        if (isHeartbeat(messageType)) {
             byte[] body = serializer.serialize(message.getData());
+
             length += body.length;
+
             byteBuf.writeBytes(body);
         }
 
@@ -68,12 +76,15 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
         byteBuf.writerIndex(end);
     }
 
-    // private void writeLength(ByteBuf byteBuf, int length) {
-    //     int index = byteBuf.writerIndex();
-    //
-    //     byteBuf.writerIndex(5);
-    //     byteBuf.writeInt(length);
-    //
-    //     byteBuf.writerIndex(index);
-    // }
+    private boolean isHeartbeat(byte messageType) {
+        return messageType != RpcMessage.HEARTBEAT_REQUEST_MESSAGE_TYPE && messageType != RpcMessage.HEARTBEAT_RESPONSE_MESSAGE_TYPE;
+    }
+
+    private Serializer getSerializer(RpcMessage message) {
+        Serializer serializer = serializers.get(message.getSerializer());
+        if (serializer == null) {
+            serializer = serializers.get("KRYO");
+        }
+        return serializer;
+    }
 }

@@ -5,10 +5,10 @@
 
 package xyz.yanghaoyu.flora.rpc.base.service;
 
-import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceConfig;
+import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceReferenceConfig;
 
 import java.net.InetSocketAddress;
 
 public interface ServiceDiscovery {
-    InetSocketAddress discover(ServiceConfig serviceConfig);
+    InetSocketAddress discover(ServiceReferenceConfig serviceConfig) throws ServiceNotFoundException;
 }

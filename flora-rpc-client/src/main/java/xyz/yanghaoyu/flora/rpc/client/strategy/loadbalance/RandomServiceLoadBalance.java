@@ -5,14 +5,14 @@
 
 package xyz.yanghaoyu.flora.rpc.client.strategy.loadbalance;
 
-import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceConfig;
+import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceReferenceConfig;
 
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class RandomServiceLoadBalance extends AbstractServiceLoadBalance {
     @Override
-    protected String doSelect(ServiceConfig serviceConfig, List<String> serviceAddresses) {
+    protected String doSelect(ServiceReferenceConfig serviceConfig, List<String> serviceAddresses) {
         int randomIndex = ThreadLocalRandom.current().nextInt(serviceAddresses.size());
         return serviceAddresses.get(randomIndex);
     }

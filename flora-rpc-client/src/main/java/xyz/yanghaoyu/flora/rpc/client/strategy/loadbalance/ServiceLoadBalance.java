@@ -6,11 +6,11 @@
 package xyz.yanghaoyu.flora.rpc.client.strategy.loadbalance;
 
 
-import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceConfig;
+import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceReferenceConfig;
 import xyz.yanghaoyu.flora.rpc.base.strategy.LoadBalance;
 
 import java.util.List;
 
 public interface ServiceLoadBalance extends LoadBalance {
-    String select(ServiceConfig serviceConfig, List<String> serviceAddresses);
+    String select(ServiceReferenceConfig serviceConfig, List<String> serviceAddresses);
 }

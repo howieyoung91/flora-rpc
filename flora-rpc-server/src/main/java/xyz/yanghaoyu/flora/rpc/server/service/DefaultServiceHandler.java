@@ -9,10 +9,10 @@ package xyz.yanghaoyu.flora.rpc.server.service;
 import io.netty.handler.codec.marshalling.DefaultUnmarshallerProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xyz.yanghaoyu.flora.rpc.base.service.config.Service;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceHandler;
-import xyz.yanghaoyu.flora.rpc.base.service.ServiceRegistry;
-import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequest;
+import xyz.yanghaoyu.flora.rpc.server.config.Service;
+import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestBody;
+import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseConfig;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -22,21 +22,28 @@ public class DefaultServiceHandler implements ServiceHandler {
 
     private ServiceRegistry registry;
 
+
     public DefaultServiceHandler(ServiceRegistry registry) {
         this.registry = registry;
     }
 
     @Override
-    public Object handle(RpcRequest request) {
-        logger.info("handle service request [{}#{}]", request.getServiceConfig(), request.getMethodName());
+    public RpcResponseConfig handle(RpcRequestBody requestData) {
+        logger.info("handle service request [{}#{}]", requestData.getServiceName(), requestData.getMethodName());
 
-        Service service     = registry.getService(request.getServiceConfig().getServiceName());
+        Service service     = registry.getService(requestData.getServiceName());
         Object  serviceBean = service.getServiceBean();
 
-        return invokeTargetMethod(serviceBean, request);
+        Object                                                  result            = invokeTargetMethod(serviceBean, requestData);
+        xyz.yanghaoyu.flora.rpc.server.config.RpcResponseConfig rpcResponseConfig = service.getRpcResponseConfig();
+
+        RpcResponseConfig response = new RpcResponseConfig();
+        response.setSerializer(rpcResponseConfig.getSerializerName());
+        response.setBody(result);
+        return response;
     }
 
-    private Object invokeTargetMethod(Object serviceBean, RpcRequest request) {
+    private Object invokeTargetMethod(Object serviceBean, RpcRequestBody request) {
         String     methodName = request.getMethodName();
         Class<?>[] paramTypes = request.getParamTypes();
         try {

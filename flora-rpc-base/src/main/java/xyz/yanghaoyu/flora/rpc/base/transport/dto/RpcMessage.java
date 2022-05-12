@@ -8,7 +8,7 @@ package xyz.yanghaoyu.flora.rpc.base.transport.dto;
 /**
  * 协议报文
  */
-public class RpcMessage {
+public class RpcMessage<T> {
     public static final byte[] MAGIC_NUMBER                    = {'R', 'O', 'S', 'E'};
     public static final byte   REQUEST_MESSAGE_TYPE            = 1;
     public static final byte   RESPONSE_MESSAGE_TYPE           = 2;
@@ -21,13 +21,13 @@ public class RpcMessage {
     // 消息类型
     private byte   messageType;
     // 序列化类型
-    private byte   codec;
+    private String serializer;
     // 压缩类型
     private byte   compress;
     // 请求 id
     private int    id;
     // 具体数据
-    private Object data;
+    private T      data;
 
     public byte getMessageType() {
         return messageType;
@@ -37,12 +37,12 @@ public class RpcMessage {
         this.messageType = messageType;
     }
 
-    public byte getCodec() {
-        return codec;
+    public String getSerializer() {
+        return serializer;
     }
 
-    public void setCodec(byte codec) {
-        this.codec = codec;
+    public void setSerializer(String serializer) {
+        this.serializer = serializer;
     }
 
     public byte getCompress() {
@@ -65,7 +65,7 @@ public class RpcMessage {
         return data;
     }
 
-    public void setData(Object data) {
+    public void setBody(T data) {
         this.data = data;
     }
 
@@ -73,7 +73,7 @@ public class RpcMessage {
     public String toString() {
         return "RpcMessage{" +
                "messageType=" + messageType +
-               ", codec=" + codec +
+               ", codec=" + serializer +
                ", compress=" + compress +
                ", id=" + id +
                ", data=" + data +

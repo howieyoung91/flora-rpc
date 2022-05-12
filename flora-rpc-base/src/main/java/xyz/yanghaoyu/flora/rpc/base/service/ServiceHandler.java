@@ -5,8 +5,9 @@
 
 package xyz.yanghaoyu.flora.rpc.base.service;
 
-import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequest;
+import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestBody;
+import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseConfig;
 
 public interface ServiceHandler {
-    Object handle(RpcRequest request);
+    RpcResponseConfig handle(RpcRequestBody request);
 }

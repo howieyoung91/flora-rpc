@@ -5,7 +5,9 @@
 
 package xyz.yanghaoyu.flora.rpc.server.util;
 
-import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceConfig;
+import xyz.yanghaoyu.flora.rpc.server.annotation.RpcResponse;
+import xyz.yanghaoyu.flora.rpc.server.config.RpcResponseConfig;
+import xyz.yanghaoyu.flora.rpc.server.config.ServiceConfig;
 import xyz.yanghaoyu.flora.rpc.server.annotation.RpcService;
 
 public final class ServiceUtil {
@@ -16,5 +18,11 @@ public final class ServiceUtil {
                 rpcServiceAnn.group(),
                 rpcServiceAnn.version()
         );
+    }
+
+    public static RpcResponseConfig buildRpcResponseConfig(RpcResponse rpcResponse) {
+        RpcResponseConfig rpcResponseConfig = new RpcResponseConfig();
+        rpcResponseConfig.setSerializerName(rpcResponse.serializer());
+        return rpcResponseConfig;
     }
 }

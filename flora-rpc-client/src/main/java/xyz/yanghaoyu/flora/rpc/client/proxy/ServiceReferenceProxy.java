@@ -8,9 +8,10 @@ package xyz.yanghaoyu.flora.rpc.client.proxy;
 import cn.hutool.core.lang.Snowflake;
 import cn.hutool.core.util.IdUtil;
 import xyz.yanghaoyu.flora.rpc.base.exception.RpcClientException;
-import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceConfig;
-import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequest;
-import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponse;
+import xyz.yanghaoyu.flora.rpc.base.service.ServiceNotFoundException;
+import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceReferenceConfig;
+import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestConfig;
+import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
 
 import java.lang.reflect.InvocationHandler;
@@ -23,12 +24,14 @@ public class ServiceReferenceProxy implements InvocationHandler {
     private static final Snowflake snowflake =
             IdUtil.getSnowflake(0, 0);
 
-    private ServiceConfig serviceConfig;
-    private RpcClient     rpcClient;
+    private RpcClient                                              rpcClient;
+    private ServiceReferenceConfig                                 serviceReferenceConfig;
+    private xyz.yanghaoyu.flora.rpc.client.config.RpcRequestConfig requestConfig;
 
-    public ServiceReferenceProxy(RpcClient rpcClient, ServiceConfig serviceConfig) {
-        this.serviceConfig = serviceConfig;
+    public ServiceReferenceProxy(RpcClient rpcClient, ServiceReferenceConfig serviceReferenceConfig, xyz.yanghaoyu.flora.rpc.client.config.RpcRequestConfig requestConfig) {
         this.rpcClient = rpcClient;
+        this.serviceReferenceConfig = serviceReferenceConfig;
+        this.requestConfig = requestConfig;
     }
 
     @Override
@@ -37,17 +40,29 @@ public class ServiceReferenceProxy implements InvocationHandler {
             return method.invoke(this, args);
         }
 
-        return invokeClientStub(proxy, method, args);
+        return request(proxy, method, args);
     }
 
-    private Object invokeClientStub(Object proxy, Method method, Object[] args) throws InterruptedException, ExecutionException {
-        RpcRequest request = getRequest(proxy, method, args);
+    private Object request(Object proxy, Method method, Object[] args) throws InterruptedException, ExecutionException {
+        RpcRequestConfig request = getRequest(proxy, method, args);
 
-        CompletableFuture<RpcResponse> promise = rpcClient.send(request);
+        CompletableFuture<RpcResponseBody> promise;
+
+        try {
+            promise = rpcClient.send(request);
+        } catch (ServiceNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
 
         // 等待服务器响应，代码阻塞在这里
-        RpcResponse response = promise.get();
+        RpcResponseBody response = promise.get();
 
+        checkResponse(request, response);
+        return response.getData();
+    }
+
+    private void checkResponse(RpcRequestConfig request, RpcResponseBody response) {
         if (response == null) {
             throw new RpcClientException("response is null. method: " + request.getMethodName());
         }
@@ -57,26 +72,27 @@ public class ServiceReferenceProxy implements InvocationHandler {
         if (response.getCode() != 200) {
             throw new RpcClientException("something in server went wrong. method: " + request.getMethodName());
         }
-        return response.getData();
     }
 
-    private RpcRequest getRequest(Object proxy, Method method, Object[] args) {
-        RpcRequest request = new RpcRequest();
+    private RpcRequestConfig getRequest(Object proxy, Method method, Object[] args) {
+        RpcRequestConfig request = new RpcRequestConfig();
+
+        // service reference config
         request.setMethodName(method.getName());
         request.setParamTypes(method.getParameterTypes());
         request.setParams(args);
-        request.setServiceConfig(serviceConfig);
-        // req id
-        // request.setId(reqId.getAndIncrement());
+        request.setServiceReferenceConfig(serviceReferenceConfig);
         request.setId(snowflake.nextIdStr());
+
+        // request config
+        request.setSerializerName(requestConfig.getSerializerName());
         return request;
     }
 
     @Override
     public String toString() {
         return "ServiceReferenceProxy{" +
-               "serviceConfig=" + serviceConfig +
-               ", rpcClient=" + rpcClient +
+               "serviceReferenceConfig=" + serviceReferenceConfig +
                '}';
     }
 }

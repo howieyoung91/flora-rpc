@@ -5,73 +5,54 @@
 
 package xyz.yanghaoyu.flora.rpc.client.autoconfiguration;
 
-import org.apache.curator.retry.ExponentialBackoffRetry;
 import xyz.yanghaoyu.flora.annotation.Bean;
 import xyz.yanghaoyu.flora.annotation.Configuration;
-import xyz.yanghaoyu.flora.annotation.Value;
-import xyz.yanghaoyu.flora.rpc.base.exception.ServiceDiscoveryException;
+import xyz.yanghaoyu.flora.annotation.Enable;
+import xyz.yanghaoyu.flora.annotation.Inject;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.base.service.support.ZooKeeper;
-import xyz.yanghaoyu.flora.rpc.base.service.support.ZooKeeperBuilder;
-import xyz.yanghaoyu.flora.rpc.client.annotation.RpcServiceReference;
+import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ServiceDiscoveryConfigProperties;
+import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ServiceDiscoveryConfigurer;
+import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ZooKeeperConfigProperties;
+import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ZooKeeperConfigurer;
+import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder.ServiceDiscoveryConfigBuilder;
+import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder.ZooKeeperBuilderFactory;
 import xyz.yanghaoyu.flora.rpc.client.discovery.ZookeeperServiceDiscovery;
-import xyz.yanghaoyu.flora.rpc.client.discovery.config.DefaultDiscoveryConfig;
+import xyz.yanghaoyu.flora.rpc.client.config.DiscoveryConfig;
 import xyz.yanghaoyu.flora.rpc.client.strategy.loadbalance.RandomServiceLoadBalance;
 import xyz.yanghaoyu.flora.rpc.client.strategy.loadbalance.ServiceLoadBalance;
 
-import java.util.Objects;
-
-@Configuration
+@Configuration(ServiceDiscoveryAutoConfiguration.BEAN_NAME)
+@Enable.ComponentScan(basePackages = "xyz.yanghaoyu.flora.rpc.client.autoconfiguration")
 public class ServiceDiscoveryAutoConfiguration {
-    @Value("${flora.rpc.client.discovery.zookeeper.address}")
-    private String  zooKeeperAddress;
-    @Value("${flora.rpc.client.discovery.zookeeper.base-sleep-time}")
-    private Integer baseSleepTime;
-    @Value("${flora.rpc.client.discovery.zookeeper.max-retries}")
-    private Integer maxRetries;
+    public static final String BEAN_NAME = "flora-rpc-client$ServiceDiscoveryAutoConfiguration$";
 
-    @Value("${flora.rpc.client.discovery.zookeeper.namespace}")
-    private String namespace;
-    @Value("${flora.rpc.client.discovery.zookeeper.load-balance}")
-    private String loadBalance;
-
-    @Bean
-    public DefaultDiscoveryConfig discoveryConfig() {
-        DefaultDiscoveryConfig config = new DefaultDiscoveryConfig();
-        if (Objects.equals(namespace, RpcServiceReference.EMPTY_NAMESPACE)) {
-            throw new ServiceDiscoveryException("the discovery namespace is blank! it should start with /");
-        }
-        if (namespace.charAt(0) != '/') {
-            throw new ServiceDiscoveryException("discovery namespace should start with /");
-        }
-        config.setNamespace(namespace);
-        config.setLoadBalance(loadBalance);
-        return config;
+    @Bean("flora-rpc-client$ZooKeeper$")
+    public ZooKeeper zooKeeper(
+            @Inject.ByType(required = false) ZooKeeperConfigurer configurer,
+            @Inject.ByName(ZooKeeperConfigProperties.BEAN_NAME) ZooKeeperConfigProperties properties
+    ) {
+        return ZooKeeperBuilderFactory.aZooKeeperConfigBuilder(configurer, properties)
+                .build().build();
     }
 
-    @Bean("floraRpcClient$ServiceDiscovery$")
-    public ServiceDiscovery discovery() {
-        ServiceLoadBalance loadBalance;
-        switch (this.loadBalance) {
-            case "RANDOM": {
-                loadBalance = new RandomServiceLoadBalance();
-                break;
-            }
-            default: {
-                throw new ServiceDiscoveryException("unknown load balance strategy");
-            }
-        }
-
-        return new ZookeeperServiceDiscovery(discoveryConfig(), zooKeeper(), loadBalance);
-    }
-
-    @Bean("floraRpcClient$ZooKeeper$")
-    public ZooKeeper zooKeeper() {
-        return ZooKeeperBuilder.aNewZooKeeper()
-                .zookeeperAddress(zooKeeperAddress)
-                .retryPolicy(new ExponentialBackoffRetry(baseSleepTime, maxRetries))
+    @Bean("flora-rpc-client$ServiceDiscoveryConfig$")
+    public DiscoveryConfig discoveryConfig(
+            @Inject.ByType(required = false) ServiceDiscoveryConfigurer configurer,
+            @Inject.ByName(ServiceDiscoveryConfigProperties.BEAN_NAME) ServiceDiscoveryConfigProperties properties
+    ) {
+        return ServiceDiscoveryConfigBuilder
+                .aServiceDiscoveryConfig(configurer, properties)
                 .build();
     }
 
+    @Bean("flora-rpc-client$ServiceDiscovery$")
+    public ServiceDiscovery discovery(
+            @Inject.ByName("flora-rpc-client$ServiceDiscoveryConfig$") DiscoveryConfig discoveryConfig,
+            @Inject.ByName("flora-rpc-client$ZooKeeper$") ZooKeeper zooKeeper
+    ) {
+        ServiceLoadBalance loadBalance = new RandomServiceLoadBalance();
+        return new ZookeeperServiceDiscovery(discoveryConfig, zooKeeper, loadBalance);
+    }
 
 }
