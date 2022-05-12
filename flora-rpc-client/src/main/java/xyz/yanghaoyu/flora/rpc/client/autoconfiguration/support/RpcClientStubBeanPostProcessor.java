@@ -14,7 +14,7 @@ import xyz.yanghaoyu.flora.core.beans.factory.config.SmartInstantiationAwareBean
 import xyz.yanghaoyu.flora.exception.BeansException;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcRequest;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcServiceReference;
-import xyz.yanghaoyu.flora.rpc.client.config.RpcRequestConfig;
+import xyz.yanghaoyu.flora.rpc.client.config.RpcRequestAnnotationConfig;
 import xyz.yanghaoyu.flora.rpc.client.proxy.ServiceReferenceProxyFactory;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
 import xyz.yanghaoyu.flora.rpc.client.util.RpcServiceClientUtil;
@@ -48,8 +48,8 @@ public class RpcClientStubBeanPostProcessor
                 initClientIfNecessary();
 
                 // handler @RpcRequest
-                RpcRequest       rpcRequestAnn = field.getAnnotation(RpcRequest.class);
-                RpcRequestConfig rpcRequestConfig = getRequestConfig(rpcRequestAnn);
+                RpcRequest                 rpcRequestAnn    = field.getAnnotation(RpcRequest.class);
+                RpcRequestAnnotationConfig rpcRequestConfig = getRequestAnnotationConfig(rpcRequestAnn);
 
 
                 Object proxy = proxyFactory.getProxy(
@@ -68,14 +68,13 @@ public class RpcClientStubBeanPostProcessor
         return null;
     }
 
-    private RpcRequestConfig getRequestConfig(RpcRequest rpcRequestAnn) {
-        RpcRequestConfig rpcRequestConfig;
+    private RpcRequestAnnotationConfig getRequestAnnotationConfig(RpcRequest rpcRequestAnn) {
+        RpcRequestAnnotationConfig rpcRequestConfig;
         if (rpcRequestAnn == null) {
-            rpcRequestConfig = new RpcRequestConfig();
-            rpcRequestConfig.setSerializerName("KRYO");
-        } else {
-            rpcRequestConfig = RpcServiceClientUtil.buildRpcRequestConfig(rpcRequestAnn);
+            return null;
         }
+
+        rpcRequestConfig = RpcServiceClientUtil.buildRpcRequestConfig(rpcRequestAnn);
         return rpcRequestConfig;
     }
 

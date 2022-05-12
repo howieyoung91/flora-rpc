@@ -18,4 +18,6 @@ public interface ServerConfig {
 
     Map<String, Deserializer> getDeserializers();
 
+    String defaultSerializer();
+
 }

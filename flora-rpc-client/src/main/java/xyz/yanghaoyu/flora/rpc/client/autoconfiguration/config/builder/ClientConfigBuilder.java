@@ -7,6 +7,7 @@ package xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder;
 
 import xyz.yanghaoyu.flora.rpc.base.serialize.Deserializer;
 import xyz.yanghaoyu.flora.rpc.base.serialize.Serializer;
+import xyz.yanghaoyu.flora.rpc.base.serialize.SmartSerializer;
 import xyz.yanghaoyu.flora.rpc.base.serialize.support.KryoSmartSerializer;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ClientConfigProperties;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ClientConfigurer;
@@ -29,38 +30,38 @@ public class ClientConfigBuilder {
     }
 
     public ClientConfig build() {
-        Map<String, Serializer>   serializer    = getSerializers();
-        Map<String, Deserializer> deserializers = getDeserializers();
+        Map<String, Serializer>   serializer        = getSerializers();
+        Map<String, Deserializer> deserializers     = getDeserializers();
+        String                    defaultSerializer = getDefaultSerializer();
         return new ClientConfig() {
             @Override
-            public Map<String, Serializer> getSerializers() {
+            public Map<String, Serializer> serializers() {
                 return serializer;
             }
 
             @Override
-            public Map<String, Deserializer> getDeserializers() {
+            public Map<String, Deserializer> deserializers() {
                 return deserializers;
+            }
+
+            @Override
+            public String defaultSerializer() {
+                return defaultSerializer;
             }
         };
     }
 
+    private final SmartSerializer kryoSmartSerializer = new KryoSmartSerializer();
+
     public Map<String, Serializer> getSerializers() {
         Map<String, Serializer> serializers = new HashMap<>();
-
-        // String[] serializerNames = StringUtil.commaDelimitedListToStringArray(properties.getSerializer());
-        //
-        // for (String name : serializerNames) {
-        //     if (Objects.equals(name, "KRYO")) {
-        //         serializers.put("KRYO", new KryoSmartSerializer());
-        //     }
-        // }
 
         if (configurer != null) {
             Map<String, Serializer> configurerSerializer = configurer.addSerializers();
             serializers.putAll(configurerSerializer);
         }
 
-        serializers.put("KRYO", new KryoSmartSerializer());
+        serializers.put("KRYO", kryoSmartSerializer);
         return serializers;
     }
 
@@ -72,7 +73,21 @@ public class ClientConfigBuilder {
             serializers.putAll(configurerSerializer);
         }
 
-        serializers.put("KRYO", new KryoSmartSerializer());
+        serializers.put("KRYO", kryoSmartSerializer);
         return serializers;
+    }
+
+    public String getDefaultSerializer() {
+        String serializer = properties.getSerializer();
+        if (configurer != null) {
+            String serializerByConfigurer = configurer.setDefaultSerializer();
+            if (serializer != null) {
+                serializer = serializerByConfigurer;
+            }
+        }
+        if (serializer == null) {
+            serializer = "KRYO";
+        }
+        return serializer;
     }
 }

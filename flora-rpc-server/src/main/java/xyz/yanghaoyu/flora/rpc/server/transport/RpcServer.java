@@ -27,9 +27,11 @@ import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
 public class RpcServer {
-    private final ServerConfig    serverConfig;
-    private final ServiceRegistry registry;
-    private final ServiceHandler  serviceHandler;
+    private final ServerConfig      serverConfig;
+    private final ServiceRegistry   registry;
+    private final ServiceHandler    serviceHandler;
+    private final NioEventLoopGroup bossGroup = new NioEventLoopGroup();
+    private final NioEventLoopGroup workGroup = new NioEventLoopGroup();
 
     public RpcServer(ServerConfig serverConfig, ServiceRegistry registry, ServiceHandler serviceHandler) {
         this.serverConfig = serverConfig;
@@ -37,10 +39,9 @@ public class RpcServer {
         this.serviceHandler = serviceHandler;
     }
 
-    private NioEventLoopGroup bossGroup = new NioEventLoopGroup();
-    private NioEventLoopGroup workGroup = new NioEventLoopGroup();
-
     public void start() {
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
+
         ServerBootstrap serverBootstrap = new ServerBootstrap()
                 .channel(NioServerSocketChannel.class)
                 .group(bossGroup, workGroup)
@@ -54,7 +55,7 @@ public class RpcServer {
                         pipeline.addLast(new IdleStateHandler(
                                 30, 0, 0, TimeUnit.SECONDS)
                         );
-                        pipeline.addLast(new MessageEncoder(serverConfig.getSerializers()));
+                        pipeline.addLast(new MessageEncoder(serverConfig.getSerializers(), serverConfig.defaultSerializer()));
                         pipeline.addLast(new MessageDecoder(serverConfig.getDeserializers()));
                         // todo 可以调用服务交给另一个线程完成
                         pipeline.addLast(new RpcRequestHandler(serviceHandler));
@@ -67,8 +68,7 @@ public class RpcServer {
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
-            bossGroup.shutdownGracefully();
-            workGroup.shutdownGracefully();
+            close();
         }
     }
 
@@ -78,5 +78,10 @@ public class RpcServer {
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
+    }
+
+    public void close() {
+        bossGroup.shutdownGracefully();
+        workGroup.shutdownGracefully();
     }
 }

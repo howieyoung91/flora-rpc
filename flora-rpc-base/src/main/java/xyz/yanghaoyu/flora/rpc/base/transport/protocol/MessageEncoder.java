@@ -8,6 +8,8 @@ package xyz.yanghaoyu.flora.rpc.base.transport.protocol;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import xyz.yanghaoyu.flora.rpc.base.serialize.Serializer;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcMessage;
 
@@ -34,11 +36,15 @@ import java.util.concurrent.atomic.AtomicInteger;
   8. body               报文数据
  */
 public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageEncoder.class);
+
     private       AtomicInteger           ID_GENERATOR = new AtomicInteger(0);
     private final Map<String, Serializer> serializers;
+    private final String                  defaultSerializer;
 
-    public MessageEncoder(Map<String, Serializer> serializers) {
+    public MessageEncoder(Map<String, Serializer> serializers, String defaultSerializer) {
         this.serializers = serializers;
+        this.defaultSerializer = defaultSerializer;
     }
 
     @Override
@@ -49,7 +55,8 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
         byte messageType = message.getMessageType();
         byteBuf.writeByte(message.getMessageType());
 
-        Serializer serializer = getSerializer(message);
+
+        Serializer serializer = getSerializer(message.getSerializer());
         byteBuf.writeByte(serializer.code());
 
         byteBuf.writeByte(message.getCompress());
@@ -59,14 +66,24 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
         // skip length field
         byteBuf.writerIndex(byteBuf.writerIndex() + 4);
 
-        int length = RpcMessage.HEADER_LENGTH;
-        if (isHeartbeat(messageType)) {
-            byte[] body = serializer.serialize(message.getData());
-
-            length += body.length;
-
-            byteBuf.writeBytes(body);
+        int    length   = RpcMessage.HEADER_LENGTH;
+        byte[] bodyData = null;
+        if (messageType == RpcMessage.REQUEST_MESSAGE_TYPE || messageType == RpcMessage.RESPONSE_MESSAGE_TYPE) {
+            Object body = message.getBody();
+            bodyData = serializer.serialize(body);
+        } else if (messageType == RpcMessage.HEARTBEAT_REQUEST_MESSAGE_TYPE) {
+            // client
+            LOGGER.info("ping {}", context.channel().remoteAddress());
+        } else {
+            // server RpcMessage.HEARTBEAT_RESPONSE_MESSAGE_TYPE
+            LOGGER.info("pong {}", context.channel().remoteAddress());
         }
+
+        if (bodyData != null) {
+            length += bodyData.length;
+            byteBuf.writeBytes(bodyData);
+        }
+
 
         int end = byteBuf.writerIndex();
 
@@ -76,15 +93,31 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
         byteBuf.writerIndex(end);
     }
 
-    private boolean isHeartbeat(byte messageType) {
-        return messageType != RpcMessage.HEARTBEAT_REQUEST_MESSAGE_TYPE && messageType != RpcMessage.HEARTBEAT_RESPONSE_MESSAGE_TYPE;
+    private boolean isCommonMessage(byte messageType) {
+        return messageType != RpcMessage.HEARTBEAT_REQUEST_MESSAGE_TYPE
+               && messageType != RpcMessage.HEARTBEAT_RESPONSE_MESSAGE_TYPE;
     }
 
-    private Serializer getSerializer(RpcMessage message) {
-        Serializer serializer = serializers.get(message.getSerializer());
+
+    private Serializer getSerializer(String serializerName) {
+        if (serializerName == null) {
+            return getDefaultSerializer();
+        }
+
+        Serializer serializer = serializers.get(serializerName);
+
         if (serializer == null) {
-            serializer = serializers.get("KRYO");
+            LOGGER.warn("unknown serializer [{}]", serializerName);
+            return getDefaultSerializer();
         }
         return serializer;
+    }
+
+    private Serializer getDefaultSerializer() {
+        Serializer serializer = serializers.get(defaultSerializer);
+        if (serializer == null) {
+            LOGGER.warn("unknown serializer [{}]", defaultSerializer);
+        }
+        return serializers.get("KRYO");
     }
 }

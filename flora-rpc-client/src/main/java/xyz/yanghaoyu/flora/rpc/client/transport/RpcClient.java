@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.yanghaoyu.flora.rpc.base.exception.RpcClientException;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
+import xyz.yanghaoyu.flora.rpc.base.service.ServiceNotFoundException;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcMessage;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestBody;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestConfig;
@@ -24,7 +25,6 @@ import xyz.yanghaoyu.flora.rpc.base.transport.protocol.MessageDecoder;
 import xyz.yanghaoyu.flora.rpc.base.transport.protocol.MessageEncoder;
 import xyz.yanghaoyu.flora.rpc.client.config.ClientConfig;
 
-import xyz.yanghaoyu.flora.rpc.base.service.ServiceNotFoundException;
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -76,13 +76,13 @@ public class RpcClient {
 
     private RpcMessage buildMessage(RpcRequestConfig reqConfig) {
         RpcRequestBody reqBody = buildRpcRequestBody(reqConfig);
-
-
-        RpcMessage message = new RpcMessage();
+        RpcMessage     message = new RpcMessage();
         message.setBody(reqBody);
         message.setSerializer(reqConfig.getSerializerName());
         message.setCompress((byte) 0);
-        message.setMessageType(RpcMessage.REQUEST_MESSAGE_TYPE);
+        message.setType(RpcMessage.REQUEST_MESSAGE_TYPE);
+        // todo set id
+
         return message;
     }
 
@@ -96,7 +96,7 @@ public class RpcClient {
         return reqBody;
     }
 
-    private Channel connectService(InetSocketAddress serviceAddress) {
+    Channel connectService(InetSocketAddress serviceAddress) {
         try {
             return bootstrap.connect(serviceAddress).sync().channel();
         } catch (InterruptedException e) {
@@ -110,6 +110,7 @@ public class RpcClient {
     }
 
     private Bootstrap buildBootstrap(NioEventLoopGroup group) {
+        RpcClient that = this;
         return new Bootstrap()
                 .group(group)
                 .channel(NioSocketChannel.class)
@@ -120,9 +121,8 @@ public class RpcClient {
                     protected void initChannel(SocketChannel ch) {
                         ChannelPipeline pipeline = ch.pipeline();
                         pipeline.addLast(new IdleStateHandler(0, 5, 0, TimeUnit.SECONDS));
-
-                        pipeline.addLast(new MessageEncoder(clientConfig.getSerializers()));
-                        pipeline.addLast(new MessageDecoder(clientConfig.getDeserializers()));
+                        pipeline.addLast(new MessageEncoder(clientConfig.serializers(), clientConfig.defaultSerializer()));
+                        pipeline.addLast(new MessageDecoder(clientConfig.deserializers()));
                         pipeline.addLast(new RpcResponseHandler(waitingRequests));
                     }
                 });

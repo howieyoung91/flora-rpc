@@ -12,8 +12,9 @@ import xyz.yanghaoyu.flora.rpc.base.serialize.Serializer;
 import java.util.Map;
 
 public interface ClientConfig {
-    Map<String, Serializer> getSerializers();
+    Map<String, Serializer> serializers();
 
-    Map<String, Deserializer> getDeserializers();
+    Map<String, Deserializer> deserializers();
 
+    String defaultSerializer();
 }

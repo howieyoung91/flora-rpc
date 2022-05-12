@@ -7,16 +7,16 @@ package xyz.yanghaoyu.flora.rpc.server.config;
 
 public class Service {
     private final Object            serviceBean;
-    private final ServiceConfig     serviceConfig;
-    private final RpcResponseConfig rpcResponseConfig;
+    private final ServiceConfig               serviceConfig;
+    private final RpcResponseAnnotationConfig rpcResponseConfig;
 
-    public Service(Object serviceBean, ServiceConfig serviceConfig, RpcResponseConfig rpcResponseConfig) {
+    public Service(Object serviceBean, ServiceConfig serviceConfig, RpcResponseAnnotationConfig rpcResponseConfig) {
         this.serviceBean = serviceBean;
         this.serviceConfig = serviceConfig;
         this.rpcResponseConfig = rpcResponseConfig;
     }
 
-    public RpcResponseConfig getRpcResponseConfig() {
+    public RpcResponseAnnotationConfig getRpcResponseConfig() {
         return rpcResponseConfig;
     }
 

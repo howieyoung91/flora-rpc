@@ -12,6 +12,7 @@ import xyz.yanghaoyu.flora.rpc.base.service.ServiceNotFoundException;
 import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceReferenceConfig;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestConfig;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
+import xyz.yanghaoyu.flora.rpc.client.config.RpcRequestAnnotationConfig;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
 
 import java.lang.reflect.InvocationHandler;
@@ -24,11 +25,11 @@ public class ServiceReferenceProxy implements InvocationHandler {
     private static final Snowflake snowflake =
             IdUtil.getSnowflake(0, 0);
 
-    private RpcClient                                              rpcClient;
-    private ServiceReferenceConfig                                 serviceReferenceConfig;
-    private xyz.yanghaoyu.flora.rpc.client.config.RpcRequestConfig requestConfig;
+    private RpcClient                  rpcClient;
+    private ServiceReferenceConfig     serviceReferenceConfig;
+    private RpcRequestAnnotationConfig requestConfig;
 
-    public ServiceReferenceProxy(RpcClient rpcClient, ServiceReferenceConfig serviceReferenceConfig, xyz.yanghaoyu.flora.rpc.client.config.RpcRequestConfig requestConfig) {
+    public ServiceReferenceProxy(RpcClient rpcClient, ServiceReferenceConfig serviceReferenceConfig, RpcRequestAnnotationConfig requestConfig) {
         this.rpcClient = rpcClient;
         this.serviceReferenceConfig = serviceReferenceConfig;
         this.requestConfig = requestConfig;
@@ -44,12 +45,12 @@ public class ServiceReferenceProxy implements InvocationHandler {
     }
 
     private Object request(Object proxy, Method method, Object[] args) throws InterruptedException, ExecutionException {
-        RpcRequestConfig request = getRequest(proxy, method, args);
+        RpcRequestConfig reqConfig = getRequest(proxy, method, args);
 
         CompletableFuture<RpcResponseBody> promise;
 
         try {
-            promise = rpcClient.send(request);
+            promise = rpcClient.send(reqConfig);
         } catch (ServiceNotFoundException e) {
             e.printStackTrace();
             return null;
@@ -58,7 +59,7 @@ public class ServiceReferenceProxy implements InvocationHandler {
         // 等待服务器响应，代码阻塞在这里
         RpcResponseBody response = promise.get();
 
-        checkResponse(request, response);
+        checkResponse(reqConfig, response);
         return response.getData();
     }
 
@@ -84,9 +85,17 @@ public class ServiceReferenceProxy implements InvocationHandler {
         request.setServiceReferenceConfig(serviceReferenceConfig);
         request.setId(snowflake.nextIdStr());
 
-        // request config
-        request.setSerializerName(requestConfig.getSerializerName());
+        applyRpcRequestAnnotationConfig(request);
+
         return request;
+    }
+
+    private void applyRpcRequestAnnotationConfig(RpcRequestConfig request) {
+        if (requestConfig == null) {
+            return;
+        }
+
+        request.setSerializerName(requestConfig.getSerializerName());
     }
 
     @Override

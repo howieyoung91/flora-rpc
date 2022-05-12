@@ -10,6 +10,7 @@ import io.netty.handler.codec.marshalling.DefaultUnmarshallerProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceHandler;
+import xyz.yanghaoyu.flora.rpc.server.config.RpcResponseAnnotationConfig;
 import xyz.yanghaoyu.flora.rpc.server.config.Service;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestBody;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseConfig;
@@ -34,8 +35,8 @@ public class DefaultServiceHandler implements ServiceHandler {
         Service service     = registry.getService(requestData.getServiceName());
         Object  serviceBean = service.getServiceBean();
 
-        Object                                                  result            = invokeTargetMethod(serviceBean, requestData);
-        xyz.yanghaoyu.flora.rpc.server.config.RpcResponseConfig rpcResponseConfig = service.getRpcResponseConfig();
+        Object                      result            = invokeTargetMethod(serviceBean, requestData);
+        RpcResponseAnnotationConfig rpcResponseConfig = service.getRpcResponseConfig();
 
         RpcResponseConfig response = new RpcResponseConfig();
         response.setSerializer(rpcResponseConfig.getSerializerName());

@@ -29,9 +29,11 @@ public class ServerConfigBuilder {
     }
 
     public ServerConfig build() {
-        Integer                   port          = determinePort();
-        Map<String, Serializer>   serializer    = getSerializers();
-        Map<String, Deserializer> deserializers = getDeserializers();
+        Integer                   port              = determinePort();
+        Map<String, Serializer>   serializer        = getSerializers();
+        Map<String, Deserializer> deserializers     = getDeserializers();
+        String                    defaultSerializer = getDefaultSerializer();
+
         return new ServerConfig() {
             @Override
             public int port() {
@@ -46,6 +48,11 @@ public class ServerConfigBuilder {
             @Override
             public Map<String, Deserializer> getDeserializers() {
                 return deserializers;
+            }
+
+            @Override
+            public String defaultSerializer() {
+                return defaultSerializer;
             }
         };
     }
@@ -86,5 +93,19 @@ public class ServerConfigBuilder {
 
         deserializers.put("KRYO", new KryoSmartSerializer());
         return deserializers;
+    }
+
+    public String getDefaultSerializer() {
+        String serializer = properties.getSerializer();
+        if (configurer != null) {
+            String serializerByConfigurer = configurer.setDefaultSerializer();
+            if (serializer != null) {
+                serializer = serializerByConfigurer;
+            }
+        }
+        if (serializer != null) {
+            serializer = "KRYO";
+        }
+        return serializer;
     }
 }

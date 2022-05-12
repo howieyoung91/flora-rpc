@@ -23,4 +23,8 @@ public interface ServerConfigurer {
     default Map<String, Deserializer> addDeserializers() {
         return new HashMap<>(0);
     }
+
+    default String setDefaultSerializer() {
+        return null;
+    }
 }

@@ -30,9 +30,8 @@ import java.util.stream.Collectors;
  * ...     body
  */
 public class MessageDecoder extends LengthFieldBasedFrameDecoder {
-    private static final Logger logger = LoggerFactory.getLogger(MessageDecoder.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageDecoder.class);
 
-    // todo inject deserializers;
     private Map<Byte, Deserializer> deserializers;
 
     public MessageDecoder(Map<String, Deserializer> deserializers) {
@@ -47,13 +46,13 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
-        logger.info("receive message {}", ctx.channel());
+        // LOGGER.info("receive message {}", ctx.channel());
         Object decoded = super.decode(ctx, in);
         if (decoded instanceof ByteBuf) {
             ByteBuf frame = (ByteBuf) decoded;
             if (frame.readableBytes() >= RpcMessage.HEADER_LENGTH) {
                 try {
-                    return decodeFrame(frame);
+                    return decodeFrame(ctx, frame);
                 } finally {
                     frame.release();
                 }
@@ -72,25 +71,32 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
      * [12,15] length
      * ...     body
      */
-    private Object decodeFrame(ByteBuf in) {
+    private Object decodeFrame(ChannelHandlerContext ctx, ByteBuf in) {
         checkMagicNumber(in);
         checkVersion(in);
         byte         messageType  = in.readByte();
         Deserializer deserializer = getDeserializer(in.readByte());
         byte         compressType = in.readByte();
         int          id           = in.readInt();
-        int          length       = in.readInt();
 
-        // todo handle heartbeat
-        switch (messageType) {
-            case RpcMessage.HEARTBEAT_REQUEST_MESSAGE_TYPE: {
+        if (messageType == RpcMessage.HEARTBEAT_REQUEST_MESSAGE_TYPE) {
+            // server
+            LOGGER.info("{} ping", ctx.channel().remoteAddress());
 
-            }
-            case RpcMessage.HEARTBEAT_RESPONSE_MESSAGE_TYPE: {
-
-            }
+            RpcMessage<Object> pong =
+                    RpcMessage.of(RpcMessage.HEARTBEAT_RESPONSE_MESSAGE_TYPE, null);
+            pong.setId(id);
+            pong.setSerializer("KRYO");
+            pong.setCompress((byte) 0);
+            ctx.writeAndFlush(pong);
+            return null;
+        } else if (messageType == RpcMessage.HEARTBEAT_RESPONSE_MESSAGE_TYPE) {
+            // client
+            LOGGER.info("{} pong", ctx.channel().remoteAddress());
+            return null;
         }
 
+        int length = in.readInt();
         // handle rpc
         int bodyLength = length - RpcMessage.HEADER_LENGTH;
         if (bodyLength == 0) {
@@ -99,6 +105,7 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
 
         byte[] body = new byte[bodyLength];
         in.readBytes(body);
+
 
         // request
         if (messageType == RpcMessage.REQUEST_MESSAGE_TYPE) {
@@ -113,6 +120,7 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
     private Deserializer getDeserializer(byte codecType) {
         Deserializer deserializer = deserializers.get(codecType);
         if (deserializer == null) {
+            LOGGER.warn("unknown deserializer marked by code [{}]", codecType);
             deserializer = deserializers.get(0);
         }
         return deserializer;

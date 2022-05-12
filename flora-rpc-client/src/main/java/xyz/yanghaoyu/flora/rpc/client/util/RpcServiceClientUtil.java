@@ -8,7 +8,7 @@ package xyz.yanghaoyu.flora.rpc.client.util;
 import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceReferenceConfig;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcRequest;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcServiceReference;
-import xyz.yanghaoyu.flora.rpc.client.config.RpcRequestConfig;
+import xyz.yanghaoyu.flora.rpc.client.config.RpcRequestAnnotationConfig;
 
 public abstract class RpcServiceClientUtil {
     public static ServiceReferenceConfig buildServiceReferenceConfig(RpcServiceReference rpcServiceReference) {
@@ -20,15 +20,9 @@ public abstract class RpcServiceClientUtil {
         );
     }
 
-    public static RpcRequestConfig buildRpcRequestConfig(RpcRequest rpcRequestAnn) {
-        RpcRequestConfig config = new RpcRequestConfig();
-
-        String serializer = rpcRequestAnn.serializer();
-        if (serializer.equals("")) {
-            serializer = "KRYO";
-        }
-        
-        config.setSerializerName(serializer);
+    public static RpcRequestAnnotationConfig buildRpcRequestConfig(RpcRequest rpcRequestAnn) {
+        RpcRequestAnnotationConfig config = new RpcRequestAnnotationConfig();
+        config.setSerializerName(rpcRequestAnn.serializer());
         return config;
     }
 }

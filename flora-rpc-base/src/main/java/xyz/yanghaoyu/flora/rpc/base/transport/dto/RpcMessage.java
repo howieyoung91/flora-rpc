@@ -18,6 +18,13 @@ public class RpcMessage<T> {
     public static final int    MAX_FRAME_LENGTH                = 8 * 1024 * 1024;
     public static final byte   VERSION                         = 1;
 
+    public static <T> RpcMessage<T> of(byte type, T body) {
+        RpcMessage<T> message = new RpcMessage<>();
+        message.setType(type);
+        message.setBody(body);
+        return message;
+    }
+
     // 消息类型
     private byte   messageType;
     // 序列化类型
@@ -27,13 +34,13 @@ public class RpcMessage<T> {
     // 请求 id
     private int    id;
     // 具体数据
-    private T      data;
+    private T      body;
 
     public byte getMessageType() {
         return messageType;
     }
 
-    public void setMessageType(byte messageType) {
+    public void setType(byte messageType) {
         this.messageType = messageType;
     }
 
@@ -61,12 +68,12 @@ public class RpcMessage<T> {
         this.id = id;
     }
 
-    public Object getData() {
-        return data;
+    public Object getBody() {
+        return body;
     }
 
     public void setBody(T data) {
-        this.data = data;
+        this.body = data;
     }
 
     @Override
@@ -76,7 +83,7 @@ public class RpcMessage<T> {
                ", codec=" + serializer +
                ", compress=" + compress +
                ", id=" + id +
-               ", data=" + data +
+               ", data=" + body +
                '}';
     }
 }

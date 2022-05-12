@@ -15,7 +15,10 @@ public class ClientConfigProperties {
 
     private String serializer;
 
+
     public String getSerializer() {
         return serializer;
     }
+
+
 }
