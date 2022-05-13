@@ -23,8 +23,8 @@ public class KryoSmartSerializer implements SmartSerializer {
     @Override
     public <T> T deserialize(byte[] bytes, Class<T> clazz) {
         try (
-                ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
-                Input input = new Input(byteArrayInputStream)
+                ByteArrayInputStream stream = new ByteArrayInputStream(bytes);
+                Input input = new Input(stream)
         ) {
             Object result = KRYO.get().readObject(input, clazz);
             KRYO.remove();
@@ -38,8 +38,8 @@ public class KryoSmartSerializer implements SmartSerializer {
     @Override
     public byte[] serialize(Object obj) {
         try (
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                Output output = new Output(byteArrayOutputStream)
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                Output output = new Output(stream)
         ) {
             KRYO.get().writeObject(output, obj);
             KRYO.remove();
@@ -51,6 +51,11 @@ public class KryoSmartSerializer implements SmartSerializer {
 
     @Override
     public byte code() {
-        return 0;
+        return -1;
+    }
+
+    @Override
+    public String name() {
+        return "KRYO";
     }
 }

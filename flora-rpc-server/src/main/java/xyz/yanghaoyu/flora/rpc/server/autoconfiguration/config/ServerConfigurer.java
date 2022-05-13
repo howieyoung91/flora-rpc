@@ -5,23 +5,18 @@
 
 package xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config;
 
-import xyz.yanghaoyu.flora.rpc.base.serialize.Deserializer;
-import xyz.yanghaoyu.flora.rpc.base.serialize.Serializer;
+import xyz.yanghaoyu.flora.rpc.base.serialize.SmartSerializer;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public interface ServerConfigurer {
     default Integer port() {
         return null;
     }
 
-    default Map<String, Serializer> addSerializers() {
-        return new HashMap<>(0);
-    }
-
-    default Map<String, Deserializer> addDeserializers() {
-        return new HashMap<>(0);
+    default List<SmartSerializer> addSerializers() {
+        return new ArrayList<>(0);
     }
 
     default String setDefaultSerializer() {

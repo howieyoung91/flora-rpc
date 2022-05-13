@@ -5,16 +5,15 @@
 
 package xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder;
 
-import xyz.yanghaoyu.flora.rpc.base.serialize.Deserializer;
-import xyz.yanghaoyu.flora.rpc.base.serialize.Serializer;
+import xyz.yanghaoyu.flora.rpc.base.serialize.SerializeService;
+import xyz.yanghaoyu.flora.rpc.base.serialize.SerializerFactory;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SmartSerializer;
-import xyz.yanghaoyu.flora.rpc.base.serialize.support.KryoSmartSerializer;
+import xyz.yanghaoyu.flora.rpc.base.serialize.support.DefaultSerializeService;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ClientConfigProperties;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ClientConfigurer;
 import xyz.yanghaoyu.flora.rpc.client.config.ClientConfig;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 public class ClientConfigBuilder {
     private ClientConfigurer       configurer;
@@ -30,18 +29,17 @@ public class ClientConfigBuilder {
     }
 
     public ClientConfig build() {
-        Map<String, Serializer>   serializer        = getSerializers();
-        Map<String, Deserializer> deserializers     = getDeserializers();
-        String                    defaultSerializer = getDefaultSerializer();
+        DefaultSerializeService serializer        = getSerializers();
+        String                  defaultSerializer = getDefaultSerializer();
         return new ClientConfig() {
             @Override
-            public Map<String, Serializer> serializers() {
+            public SerializerFactory serializerFactory() {
                 return serializer;
             }
 
             @Override
-            public Map<String, Deserializer> deserializers() {
-                return deserializers;
+            public SerializeService serializeService() {
+                return serializer;
             }
 
             @Override
@@ -51,30 +49,18 @@ public class ClientConfigBuilder {
         };
     }
 
-    private final SmartSerializer kryoSmartSerializer = new KryoSmartSerializer();
+    private DefaultSerializeService serializeService = new DefaultSerializeService();
 
-    public Map<String, Serializer> getSerializers() {
-        Map<String, Serializer> serializers = new HashMap<>();
-
+    public DefaultSerializeService getSerializers() {
         if (configurer != null) {
-            Map<String, Serializer> configurerSerializer = configurer.addSerializers();
-            serializers.putAll(configurerSerializer);
+            List<SmartSerializer> configurerSerializer = configurer.addSerializers();
+            if (configurerSerializer != null) {
+                for (SmartSerializer serializer : configurerSerializer) {
+                    serializeService.addSerializer(serializer);
+                }
+            }
         }
-
-        serializers.put("KRYO", kryoSmartSerializer);
-        return serializers;
-    }
-
-    public Map<String, Deserializer> getDeserializers() {
-        Map<String, Deserializer> serializers = new HashMap<>();
-
-        if (configurer != null) {
-            Map<String, Deserializer> configurerSerializer = configurer.addDeserializers();
-            serializers.putAll(configurerSerializer);
-        }
-
-        serializers.put("KRYO", kryoSmartSerializer);
-        return serializers;
+        return serializeService;
     }
 
     public String getDefaultSerializer() {

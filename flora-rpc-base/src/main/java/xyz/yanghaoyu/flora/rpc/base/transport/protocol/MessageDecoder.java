@@ -11,42 +11,47 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.yanghaoyu.flora.rpc.base.serialize.Deserializer;
+import xyz.yanghaoyu.flora.rpc.base.serialize.SerializerFactory;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcMessage;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestBody;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
 
 import java.util.Arrays;
-import java.util.Map;
-import java.util.stream.Collectors;
 
-/**
- * [0,3]   magic number
- * 4       version
- * 5       message type
- * 6       codec
- * 7       compress
- * [8,11]  request id
- * [12,15] length
- * ...     body
+/*
+  自定义一个 rpc 协议
+
+  0       4         5              6                7               8    11      15
+  +-------+---------+--------------+----------------+---------------+----+--------+
+  | magic | version | message type | serialize type | compress type | id | length |
+  +-------------------------------------------------------------------------------+
+  |                                     body                                      |
+  +-------------------------------------------------------------------------------+
+
+  1. magic              魔数            用于快速判断是否是无效包
+  2. version            版本号          用于协议升级
+  3. message type       消息类型        可能是请求包，响应包，心跳检测请求包，心跳检测响应包
+  4. serialize type     序列化类型
+  5. compress type      body 压缩类型
+  6. id                 报文 id
+  7. length             报文长度
+  8. body               报文数据
  */
 public class MessageDecoder extends LengthFieldBasedFrameDecoder {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageDecoder.class);
 
-    private Map<Byte, Deserializer> deserializers;
+    private SerializerFactory serializerFactory;
 
-    public MessageDecoder(Map<String, Deserializer> deserializers) {
+    public MessageDecoder(SerializerFactory serializerFactory) {
         super(RpcMessage.MAX_FRAME_LENGTH,
                 12, 4,
                 -16, 0
         );
-        this.deserializers = deserializers.entrySet().stream().collect(
-                Collectors.toMap(e -> e.getValue().code(), Map.Entry::getValue)
-        );
+        this.serializerFactory = serializerFactory;
     }
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
-        // LOGGER.info("receive message {}", ctx.channel());
         Object decoded = super.decode(ctx, in);
         if (decoded instanceof ByteBuf) {
             ByteBuf frame = (ByteBuf) decoded;
@@ -61,16 +66,6 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
         return decoded;
     }
 
-    /**
-     * [0,3]   magic number
-     * 4       version
-     * 5       message type
-     * 6       codec
-     * 7       compress
-     * [8,11]  request id
-     * [12,15] length
-     * ...     body
-     */
     private Object decodeFrame(ChannelHandlerContext ctx, ByteBuf in) {
         checkMagicNumber(in);
         checkVersion(in);
@@ -107,21 +102,26 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
         in.readBytes(body);
 
 
-        // request
-        if (messageType == RpcMessage.REQUEST_MESSAGE_TYPE) {
-            return deserializer.deserialize(body, RpcRequestBody.class);
-        }
-        // response
-        else {
-            return deserializer.deserialize(body, RpcResponseBody.class);
+        try {
+            // request
+            if (messageType == RpcMessage.REQUEST_MESSAGE_TYPE) {
+                return deserializer.deserialize(body, RpcRequestBody.class);
+            }
+            // response
+            else {
+                return deserializer.deserialize(body, RpcResponseBody.class);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("fail to decode");
         }
     }
 
     private Deserializer getDeserializer(byte codecType) {
-        Deserializer deserializer = deserializers.get(codecType);
+        Deserializer deserializer = serializerFactory.getDeserializer(codecType);
         if (deserializer == null) {
             LOGGER.warn("unknown deserializer marked by code [{}]", codecType);
-            deserializer = deserializers.get(0);
+            deserializer = serializerFactory.getDeserializer((byte) 0);
         }
         return deserializer;
     }

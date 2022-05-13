@@ -34,8 +34,8 @@ import java.util.concurrent.TimeUnit;
 public class RpcClient {
     private static final Logger logger = LoggerFactory.getLogger(RpcClient.class);
 
-    private final ServiceDiscovery  discovery;
     private final ClientConfig      clientConfig;
+    private final ServiceDiscovery  discovery;
     private final NioEventLoopGroup group     = new NioEventLoopGroup();
     private final Bootstrap         bootstrap = buildBootstrap(group);
 
@@ -121,8 +121,8 @@ public class RpcClient {
                     protected void initChannel(SocketChannel ch) {
                         ChannelPipeline pipeline = ch.pipeline();
                         pipeline.addLast(new IdleStateHandler(0, 5, 0, TimeUnit.SECONDS));
-                        pipeline.addLast(new MessageEncoder(clientConfig.serializers(), clientConfig.defaultSerializer()));
-                        pipeline.addLast(new MessageDecoder(clientConfig.deserializers()));
+                        pipeline.addLast(new MessageEncoder(clientConfig.serializerFactory(), clientConfig.defaultSerializer()));
+                        pipeline.addLast(new MessageDecoder(clientConfig.serializerFactory()));
                         pipeline.addLast(new RpcResponseHandler(waitingRequests));
                     }
                 });

@@ -29,11 +29,9 @@ public class RpcResponseHandler extends ChannelInboundHandlerAdapter {
         this.waitingRequests = waitingRequests;
     }
 
-
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         try {
-            System.out.println("client handle");
             if (msg instanceof RpcResponseBody) {
                 RpcResponseBody   response = (RpcResponseBody) msg;
                 CompletableFuture promise  = waitingRequests.get(response.getRequestId());

@@ -6,15 +6,13 @@
 package xyz.yanghaoyu.flora.rpc.client.config;
 
 
-import xyz.yanghaoyu.flora.rpc.base.serialize.Deserializer;
-import xyz.yanghaoyu.flora.rpc.base.serialize.Serializer;
-
-import java.util.Map;
+import xyz.yanghaoyu.flora.rpc.base.serialize.SerializeService;
+import xyz.yanghaoyu.flora.rpc.base.serialize.SerializerFactory;
 
 public interface ClientConfig {
-    Map<String, Serializer> serializers();
+    SerializerFactory serializerFactory();
 
-    Map<String, Deserializer> deserializers();
+    SerializeService serializeService();
 
     String defaultSerializer();
 }

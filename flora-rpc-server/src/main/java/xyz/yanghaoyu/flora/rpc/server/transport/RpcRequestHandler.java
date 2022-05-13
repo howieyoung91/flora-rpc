@@ -29,8 +29,6 @@ public class RpcRequestHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        System.out.println("server handle");
-
         if (msg instanceof RpcRequestBody) {
             RpcRequestBody reqBody = (RpcRequestBody) msg;
 
@@ -86,7 +84,6 @@ public class RpcRequestHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        logger.error("server catch exception");
         cause.printStackTrace();
         ctx.close();
     }

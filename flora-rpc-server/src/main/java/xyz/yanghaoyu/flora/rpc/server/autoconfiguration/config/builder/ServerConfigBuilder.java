@@ -5,15 +5,15 @@
 
 package xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.builder;
 
-import xyz.yanghaoyu.flora.rpc.base.serialize.Deserializer;
-import xyz.yanghaoyu.flora.rpc.base.serialize.Serializer;
-import xyz.yanghaoyu.flora.rpc.base.serialize.support.KryoSmartSerializer;
+import xyz.yanghaoyu.flora.rpc.base.serialize.SerializeService;
+import xyz.yanghaoyu.flora.rpc.base.serialize.SerializerFactory;
+import xyz.yanghaoyu.flora.rpc.base.serialize.SmartSerializer;
+import xyz.yanghaoyu.flora.rpc.base.serialize.support.DefaultSerializeService;
 import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.ServerConfigProperties;
 import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.ServerConfigurer;
 import xyz.yanghaoyu.flora.rpc.server.config.ServerConfig;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 public class ServerConfigBuilder {
     private ServerConfigurer       configurer;
@@ -29,11 +29,9 @@ public class ServerConfigBuilder {
     }
 
     public ServerConfig build() {
-        Integer                   port              = determinePort();
-        Map<String, Serializer>   serializer        = getSerializers();
-        Map<String, Deserializer> deserializers     = getDeserializers();
-        String                    defaultSerializer = getDefaultSerializer();
-
+        Integer                 port              = determinePort();
+        String                  defaultSerializer = getDefaultSerializer();
+        DefaultSerializeService serializerService = getSerializerService();
         return new ServerConfig() {
             @Override
             public int port() {
@@ -41,13 +39,13 @@ public class ServerConfigBuilder {
             }
 
             @Override
-            public Map<String, Serializer> getSerializers() {
-                return serializer;
+            public SerializerFactory serializerFactory() {
+                return serializerService;
             }
 
             @Override
-            public Map<String, Deserializer> getDeserializers() {
-                return deserializers;
+            public SerializeService serializeService() {
+                return serializerService;
             }
 
             @Override
@@ -71,29 +69,20 @@ public class ServerConfigBuilder {
         return port;
     }
 
-    public Map<String, Serializer> getSerializers() {
-        Map<String, Serializer> serializers = new HashMap<>();
+    private DefaultSerializeService serializeService = new DefaultSerializeService();
 
+    public DefaultSerializeService getSerializerService() {
         if (configurer != null) {
-            Map<String, Serializer> configurerSerializer = configurer.addSerializers();
-            serializers.putAll(configurerSerializer);
+            List<SmartSerializer> configurerSerializer = configurer.addSerializers();
+            if (configurerSerializer != null) {
+                for (SmartSerializer serializer : configurerSerializer) {
+                    serializeService.addSerializer(serializer);
+                }
+            }
         }
-
-        serializers.put("KRYO", new KryoSmartSerializer());
-        return serializers;
+        return serializeService;
     }
 
-    public Map<String, Deserializer> getDeserializers() {
-        Map<String, Deserializer> deserializers = new HashMap<>();
-
-        if (configurer != null) {
-            Map<String, Deserializer> configurerSerializer = configurer.addDeserializers();
-            deserializers.putAll(configurerSerializer);
-        }
-
-        deserializers.put("KRYO", new KryoSmartSerializer());
-        return deserializers;
-    }
 
     public String getDefaultSerializer() {
         String serializer = properties.getSerializer();

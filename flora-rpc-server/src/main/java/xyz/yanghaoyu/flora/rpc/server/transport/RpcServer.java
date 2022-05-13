@@ -55,8 +55,8 @@ public class RpcServer {
                         pipeline.addLast(new IdleStateHandler(
                                 30, 0, 0, TimeUnit.SECONDS)
                         );
-                        pipeline.addLast(new MessageEncoder(serverConfig.getSerializers(), serverConfig.defaultSerializer()));
-                        pipeline.addLast(new MessageDecoder(serverConfig.getDeserializers()));
+                        pipeline.addLast(new MessageEncoder(serverConfig.serializerFactory(), serverConfig.defaultSerializer()));
+                        pipeline.addLast(new MessageDecoder(serverConfig.serializerFactory()));
                         // todo 可以调用服务交给另一个线程完成
                         pipeline.addLast(new RpcRequestHandler(serviceHandler));
                     }

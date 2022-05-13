@@ -5,18 +5,16 @@
 
 package xyz.yanghaoyu.flora.rpc.server.config;
 
-import xyz.yanghaoyu.flora.rpc.base.serialize.Deserializer;
-import xyz.yanghaoyu.flora.rpc.base.serialize.Serializer;
-
-import java.util.Map;
+import xyz.yanghaoyu.flora.rpc.base.serialize.SerializeService;
+import xyz.yanghaoyu.flora.rpc.base.serialize.SerializerFactory;
 
 public interface ServerConfig {
 
     int port();
 
-    Map<String, Serializer> getSerializers();
+    SerializerFactory serializerFactory();
 
-    Map<String, Deserializer> getDeserializers();
+    SerializeService serializeService();
 
     String defaultSerializer();
 

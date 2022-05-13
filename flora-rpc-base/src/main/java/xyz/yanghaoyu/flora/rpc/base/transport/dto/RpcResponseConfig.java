@@ -6,12 +6,8 @@
 package xyz.yanghaoyu.flora.rpc.base.transport.dto;
 
 public class RpcResponseConfig {
-    // private String  requestId;
-    // private Integer code;
-    // private String  message;
     private String serializer;
     private Object data;
-
 
     public String getSerializer() {
         return serializer;

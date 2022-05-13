@@ -11,9 +11,9 @@ import io.netty.handler.codec.MessageToByteEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.yanghaoyu.flora.rpc.base.serialize.Serializer;
+import xyz.yanghaoyu.flora.rpc.base.serialize.SerializerFactory;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcMessage;
 
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /*
@@ -38,12 +38,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageEncoder.class);
 
-    private       AtomicInteger           ID_GENERATOR = new AtomicInteger(0);
-    private final Map<String, Serializer> serializers;
-    private final String                  defaultSerializer;
+    private AtomicInteger ID_GENERATOR = new AtomicInteger(0);
 
-    public MessageEncoder(Map<String, Serializer> serializers, String defaultSerializer) {
-        this.serializers = serializers;
+    private final SerializerFactory serializerFactory;
+    private final String            defaultSerializer;
+
+    public MessageEncoder(SerializerFactory serializerFactory, String defaultSerializer) {
+        this.serializerFactory = serializerFactory;
         this.defaultSerializer = defaultSerializer;
     }
 
@@ -70,7 +71,11 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
         byte[] bodyData = null;
         if (messageType == RpcMessage.REQUEST_MESSAGE_TYPE || messageType == RpcMessage.RESPONSE_MESSAGE_TYPE) {
             Object body = message.getBody();
-            bodyData = serializer.serialize(body);
+            try {
+                bodyData = serializer.serialize(body);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         } else if (messageType == RpcMessage.HEARTBEAT_REQUEST_MESSAGE_TYPE) {
             // client
             LOGGER.info("ping {}", context.channel().remoteAddress());
@@ -104,7 +109,7 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
             return getDefaultSerializer();
         }
 
-        Serializer serializer = serializers.get(serializerName);
+        Serializer serializer = serializerFactory.getSerializer(serializerName);
 
         if (serializer == null) {
             LOGGER.warn("unknown serializer [{}]", serializerName);
@@ -114,10 +119,11 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
     }
 
     private Serializer getDefaultSerializer() {
-        Serializer serializer = serializers.get(defaultSerializer);
+        Serializer serializer = serializerFactory.getSerializer(defaultSerializer);
         if (serializer == null) {
-            LOGGER.warn("unknown serializer [{}]", defaultSerializer);
+            LOGGER.warn("unknown default serializer [{}]", defaultSerializer);
+            return serializerFactory.getSerializer("KRYO");
         }
-        return serializers.get("KRYO");
+        return serializer;
     }
 }
