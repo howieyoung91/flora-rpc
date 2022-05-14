@@ -14,6 +14,8 @@ import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xyz.yanghaoyu.flora.rpc.base.compress.support.NoCompressSmartCompressor;
+import xyz.yanghaoyu.flora.rpc.base.serialize.support.KryoSmartSerializer;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcMessage;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
 
@@ -57,8 +59,11 @@ public class RpcResponseHandler extends ChannelInboundHandlerAdapter {
             // 发送 ping 包
             if (state == IdleState.WRITER_IDLE) {
                 RpcMessage<String> pingMessage = RpcMessage.of(RpcMessage.HEARTBEAT_REQUEST_MESSAGE_TYPE, null);
-                pingMessage.setSerializer("KRYO");
-                pingMessage.setCompress((byte) 0);
+                // todo set id
+
+                
+                pingMessage.setSerializer(KryoSmartSerializer.NAME);
+                pingMessage.setCompressor(NoCompressSmartCompressor.NAME);
 
                 Channel channel = ctx.channel();
                 if (channel.isWritable()) {

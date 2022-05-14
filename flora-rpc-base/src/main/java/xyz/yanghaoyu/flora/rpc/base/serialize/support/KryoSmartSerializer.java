@@ -5,17 +5,20 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import xyz.yanghaoyu.flora.rpc.base.exception.SerializeException;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SmartSerializer;
-import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestConfig;
+import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestBody;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
 public class KryoSmartSerializer implements SmartSerializer {
+    public static final int    CODE = -1;
+    public static final String NAME = "KRYO";
+    
     // 使用 ThreadLocal 隔离一下线程
     private final ThreadLocal<Kryo> KRYO = ThreadLocal.withInitial(() -> {
         Kryo kryo = new Kryo();
-        kryo.register(RpcRequestConfig.class);
+        kryo.register(RpcRequestBody.class);
         kryo.register(RpcResponseBody.class);
         return kryo;
     });
@@ -51,11 +54,11 @@ public class KryoSmartSerializer implements SmartSerializer {
 
     @Override
     public byte code() {
-        return -1;
+        return CODE;
     }
 
     @Override
     public String name() {
-        return "KRYO";
+        return NAME;
     }
 }

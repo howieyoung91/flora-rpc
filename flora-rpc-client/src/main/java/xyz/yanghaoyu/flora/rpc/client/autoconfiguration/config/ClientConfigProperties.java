@@ -14,11 +14,13 @@ public class ClientConfigProperties {
     public static final String BEAN_NAME = "flora-rpc-client$ClientConfigProperties$";
 
     private String serializer;
-
+    private String compressor;
 
     public String getSerializer() {
         return serializer;
     }
 
-
+    public String getCompressor() {
+        return compressor;
+    }
 }

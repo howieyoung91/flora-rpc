@@ -6,15 +6,15 @@
 package xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config;
 
 public interface ZooKeeperConfigurer {
-    default String getZooKeeperAddress() {
+    default String zooKeeperAddress() {
         return null;
     }
 
-    default Integer getBaseSleepTime() {
+    default Integer baseSleepTime() {
         return null;
     }
 
-    default Integer getMaxRetries() {
+    default Integer maxRetries() {
         return null;
     }
 }

@@ -9,14 +9,14 @@ import xyz.yanghaoyu.flora.annotation.Bean;
 import xyz.yanghaoyu.flora.annotation.Configuration;
 import xyz.yanghaoyu.flora.annotation.Enable;
 import xyz.yanghaoyu.flora.annotation.Inject;
-import xyz.yanghaoyu.flora.rpc.base.service.ServiceHandler;
+import xyz.yanghaoyu.flora.rpc.server.service.ServiceHandler;
 import xyz.yanghaoyu.flora.rpc.server.service.ServiceRegistry;
-import xyz.yanghaoyu.flora.rpc.base.service.support.ZooKeeper;
+import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.ZooKeeper;
 import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.ZooKeeperConfigProperties;
 import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.ZooKeeperConfigurer;
 import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.builder.ZooKeeperBuilderFactory;
-import xyz.yanghaoyu.flora.rpc.server.service.DefaultServiceHandler;
-import xyz.yanghaoyu.flora.rpc.server.service.ZooKeeperServiceRegistry;
+import xyz.yanghaoyu.flora.rpc.server.service.support.DefaultServiceHandler;
+import xyz.yanghaoyu.flora.rpc.server.service.support.ZooKeeperServiceRegistry;
 
 @Configuration
 @Enable.ComponentScan(basePackages = "xyz.yanghaoyu.flora.rpc.server.autoconfiguration")

@@ -3,17 +3,17 @@
  * Copyright ©2022-2022 杨浩宇，保留所有权利。
  */
 
-package xyz.yanghaoyu.flora.rpc.client.discovery;
+package xyz.yanghaoyu.flora.rpc.client.service;
 
+import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
-import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceReferenceConfig;
-import xyz.yanghaoyu.flora.rpc.base.service.support.ZooKeeper;
+import xyz.yanghaoyu.flora.rpc.client.annotation.ServiceReferenceAttribute;
+import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.ZooKeeper;
 import xyz.yanghaoyu.flora.rpc.base.util.ServiceUtil;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcServiceReference;
 import xyz.yanghaoyu.flora.rpc.client.config.DiscoveryConfig;
-import xyz.yanghaoyu.flora.rpc.base.service.ServiceNotFoundException;
+import xyz.yanghaoyu.flora.rpc.base.exception.ServiceNotFoundException;
 import xyz.yanghaoyu.flora.rpc.client.strategy.loadbalance.ServiceLoadBalance;
 
 import java.net.InetSocketAddress;
@@ -41,7 +41,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
     }
 
     @Override
-    public InetSocketAddress discover(ServiceReferenceConfig serviceConfig)
+    public InetSocketAddress discover(ServiceReferenceAttribute serviceConfig)
             throws ServiceNotFoundException {
         String       serviceName = serviceConfig.getServiceName();
         String       namespace   = getNamespace(serviceConfig);
@@ -58,7 +58,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
         return ServiceUtil.buildAddress(addressString);
     }
 
-    private String getNamespace(ServiceReferenceConfig serviceConfig) {
+    private String getNamespace(ServiceReferenceAttribute serviceConfig) {
         String namespace = serviceConfig.getNamespace();
         if (serviceConfig.getNamespace().equals(RpcServiceReference.EMPTY_NAMESPACE)) {
             namespace = config.getNamespace();
@@ -78,8 +78,12 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
 
     private void cacheService(String servicePath, List<String> nodes) {
         cache.put(servicePath, nodes);
+        // 向 zookeeper 注册监听器，保证数据的实时一致性
         zooKeeper.registerPathChildrenWatcher(servicePath, event -> {
-            cache.put(servicePath, zooKeeper.getChildrenNodes(servicePath));
+            // 结点被更新
+            if (event.getType() == PathChildrenCacheEvent.Type.CHILD_UPDATED) {
+                cache.put(servicePath, zooKeeper.getChildrenNodes(servicePath));
+            }
         });
     }
 }

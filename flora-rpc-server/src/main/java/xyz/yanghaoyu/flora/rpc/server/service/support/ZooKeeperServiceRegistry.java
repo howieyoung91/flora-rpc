@@ -3,21 +3,22 @@
  * Copyright ©2022-2022 杨浩宇，保留所有权利。
  */
 
-package xyz.yanghaoyu.flora.rpc.server.service;
+package xyz.yanghaoyu.flora.rpc.server.service.support;
 
 import xyz.yanghaoyu.flora.rpc.base.exception.ServiceException;
-import xyz.yanghaoyu.flora.rpc.server.config.Service;
-import xyz.yanghaoyu.flora.rpc.server.config.ServiceConfig;
-import xyz.yanghaoyu.flora.rpc.base.service.support.ZooKeeper;
+import xyz.yanghaoyu.flora.rpc.server.annotation.RpcServiceAttribute;
+import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.ZooKeeper;
 import xyz.yanghaoyu.flora.rpc.base.util.ServiceUtil;
+import xyz.yanghaoyu.flora.rpc.server.service.Service;
+import xyz.yanghaoyu.flora.rpc.server.service.ServiceRegistry;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ZooKeeperServiceRegistry implements ServiceRegistry {
-    private ZooKeeper            zooKeeper;
-    private Map<String, Service> registeredServices = new ConcurrentHashMap<>();
+    private final ZooKeeper            zooKeeper;
+    private final Map<String, Service> registeredServices = new ConcurrentHashMap<>();
 
     public ZooKeeperServiceRegistry(ZooKeeper zooKeeper) {
         this.zooKeeper = zooKeeper;
@@ -25,14 +26,13 @@ public class ZooKeeperServiceRegistry implements ServiceRegistry {
 
     @Override
     public void register(InetSocketAddress address, Service service) {
-        ServiceConfig serviceConfig = service.getServiceConfig();
-        String        namespace     = serviceConfig.getNamespace();
-        String        serviceName   = serviceConfig.getServiceName();
-        String        path          = ServiceUtil.buildServicePathWithAddress(namespace, serviceName, address);
+        RpcServiceAttribute serviceConfig = service.getServiceConfig();
+        String              namespace     = serviceConfig.getNamespace();
+        String              serviceName   = serviceConfig.getServiceName();
+        String              path          = ServiceUtil.buildServicePathWithAddress(namespace, serviceName, address);
 
         zooKeeper.createPersistentNode(path);
         registeredServices.put(serviceName, service);
-        // todo remove service
     }
 
     @Override

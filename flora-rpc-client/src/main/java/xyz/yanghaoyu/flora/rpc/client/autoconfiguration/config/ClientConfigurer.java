@@ -5,17 +5,25 @@
 
 package xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config;
 
+import xyz.yanghaoyu.flora.rpc.base.compress.SmartCompressor;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SmartSerializer;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public interface ClientConfigurer {
     default List<SmartSerializer> addSerializers() {
-        return new ArrayList<>(0);
+        return null;
+    }
+
+    default List<SmartCompressor> addCompressors() {
+        return null;
     }
 
     default String setDefaultSerializer() {
+        return null;
+    }
+
+    default String setDefaultCompressor() {
         return null;
     }
 }

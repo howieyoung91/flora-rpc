@@ -3,21 +3,18 @@
  * Copyright ©2022-2022 杨浩宇，保留所有权利。
  */
 
-package xyz.yanghaoyu.flora.rpc.base.service.config;
+package xyz.yanghaoyu.flora.rpc.client.annotation;
 
 import xyz.yanghaoyu.flora.rpc.base.util.ServiceUtil;
 
-public class ServiceReferenceConfig {
+public class ServiceReferenceAttribute {
     private String serviceInterfaceName;
     private String group;
     private String version;
     private String namespace;
     private String serviceName;
 
-    public ServiceReferenceConfig() {
-    }
-
-    public ServiceReferenceConfig(String namespace, String serviceInterfaceName, String group, String version) {
+    public ServiceReferenceAttribute(String namespace, String serviceInterfaceName, String group, String version) {
         this.namespace = namespace;
         this.serviceInterfaceName = serviceInterfaceName;
         this.group = group;

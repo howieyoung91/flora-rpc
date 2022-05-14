@@ -8,7 +8,7 @@ package xyz.yanghaoyu.flora.rpc.client.autoconfiguration;
 import xyz.yanghaoyu.flora.annotation.Bean;
 import xyz.yanghaoyu.flora.annotation.Configuration;
 import xyz.yanghaoyu.flora.annotation.Inject;
-import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
+import xyz.yanghaoyu.flora.rpc.client.service.ServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ClientConfigProperties;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ClientConfigurer;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder.ClientConfigBuilder;

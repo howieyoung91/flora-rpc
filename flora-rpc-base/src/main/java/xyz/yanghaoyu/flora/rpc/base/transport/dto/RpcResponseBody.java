@@ -8,10 +8,10 @@ package xyz.yanghaoyu.flora.rpc.base.transport.dto;
 import java.io.Serializable;
 
 public class RpcResponseBody implements Serializable {
-    private String  requestId;
-    private Integer code;
-    private String  message;
-    private Object  data;
+    private String  requestId;  // 对应的请求 id
+    private Integer code;       // 错误码
+    private String  message;    // 额外的消息
+    private Object  data;       // service 处理结果
 
     public Integer getCode() {
         return code;

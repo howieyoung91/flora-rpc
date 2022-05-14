@@ -5,13 +5,13 @@
 
 package xyz.yanghaoyu.flora.rpc.client.strategy.loadbalance;
 
-import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceReferenceConfig;
+import xyz.yanghaoyu.flora.rpc.client.annotation.ServiceReferenceAttribute;
 
 import java.util.List;
 
 public abstract class AbstractServiceLoadBalance implements ServiceLoadBalance {
     @Override
-    public String select(ServiceReferenceConfig serviceConfig, List<String> serviceAddresses) {
+    public String select(ServiceReferenceAttribute serviceConfig, List<String> serviceAddresses) {
         if (serviceAddresses.isEmpty()) {
             return null;
         }
@@ -21,5 +21,5 @@ public abstract class AbstractServiceLoadBalance implements ServiceLoadBalance {
         return doSelect(serviceConfig, serviceAddresses);
     }
 
-    protected abstract String doSelect(ServiceReferenceConfig serviceConfig, List<String> serviceAddresses);
+    protected abstract String doSelect(ServiceReferenceAttribute serviceConfig, List<String> serviceAddresses);
 }

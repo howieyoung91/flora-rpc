@@ -9,5 +9,7 @@ public class DefaultSerializeService extends AbstractSerializeService {
     public DefaultSerializeService() {
         addSerializer(new KryoSmartSerializer());
         addSerializer(new JsonSmartSerializer());
+        addSerializer(new HessianSmartSerializer());
+        addSerializer(new ProtostuffSerializer());
     }
 }

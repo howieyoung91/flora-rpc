@@ -6,10 +6,13 @@
 package xyz.yanghaoyu.flora.rpc.base.transport.protocol;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xyz.yanghaoyu.flora.rpc.base.compress.Compressor;
+import xyz.yanghaoyu.flora.rpc.base.compress.CompressorFactory;
 import xyz.yanghaoyu.flora.rpc.base.serialize.Serializer;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SerializerFactory;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcMessage;
@@ -35,17 +38,46 @@ import java.util.concurrent.atomic.AtomicInteger;
   7. length             报文长度
   8. body               报文数据
  */
+@ChannelHandler.Sharable
 public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MessageEncoder.class);
+    private static final Logger LOGGER                         = LoggerFactory.getLogger(MessageEncoder.class);
+    private static final String SYSTEM_DEFAULT_SERIALIZER_NAME = "KRYO";
+    private static final String SYSTEM_DEFAULT_COMPRESSOR_NAME = "NOCOMPRESS";
 
     private AtomicInteger ID_GENERATOR = new AtomicInteger(0);
 
-    private final SerializerFactory serializerFactory;
-    private final String            defaultSerializer;
+    private SerializerFactory serializerFactory;
+    private Serializer        defaultSerializer;
+    private CompressorFactory compressorFactory;
+    private Compressor        defaultCompressor;
 
-    public MessageEncoder(SerializerFactory serializerFactory, String defaultSerializer) {
+    public MessageEncoder(
+            SerializerFactory serializerFactory, String defaultSerializerName,
+            CompressorFactory compressorFactory, String defaultCompressorName
+    ) {
         this.serializerFactory = serializerFactory;
-        this.defaultSerializer = defaultSerializer;
+
+        this.compressorFactory = compressorFactory;
+
+        if (defaultSerializerName == null) {
+            this.defaultSerializer = serializerFactory.getSerializer(SYSTEM_DEFAULT_SERIALIZER_NAME);
+        } else {
+            this.defaultSerializer = serializerFactory.getSerializer(defaultSerializerName);
+            if (this.defaultSerializer == null) {
+                LOGGER.warn("unknown default serializer [{}]", defaultSerializerName);
+                this.defaultSerializer = serializerFactory.getSerializer(SYSTEM_DEFAULT_SERIALIZER_NAME);
+            }
+        }
+
+        if (defaultCompressorName == null) {
+            this.defaultCompressor = compressorFactory.getCompressor(SYSTEM_DEFAULT_COMPRESSOR_NAME);
+        } else {
+            this.defaultCompressor = compressorFactory.getCompressor(defaultCompressorName);
+            if (this.defaultCompressor == null) {
+                LOGGER.warn("unknown default compressor [{}]", defaultCompressorName);
+                this.defaultCompressor = compressorFactory.getCompressor(SYSTEM_DEFAULT_COMPRESSOR_NAME);
+            }
+        }
     }
 
     @Override
@@ -53,44 +85,25 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
         byteBuf.writeBytes(RpcMessage.MAGIC_NUMBER);
         byteBuf.writeByte(RpcMessage.VERSION);
 
-        byte messageType = message.getMessageType();
-        byteBuf.writeByte(message.getMessageType());
+        byteBuf.writeByte(message.getType());
 
-
-        Serializer serializer = getSerializer(message.getSerializer());
+        final Serializer serializer = getSerializer(message.getSerializer());
         byteBuf.writeByte(serializer.code());
 
-        byteBuf.writeByte(message.getCompress());
+        final Compressor compressor = getCompressor(message.getCompressor());
+        byteBuf.writeByte(compressor.code());
+
         byteBuf.writeInt(ID_GENERATOR.getAndIncrement());
 
+        // mark length field index
         byteBuf.markWriterIndex();
         // skip length field
         byteBuf.writerIndex(byteBuf.writerIndex() + 4);
 
-        int    length   = RpcMessage.HEADER_LENGTH;
-        byte[] bodyData = null;
-        if (messageType == RpcMessage.REQUEST_MESSAGE_TYPE || messageType == RpcMessage.RESPONSE_MESSAGE_TYPE) {
-            Object body = message.getBody();
-            try {
-                bodyData = serializer.serialize(body);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else if (messageType == RpcMessage.HEARTBEAT_REQUEST_MESSAGE_TYPE) {
-            // client
-            LOGGER.info("ping {}", context.channel().remoteAddress());
-        } else {
-            // server RpcMessage.HEARTBEAT_RESPONSE_MESSAGE_TYPE
-            LOGGER.info("pong {}", context.channel().remoteAddress());
-        }
+        byte[] bodyData = doSerialize(serializer, message, context);
+        int    length   = writeBody(byteBuf, bodyData, compressor);
 
-        if (bodyData != null) {
-            length += bodyData.length;
-            byteBuf.writeBytes(bodyData);
-        }
-
-
-        int end = byteBuf.writerIndex();
+        final int end = byteBuf.writerIndex();
 
         byteBuf.resetWriterIndex();
         byteBuf.writeInt(length);
@@ -98,32 +111,61 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
         byteBuf.writerIndex(end);
     }
 
-    private boolean isCommonMessage(byte messageType) {
-        return messageType != RpcMessage.HEARTBEAT_REQUEST_MESSAGE_TYPE
-               && messageType != RpcMessage.HEARTBEAT_RESPONSE_MESSAGE_TYPE;
+
+    private byte[] doSerialize(Serializer serializer, RpcMessage message, ChannelHandlerContext context) {
+        switch (message.getType()) {
+            case RpcMessage.REQUEST_MESSAGE_TYPE:
+            case RpcMessage.RESPONSE_MESSAGE_TYPE: {
+                return serializer.serialize(message.getBody());
+            }
+            case RpcMessage.HEARTBEAT_REQUEST_MESSAGE_TYPE: {
+                LOGGER.info("ping {}", context.channel().remoteAddress());
+                break;
+            }
+            case RpcMessage.HEARTBEAT_RESPONSE_MESSAGE_TYPE: {
+                LOGGER.info("pong {}", context.channel().remoteAddress());
+                break;
+            }
+        }
+        return null;
     }
 
+    private int writeBody(ByteBuf byteBuf, byte[] bodyData, Compressor compressor) {
+        int length = RpcMessage.HEADER_LENGTH;
+        // 写入 body
+        if (bodyData != null) {
+            // compress
+            bodyData = compressor.compress(bodyData);
+
+            length += bodyData.length;
+            byteBuf.writeBytes(bodyData);
+        }
+        return length;
+    }
 
     private Serializer getSerializer(String serializerName) {
         if (serializerName == null) {
-            return getDefaultSerializer();
+            return defaultSerializer;
         }
 
         Serializer serializer = serializerFactory.getSerializer(serializerName);
-
         if (serializer == null) {
             LOGGER.warn("unknown serializer [{}]", serializerName);
-            return getDefaultSerializer();
+            return defaultSerializer;
         }
         return serializer;
     }
 
-    private Serializer getDefaultSerializer() {
-        Serializer serializer = serializerFactory.getSerializer(defaultSerializer);
-        if (serializer == null) {
-            LOGGER.warn("unknown default serializer [{}]", defaultSerializer);
-            return serializerFactory.getSerializer("KRYO");
+
+    private Compressor getCompressor(String compressorName) {
+        if (compressorName == null) {
+            return defaultCompressor;
         }
-        return serializer;
+        Compressor compressor = compressorFactory.getCompressor(compressorName);
+        if (compressor == null) {
+            LOGGER.warn("unknown compressor [{}]", defaultCompressor);
+            return defaultCompressor;
+        }
+        return compressor;
     }
 }

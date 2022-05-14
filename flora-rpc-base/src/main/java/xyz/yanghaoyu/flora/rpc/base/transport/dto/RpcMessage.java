@@ -25,23 +25,18 @@ public class RpcMessage<T> {
         return message;
     }
 
-    // 消息类型
-    private byte   messageType;
-    // 序列化类型
-    private String serializer;
-    // 压缩类型
-    private byte   compress;
-    // 请求 id
-    private int    id;
-    // 具体数据
-    private T      body;
+    private byte   type; // 消息类型
+    private String serializer;  // 序列化类型
+    private String compressor;  // 压缩类型
+    private int    id;          // 消息 id
+    private T      body;        // 请求体或响应体
 
-    public byte getMessageType() {
-        return messageType;
+    public byte getType() {
+        return type;
     }
 
     public void setType(byte messageType) {
-        this.messageType = messageType;
+        this.type = messageType;
     }
 
     public String getSerializer() {
@@ -52,12 +47,12 @@ public class RpcMessage<T> {
         this.serializer = serializer;
     }
 
-    public byte getCompress() {
-        return compress;
+    public String getCompressor() {
+        return compressor;
     }
 
-    public void setCompress(byte compress) {
-        this.compress = compress;
+    public void setCompressor(String compressor) {
+        this.compressor = compressor;
     }
 
     public int getId() {
@@ -79,9 +74,9 @@ public class RpcMessage<T> {
     @Override
     public String toString() {
         return "RpcMessage{" +
-               "messageType=" + messageType +
+               "messageType=" + type +
                ", codec=" + serializer +
-               ", compress=" + compress +
+               ", compress=" + compressor +
                ", id=" + id +
                ", data=" + body +
                '}';

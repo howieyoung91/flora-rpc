@@ -12,11 +12,10 @@ import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xyz.yanghaoyu.flora.rpc.base.service.ServiceHandler;
+import xyz.yanghaoyu.flora.rpc.server.service.ServiceHandler;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcMessage;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestBody;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
-import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseConfig;
 
 public class RpcRequestHandler extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LoggerFactory.getLogger(RpcRequestHandler.class);
@@ -37,7 +36,7 @@ public class RpcRequestHandler extends ChannelInboundHandlerAdapter {
             RpcResponseConfig respConfig = serviceHandler.handle(reqBody);
 
             message.setSerializer(respConfig.getSerializer());
-            message.setCompress((byte) 0);
+            message.setCompressor(respConfig.getCompressor());
             message.setType(RpcMessage.RESPONSE_MESSAGE_TYPE);
 
             message.setBody(buildResponseBody(reqBody.getId(), respConfig));
@@ -72,13 +71,13 @@ public class RpcRequestHandler extends ChannelInboundHandlerAdapter {
     }
 
 
-    private RpcResponseBody buildResponseBody(String reqId, RpcResponseConfig response) {
-        RpcResponseBody resp = new RpcResponseBody();
-        resp.setMessage("ok");
-        resp.setCode(200);
-        resp.setRequestId(reqId);
-        resp.setData(response.getData());
-        return resp;
+    private RpcResponseBody buildResponseBody(String reqId, RpcResponseConfig respConfig) {
+        RpcResponseBody respBody = new RpcResponseBody();
+        respBody.setMessage("ok");
+        respBody.setCode(200);
+        respBody.setRequestId(reqId);
+        respBody.setData(respConfig.getData());
+        return respBody;
     }
 
 

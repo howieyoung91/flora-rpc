@@ -5,6 +5,10 @@
 
 package xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.builder;
 
+import xyz.yanghaoyu.flora.rpc.base.compress.CompressorFactory;
+import xyz.yanghaoyu.flora.rpc.base.compress.SmartCompressor;
+import xyz.yanghaoyu.flora.rpc.base.compress.support.DefaultCompressorService;
+import xyz.yanghaoyu.flora.rpc.base.exception.RpcServerException;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SerializeService;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SerializerFactory;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SmartSerializer;
@@ -29,9 +33,11 @@ public class ServerConfigBuilder {
     }
 
     public ServerConfig build() {
-        Integer                 port              = determinePort();
-        String                  defaultSerializer = getDefaultSerializer();
-        DefaultSerializeService serializerService = getSerializerService();
+        Integer                  port              = determinePort();
+        String                   defaultSerializer = getDefaultSerializer();
+        DefaultSerializeService  serializerService = getSerializerService();
+        String                   defaultCompressor = getDefaultCompressor();
+        DefaultCompressorService compressorService = getCompressorService();
         return new ServerConfig() {
             @Override
             public int port() {
@@ -51,6 +57,21 @@ public class ServerConfigBuilder {
             @Override
             public String defaultSerializer() {
                 return defaultSerializer;
+            }
+
+            @Override
+            public CompressorFactory compressorFactory() {
+                return compressorService;
+            }
+
+            @Override
+            public CompressorFactory compressorService() {
+                return compressorService;
+            }
+
+            @Override
+            public String defaultCompressor() {
+                return defaultCompressor;
             }
         };
     }
@@ -76,6 +97,9 @@ public class ServerConfigBuilder {
             List<SmartSerializer> configurerSerializer = configurer.addSerializers();
             if (configurerSerializer != null) {
                 for (SmartSerializer serializer : configurerSerializer) {
+                    if (serializeService.containsSerializer(serializer.name())) {
+                        throw new RpcServerException("fail to build server config, cause: smart serializer [" + serializer.name() + "] has already existed!");
+                    }
                     serializeService.addSerializer(serializer);
                 }
             }
@@ -96,5 +120,36 @@ public class ServerConfigBuilder {
             serializer = "KRYO";
         }
         return serializer;
+    }
+
+    private DefaultCompressorService compressorService = new DefaultCompressorService();
+
+    public DefaultCompressorService getCompressorService() {
+        if (configurer != null) {
+            List<SmartCompressor> compressors = configurer.addCompressors();
+            if (compressors != null) {
+                for (SmartCompressor compressor : compressors) {
+                    if (compressorService.containsCompressor(compressor.name())) {
+                        throw new RpcServerException("fail to build server config, cause: smart compressor [" + compressor.name() + "] has already existed!");
+                    }
+                    compressorService.addCompressor(compressor);
+                }
+            }
+        }
+        return compressorService;
+    }
+
+    public String getDefaultCompressor() {
+        String compressor = properties.getCompressor();
+        if (configurer != null) {
+            String compressorByConfigurer = configurer.setDefaultCompressor();
+            if (compressor != null) {
+                compressor = compressorByConfigurer;
+            }
+        }
+        if (compressor == null) {
+            compressor = "NOCOMPRESS";
+        }
+        return compressor;
     }
 }

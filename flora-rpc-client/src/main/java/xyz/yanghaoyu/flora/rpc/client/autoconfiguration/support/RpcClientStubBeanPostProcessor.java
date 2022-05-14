@@ -14,7 +14,7 @@ import xyz.yanghaoyu.flora.core.beans.factory.config.SmartInstantiationAwareBean
 import xyz.yanghaoyu.flora.exception.BeansException;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcRequest;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcServiceReference;
-import xyz.yanghaoyu.flora.rpc.client.config.RpcRequestAnnotationConfig;
+import xyz.yanghaoyu.flora.rpc.client.annotation.RpcRequestAttribute;
 import xyz.yanghaoyu.flora.rpc.client.proxy.ServiceReferenceProxyFactory;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
 import xyz.yanghaoyu.flora.rpc.client.util.RpcServiceClientUtil;
@@ -48,15 +48,10 @@ public class RpcClientStubBeanPostProcessor
                 initClientIfNecessary();
 
                 // handler @RpcRequest
-                RpcRequest                 rpcRequestAnn    = field.getAnnotation(RpcRequest.class);
-                RpcRequestAnnotationConfig rpcRequestConfig = getRequestAnnotationConfig(rpcRequestAnn);
+                RpcRequest          rpcRequestAnn    = field.getAnnotation(RpcRequest.class);
+                RpcRequestAttribute rpcRequestConfig = getRequestAnnotationConfig(rpcRequestAnn);
 
-
-                Object proxy = proxyFactory.getProxy(
-                        fieldClass, rpcRequestConfig,
-                        RpcServiceClientUtil.buildServiceReferenceConfig(rpcServiceReferenceAnn)
-                );
-
+                Object proxy = proxyFactory.getProxy(fieldClass, rpcRequestConfig, RpcServiceClientUtil.buildServiceReferenceAttribute(rpcServiceReferenceAnn));
 
                 field.setAccessible(true);
                 // inject
@@ -68,13 +63,13 @@ public class RpcClientStubBeanPostProcessor
         return null;
     }
 
-    private RpcRequestAnnotationConfig getRequestAnnotationConfig(RpcRequest rpcRequestAnn) {
-        RpcRequestAnnotationConfig rpcRequestConfig;
+    private RpcRequestAttribute getRequestAnnotationConfig(RpcRequest rpcRequestAnn) {
+        RpcRequestAttribute rpcRequestConfig;
         if (rpcRequestAnn == null) {
             return null;
         }
 
-        rpcRequestConfig = RpcServiceClientUtil.buildRpcRequestConfig(rpcRequestAnn);
+        rpcRequestConfig = RpcServiceClientUtil.buildRpcRequestAttribute(rpcRequestAnn);
         return rpcRequestConfig;
     }
 

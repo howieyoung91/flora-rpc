@@ -8,11 +8,11 @@ package xyz.yanghaoyu.flora.rpc.client.proxy;
 import cn.hutool.core.lang.Snowflake;
 import cn.hutool.core.util.IdUtil;
 import xyz.yanghaoyu.flora.rpc.base.exception.RpcClientException;
-import xyz.yanghaoyu.flora.rpc.base.service.ServiceNotFoundException;
-import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceReferenceConfig;
-import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestConfig;
+import xyz.yanghaoyu.flora.rpc.base.exception.ServiceNotFoundException;
+import xyz.yanghaoyu.flora.rpc.client.annotation.ServiceReferenceAttribute;
+import xyz.yanghaoyu.flora.rpc.client.transport.RpcRequestConfig;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
-import xyz.yanghaoyu.flora.rpc.client.config.RpcRequestAnnotationConfig;
+import xyz.yanghaoyu.flora.rpc.client.annotation.RpcRequestAttribute;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
 
 import java.lang.reflect.InvocationHandler;
@@ -26,10 +26,10 @@ public class ServiceReferenceProxy implements InvocationHandler {
             IdUtil.getSnowflake(0, 0);
 
     private RpcClient                  rpcClient;
-    private ServiceReferenceConfig     serviceReferenceConfig;
-    private RpcRequestAnnotationConfig requestConfig;
+    private ServiceReferenceAttribute serviceReferenceConfig;
+    private RpcRequestAttribute       requestConfig;
 
-    public ServiceReferenceProxy(RpcClient rpcClient, ServiceReferenceConfig serviceReferenceConfig, RpcRequestAnnotationConfig requestConfig) {
+    public ServiceReferenceProxy(RpcClient rpcClient, ServiceReferenceAttribute serviceReferenceConfig, RpcRequestAttribute requestConfig) {
         this.rpcClient = rpcClient;
         this.serviceReferenceConfig = serviceReferenceConfig;
         this.requestConfig = requestConfig;
@@ -45,7 +45,7 @@ public class ServiceReferenceProxy implements InvocationHandler {
     }
 
     private Object request(Object proxy, Method method, Object[] args) throws InterruptedException, ExecutionException {
-        RpcRequestConfig reqConfig = getRequest(proxy, method, args);
+        RpcRequestConfig reqConfig = getRpcRequestConfig(method, args);
 
         CompletableFuture<RpcResponseBody> promise;
 
@@ -75,19 +75,19 @@ public class ServiceReferenceProxy implements InvocationHandler {
         }
     }
 
-    private RpcRequestConfig getRequest(Object proxy, Method method, Object[] args) {
-        RpcRequestConfig request = new RpcRequestConfig();
+    private RpcRequestConfig getRpcRequestConfig(Method method, Object[] args) {
+        RpcRequestConfig reqConfig = new RpcRequestConfig();
 
         // service reference config
-        request.setMethodName(method.getName());
-        request.setParamTypes(method.getParameterTypes());
-        request.setParams(args);
-        request.setServiceReferenceConfig(serviceReferenceConfig);
-        request.setId(snowflake.nextIdStr());
+        reqConfig.setMethodName(method.getName());
+        reqConfig.setParamTypes(method.getParameterTypes());
+        reqConfig.setParams(args);
+        reqConfig.setServiceReferenceConfig(serviceReferenceConfig);
+        reqConfig.setId(snowflake.nextIdStr());
 
-        applyRpcRequestAnnotationConfig(request);
+        applyRpcRequestAnnotationConfig(reqConfig);
 
-        return request;
+        return reqConfig;
     }
 
     private void applyRpcRequestAnnotationConfig(RpcRequestConfig request) {
@@ -95,7 +95,8 @@ public class ServiceReferenceProxy implements InvocationHandler {
             return;
         }
 
-        request.setSerializerName(requestConfig.getSerializerName());
+        request.setCompressor(requestConfig.getCompressorName());
+        request.setSerializer(requestConfig.getSerializerName());
     }
 
     @Override

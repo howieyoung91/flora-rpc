@@ -5,10 +5,13 @@
 
 package xyz.yanghaoyu.flora.rpc.base.serialize;
 
+import xyz.yanghaoyu.flora.rpc.base.exception.DeserializeException;
+import xyz.yanghaoyu.flora.rpc.base.exception.SerializeException;
+
 public interface SerializeService {
     byte[] serialize(Object o, String name) throws Exception;
 
-    <T> T deserialize(byte[] data, Class<T> clazz, String name) throws Exception;
+    <T> T deserialize(byte[] data, Class<T> clazz, String name) throws SerializeException;
 
-    <T> T deserialize(byte[] data, Class<T> clazz, byte code) throws Exception;
+    <T> T deserialize(byte[] data, Class<T> clazz, byte code) throws DeserializeException;
 }

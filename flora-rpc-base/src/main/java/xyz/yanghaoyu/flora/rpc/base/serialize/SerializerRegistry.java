@@ -7,4 +7,8 @@ package xyz.yanghaoyu.flora.rpc.base.serialize;
 
 public interface SerializerRegistry {
     void addSerializer(SmartSerializer serializer);
+
+    void addSerializer(SmartSerializer... serializers);
+
+    boolean containsSerializer(String serializerName);
 }

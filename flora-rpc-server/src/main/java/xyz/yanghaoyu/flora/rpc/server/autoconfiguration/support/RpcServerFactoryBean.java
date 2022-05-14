@@ -16,12 +16,12 @@ import xyz.yanghaoyu.flora.core.beans.factory.FactoryBean;
 import xyz.yanghaoyu.flora.core.beans.factory.config.BeanDefinition;
 import xyz.yanghaoyu.flora.core.beans.factory.support.InitializingBean;
 import xyz.yanghaoyu.flora.exception.BeansException;
-import xyz.yanghaoyu.flora.rpc.base.service.ServiceHandler;
+import xyz.yanghaoyu.flora.rpc.server.service.ServiceHandler;
 import xyz.yanghaoyu.flora.rpc.server.annotation.RpcResponse;
-import xyz.yanghaoyu.flora.rpc.server.config.RpcResponseAnnotationConfig;
+import xyz.yanghaoyu.flora.rpc.server.annotation.RpcResponseAttribute;
 import xyz.yanghaoyu.flora.rpc.server.service.ServiceRegistry;
-import xyz.yanghaoyu.flora.rpc.server.config.Service;
-import xyz.yanghaoyu.flora.rpc.server.config.ServiceConfig;
+import xyz.yanghaoyu.flora.rpc.server.service.Service;
+import xyz.yanghaoyu.flora.rpc.server.annotation.RpcServiceAttribute;
 import xyz.yanghaoyu.flora.rpc.server.annotation.RpcService;
 import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.ServerConfigProperties;
 import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.ServerConfigurer;
@@ -74,8 +74,8 @@ public class RpcServerFactoryBean
                 continue;
             }
 
-            ServiceConfig               serviceConfig     = ServiceUtil.buildServiceConfig(rpcServiceAnn);
-            RpcResponseAnnotationConfig rpcResponseConfig = getRpcResponseConfig(clazz);
+            RpcServiceAttribute  serviceConfig     = ServiceUtil.buildServiceAttribute(rpcServiceAnn);
+            RpcResponseAttribute rpcResponseConfig = getRpcResponseConfig(clazz);
 
             Service service = new Service(beanFactory.getBean(beanDefName), serviceConfig, rpcResponseConfig);
 
@@ -85,14 +85,14 @@ public class RpcServerFactoryBean
         return server;
     }
 
-    private RpcResponseAnnotationConfig getRpcResponseConfig(Class<?> clazz) {
-        RpcResponseAnnotationConfig rpcResponseAnnotationConfig = new RpcResponseAnnotationConfig();
+    private RpcResponseAttribute getRpcResponseConfig(Class<?> clazz) {
+        RpcResponseAttribute rpcResponseAnnotationConfig = new RpcResponseAttribute();
 
         RpcResponse rpcResponseAnn = clazz.getAnnotation(RpcResponse.class);
         if (rpcResponseAnn == null) {
             rpcResponseAnnotationConfig.setSerializerName("KRYO");
         } else {
-            rpcResponseAnnotationConfig = ServiceUtil.buildRpcResponseConfig(rpcResponseAnn);
+            rpcResponseAnnotationConfig = ServiceUtil.buildRpcResponseAttribute(rpcResponseAnn);
         }
         
         return rpcResponseAnnotationConfig;

@@ -5,11 +5,11 @@
 
 package xyz.yanghaoyu.flora.rpc.server.config;
 
+import xyz.yanghaoyu.flora.rpc.base.compress.CompressorFactory;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SerializeService;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SerializerFactory;
 
 public interface ServerConfig {
-
     int port();
 
     SerializerFactory serializerFactory();
@@ -18,4 +18,9 @@ public interface ServerConfig {
 
     String defaultSerializer();
 
+    CompressorFactory compressorFactory();
+
+    CompressorFactory compressorService();
+
+    String defaultCompressor();
 }

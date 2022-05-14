@@ -5,14 +5,14 @@
 
 package xyz.yanghaoyu.flora.rpc.client.util;
 
-import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceReferenceConfig;
+import xyz.yanghaoyu.flora.rpc.client.annotation.ServiceReferenceAttribute;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcRequest;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcServiceReference;
-import xyz.yanghaoyu.flora.rpc.client.config.RpcRequestAnnotationConfig;
+import xyz.yanghaoyu.flora.rpc.client.annotation.RpcRequestAttribute;
 
 public abstract class RpcServiceClientUtil {
-    public static ServiceReferenceConfig buildServiceReferenceConfig(RpcServiceReference rpcServiceReference) {
-        return new ServiceReferenceConfig(
+    public static ServiceReferenceAttribute buildServiceReferenceAttribute(RpcServiceReference rpcServiceReference) {
+        return new ServiceReferenceAttribute(
                 rpcServiceReference.namespace(),
                 rpcServiceReference.interfaceName(),
                 rpcServiceReference.group(),
@@ -20,10 +20,11 @@ public abstract class RpcServiceClientUtil {
         );
     }
 
-    public static RpcRequestAnnotationConfig buildRpcRequestConfig(RpcRequest rpcRequestAnn) {
-        RpcRequestAnnotationConfig config = new RpcRequestAnnotationConfig();
-        config.setSerializerName(rpcRequestAnn.serializer());
-        return config;
+    public static RpcRequestAttribute buildRpcRequestAttribute(RpcRequest rpcRequestAnn) {
+        RpcRequestAttribute attribute = new RpcRequestAttribute();
+        attribute.setSerializerName(rpcRequestAnn.serializer());
+        attribute.setCompressorName(rpcRequestAnn.compressor());
+        return attribute;
     }
 }
 

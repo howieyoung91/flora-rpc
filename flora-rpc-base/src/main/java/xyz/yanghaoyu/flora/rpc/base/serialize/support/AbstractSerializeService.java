@@ -5,6 +5,8 @@
 
 package xyz.yanghaoyu.flora.rpc.base.serialize.support;
 
+import xyz.yanghaoyu.flora.rpc.base.exception.DeserializeException;
+import xyz.yanghaoyu.flora.rpc.base.exception.SerializeException;
 import xyz.yanghaoyu.flora.rpc.base.serialize.*;
 
 import java.util.Map;
@@ -22,17 +24,29 @@ public abstract class AbstractSerializeService
     }
 
     @Override
+    public void addSerializer(SmartSerializer... serializers) {
+        for (SmartSerializer serializer : serializers) {
+            addSerializer(serializer);
+        }
+    }
+
+    @Override
+    public boolean containsSerializer(String serializerName) {
+        return serializersByName.containsKey(serializerName);
+    }
+
+    @Override
     public byte[] serialize(Object o, String name) throws Exception {
         return getSerializerNonNull(name).serialize(name);
     }
 
     @Override
-    public <T> T deserialize(byte[] data, Class<T> clazz, String name) throws Exception {
+    public <T> T deserialize(byte[] data, Class<T> clazz, String name) throws SerializeException {
         return getSerializerNonNull(name).deserialize(data, clazz);
     }
 
     @Override
-    public <T> T deserialize(byte[] data, Class<T> clazz, byte code) throws Exception {
+    public <T> T deserialize(byte[] data, Class<T> clazz, byte code) throws DeserializeException {
         return getSerializerNonNull(code).deserialize(data, clazz);
     }
 

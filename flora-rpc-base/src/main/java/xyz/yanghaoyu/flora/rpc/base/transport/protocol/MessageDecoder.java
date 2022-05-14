@@ -10,8 +10,14 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xyz.yanghaoyu.flora.rpc.base.compress.CompressorFactory;
+import xyz.yanghaoyu.flora.rpc.base.compress.Decompressor;
+import xyz.yanghaoyu.flora.rpc.base.compress.support.NoCompressSmartCompressor;
+import xyz.yanghaoyu.flora.rpc.base.exception.DecompressException;
+import xyz.yanghaoyu.flora.rpc.base.exception.DeserializeException;
 import xyz.yanghaoyu.flora.rpc.base.serialize.Deserializer;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SerializerFactory;
+import xyz.yanghaoyu.flora.rpc.base.serialize.support.KryoSmartSerializer;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcMessage;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestBody;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
@@ -40,14 +46,13 @@ import java.util.Arrays;
 public class MessageDecoder extends LengthFieldBasedFrameDecoder {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageDecoder.class);
 
-    private SerializerFactory serializerFactory;
+    private SerializerFactory deserializerFactory;
+    private CompressorFactory compressorFactory;
 
-    public MessageDecoder(SerializerFactory serializerFactory) {
-        super(RpcMessage.MAX_FRAME_LENGTH,
-                12, 4,
-                -16, 0
-        );
-        this.serializerFactory = serializerFactory;
+    public MessageDecoder(SerializerFactory deserializerFactory, CompressorFactory decompressorFactory) {
+        super(RpcMessage.MAX_FRAME_LENGTH, 12, 4, -16, 0);
+        this.deserializerFactory = deserializerFactory;
+        this.compressorFactory = decompressorFactory;
     }
 
     @Override
@@ -69,20 +74,20 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
     private Object decodeFrame(ChannelHandlerContext ctx, ByteBuf in) {
         checkMagicNumber(in);
         checkVersion(in);
+
         byte         messageType  = in.readByte();
         Deserializer deserializer = getDeserializer(in.readByte());
-        byte         compressType = in.readByte();
+        Decompressor decompressor = getDecompressor(in.readByte());
         int          id           = in.readInt();
 
         if (messageType == RpcMessage.HEARTBEAT_REQUEST_MESSAGE_TYPE) {
             // server
             LOGGER.info("{} ping", ctx.channel().remoteAddress());
 
-            RpcMessage<Object> pong =
-                    RpcMessage.of(RpcMessage.HEARTBEAT_RESPONSE_MESSAGE_TYPE, null);
+            RpcMessage<Object> pong = RpcMessage.of(RpcMessage.HEARTBEAT_RESPONSE_MESSAGE_TYPE, null);
             pong.setId(id);
-            pong.setSerializer("KRYO");
-            pong.setCompress((byte) 0);
+            pong.setSerializer(KryoSmartSerializer.NAME);
+            pong.setCompressor(NoCompressSmartCompressor.NAME);
             ctx.writeAndFlush(pong);
             return null;
         } else if (messageType == RpcMessage.HEARTBEAT_RESPONSE_MESSAGE_TYPE) {
@@ -91,6 +96,18 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
             return null;
         }
 
+        byte[] body = readBody(in);
+        if (body == null) {
+            return null;
+        }
+
+        // 解压
+        body = decompressor.decompress(body);
+
+        return doDeserialize(body, deserializer, messageType);
+    }
+
+    private byte[] readBody(ByteBuf in) {
         int length = in.readInt();
         // handle rpc
         int bodyLength = length - RpcMessage.HEADER_LENGTH;
@@ -100,30 +117,33 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
 
         byte[] body = new byte[bodyLength];
         in.readBytes(body);
+        return body;
+    }
 
-
-        try {
-            // request
-            if (messageType == RpcMessage.REQUEST_MESSAGE_TYPE) {
-                return deserializer.deserialize(body, RpcRequestBody.class);
-            }
-            // response
-            else {
-                return deserializer.deserialize(body, RpcResponseBody.class);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("fail to decode");
+    private Object doDeserialize(byte[] body, Deserializer deserializer, byte messageType) {
+        if (messageType == RpcMessage.REQUEST_MESSAGE_TYPE) {
+            return deserializer.deserialize(body, RpcRequestBody.class);
+        } else {
+            return deserializer.deserialize(body, RpcResponseBody.class);
         }
     }
 
-    private Deserializer getDeserializer(byte codecType) {
-        Deserializer deserializer = serializerFactory.getDeserializer(codecType);
+    private Deserializer getDeserializer(byte serializeType) {
+        Deserializer deserializer = deserializerFactory.getDeserializer(serializeType);
         if (deserializer == null) {
-            LOGGER.warn("unknown deserializer marked by code [{}]", codecType);
-            deserializer = serializerFactory.getDeserializer((byte) 0);
+            LOGGER.warn("unknown deserializer with code [{}]", serializeType);
+            throw new DeserializeException("unknown deserializer with code [" + serializeType + "]");
         }
         return deserializer;
+    }
+
+    private Decompressor getDecompressor(byte compressType) {
+        Decompressor decompressor = compressorFactory.getDecompressor(compressType);
+        if (decompressor == null) {
+            LOGGER.warn("unknown decompressor with code [{}]", compressType);
+            throw new DecompressException("unknown decompressor with code [" + compressType + "]");
+        }
+        return decompressor;
     }
 
     private void checkVersion(ByteBuf in) {

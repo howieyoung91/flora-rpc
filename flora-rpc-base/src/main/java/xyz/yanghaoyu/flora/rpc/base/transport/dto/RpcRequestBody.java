@@ -5,16 +5,17 @@
 
 package xyz.yanghaoyu.flora.rpc.base.transport.dto;
 
-public class RpcRequestBody {
+import java.io.Serializable;
+
+/**
+ * RPC 请求体
+ */
+public class RpcRequestBody implements Serializable {
     private String     id;
-    // 请求的服务名
-    private String     serviceName;
-    // 请求的函数
-    private String     methodName;
-    // 函数的参数
-    private Object[]   params;
-    // 参数类型
-    private Class<?>[] paramTypes;
+    private String     serviceName; // 请求的服务名
+    private String     methodName;  // 请求的函数
+    private Object[]   params;      // 函数的参数
+    private Class<?>[] paramTypes;  // 参数类型
 
     public String getId() {
         return id;

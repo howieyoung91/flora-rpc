@@ -14,4 +14,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RpcResponse {
     String serializer() default "";
+
+    String compressor() default "";
 }

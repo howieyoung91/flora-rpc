@@ -9,15 +9,15 @@ import xyz.yanghaoyu.flora.annotation.Bean;
 import xyz.yanghaoyu.flora.annotation.Configuration;
 import xyz.yanghaoyu.flora.annotation.Enable;
 import xyz.yanghaoyu.flora.annotation.Inject;
-import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
-import xyz.yanghaoyu.flora.rpc.base.service.support.ZooKeeper;
+import xyz.yanghaoyu.flora.rpc.client.service.ServiceDiscovery;
+import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.ZooKeeper;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ServiceDiscoveryConfigProperties;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ServiceDiscoveryConfigurer;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ZooKeeperConfigProperties;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ZooKeeperConfigurer;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder.ServiceDiscoveryConfigBuilder;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder.ZooKeeperBuilderFactory;
-import xyz.yanghaoyu.flora.rpc.client.discovery.ZookeeperServiceDiscovery;
+import xyz.yanghaoyu.flora.rpc.client.service.ZookeeperServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.client.config.DiscoveryConfig;
 import xyz.yanghaoyu.flora.rpc.client.strategy.loadbalance.RandomServiceLoadBalance;
 import xyz.yanghaoyu.flora.rpc.client.strategy.loadbalance.ServiceLoadBalance;
@@ -29,8 +29,10 @@ public class ServiceDiscoveryAutoConfiguration {
 
     @Bean("flora-rpc-client$ZooKeeper$")
     public ZooKeeper zooKeeper(
-            @Inject.ByType(required = false) ZooKeeperConfigurer configurer,
-            @Inject.ByName(ZooKeeperConfigProperties.BEAN_NAME) ZooKeeperConfigProperties properties
+            @Inject.ByType(required = false)
+                    ZooKeeperConfigurer configurer,
+            @Inject.ByName(ZooKeeperConfigProperties.BEAN_NAME)
+                    ZooKeeperConfigProperties properties
     ) {
         return ZooKeeperBuilderFactory.aZooKeeperConfigBuilder(configurer, properties)
                 .build().build();
@@ -38,8 +40,10 @@ public class ServiceDiscoveryAutoConfiguration {
 
     @Bean("flora-rpc-client$ServiceDiscoveryConfig$")
     public DiscoveryConfig discoveryConfig(
-            @Inject.ByType(required = false) ServiceDiscoveryConfigurer configurer,
-            @Inject.ByName(ServiceDiscoveryConfigProperties.BEAN_NAME) ServiceDiscoveryConfigProperties properties
+            @Inject.ByType(required = false)
+                    ServiceDiscoveryConfigurer configurer,
+            @Inject.ByName(ServiceDiscoveryConfigProperties.BEAN_NAME)
+                    ServiceDiscoveryConfigProperties properties
     ) {
         return ServiceDiscoveryConfigBuilder
                 .aServiceDiscoveryConfig(configurer, properties)
@@ -48,8 +52,10 @@ public class ServiceDiscoveryAutoConfiguration {
 
     @Bean("flora-rpc-client$ServiceDiscovery$")
     public ServiceDiscovery discovery(
-            @Inject.ByName("flora-rpc-client$ServiceDiscoveryConfig$") DiscoveryConfig discoveryConfig,
-            @Inject.ByName("flora-rpc-client$ZooKeeper$") ZooKeeper zooKeeper
+            @Inject.ByName("flora-rpc-client$ServiceDiscoveryConfig$")
+                    DiscoveryConfig discoveryConfig,
+            @Inject.ByName("flora-rpc-client$ZooKeeper$")
+                    ZooKeeper zooKeeper
     ) {
         ServiceLoadBalance loadBalance = new RandomServiceLoadBalance();
         return new ZookeeperServiceDiscovery(discoveryConfig, zooKeeper, loadBalance);

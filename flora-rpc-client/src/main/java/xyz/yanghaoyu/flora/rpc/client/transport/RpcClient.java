@@ -15,11 +15,10 @@ import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.yanghaoyu.flora.rpc.base.exception.RpcClientException;
-import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
-import xyz.yanghaoyu.flora.rpc.base.service.ServiceNotFoundException;
+import xyz.yanghaoyu.flora.rpc.client.service.ServiceDiscovery;
+import xyz.yanghaoyu.flora.rpc.base.exception.ServiceNotFoundException;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcMessage;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestBody;
-import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestConfig;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
 import xyz.yanghaoyu.flora.rpc.base.transport.protocol.MessageDecoder;
 import xyz.yanghaoyu.flora.rpc.base.transport.protocol.MessageEncoder;
@@ -31,13 +30,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-public class RpcClient {
+public final class RpcClient {
     private static final Logger logger = LoggerFactory.getLogger(RpcClient.class);
 
     private final ClientConfig      clientConfig;
     private final ServiceDiscovery  discovery;
     private final NioEventLoopGroup group     = new NioEventLoopGroup();
     private final Bootstrap         bootstrap = buildBootstrap(group);
+    private final MessageEncoder    encoder;
 
     private final Map<String, CompletableFuture<RpcResponseBody>> waitingRequests
             = new ConcurrentHashMap<>();
@@ -45,18 +45,31 @@ public class RpcClient {
     public RpcClient(ClientConfig clientConfig, ServiceDiscovery discovery) {
         this.discovery = discovery;
         this.clientConfig = clientConfig;
+        encoder = new MessageEncoder(
+                clientConfig.serializerFactory(),
+                clientConfig.defaultSerializer(),
+                clientConfig.compressorFactory(),
+                clientConfig.defaultCompressor()
+        );
     }
 
     public CompletableFuture<RpcResponseBody> send(RpcRequestConfig request) throws ServiceNotFoundException {
         InetSocketAddress serviceAddress = discoverService(request);
-        Channel           channel        = connectService(serviceAddress);
+
+        // 连接到服务所在到服务器
+        Channel channel = connectService(serviceAddress);
 
         // 返回 CompletableFuture， 让调用线程去阻塞，提升客户端的吞吐量
         return doSend(request.getId(), request, channel);
     }
 
-    private CompletableFuture<RpcResponseBody> doSend(String requestId, RpcRequestConfig reqConfig, Channel channel) {
+    public void close() {
+        logger.info("rpc client close");
+        group.shutdownGracefully();
+    }
 
+    private CompletableFuture<RpcResponseBody> doSend(String requestId, RpcRequestConfig reqConfig, Channel channel) {
+        // 返回一个 promise 用户线程从这个 promise 中拿到服务器返回的结果
         CompletableFuture<RpcResponseBody> promise = new CompletableFuture<>();
         waitingRequests.put(requestId, promise);
 
@@ -74,14 +87,15 @@ public class RpcClient {
         return promise;
     }
 
-    private RpcMessage buildMessage(RpcRequestConfig reqConfig) {
-        RpcRequestBody reqBody = buildRpcRequestBody(reqConfig);
+    private RpcMessage buildMessage(RpcRequestConfig reqAnnConfig) {
+        RpcRequestBody reqBody = buildRpcRequestBody(reqAnnConfig);
         RpcMessage     message = new RpcMessage();
         message.setBody(reqBody);
-        message.setSerializer(reqConfig.getSerializerName());
-        message.setCompress((byte) 0);
+        message.setSerializer(reqAnnConfig.getSerializer());
+        message.setCompressor(reqAnnConfig.getCompressor());
         message.setType(RpcMessage.REQUEST_MESSAGE_TYPE);
         // todo set id
+        // message.setId();
 
         return message;
     }
@@ -96,7 +110,7 @@ public class RpcClient {
         return reqBody;
     }
 
-    Channel connectService(InetSocketAddress serviceAddress) {
+    private Channel connectService(InetSocketAddress serviceAddress) {
         try {
             return bootstrap.connect(serviceAddress).sync().channel();
         } catch (InterruptedException e) {
@@ -110,7 +124,7 @@ public class RpcClient {
     }
 
     private Bootstrap buildBootstrap(NioEventLoopGroup group) {
-        RpcClient that = this;
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
         return new Bootstrap()
                 .group(group)
                 .channel(NioSocketChannel.class)
@@ -121,15 +135,16 @@ public class RpcClient {
                     protected void initChannel(SocketChannel ch) {
                         ChannelPipeline pipeline = ch.pipeline();
                         pipeline.addLast(new IdleStateHandler(0, 5, 0, TimeUnit.SECONDS));
-                        pipeline.addLast(new MessageEncoder(clientConfig.serializerFactory(), clientConfig.defaultSerializer()));
-                        pipeline.addLast(new MessageDecoder(clientConfig.serializerFactory()));
+                        pipeline.addLast(encoder);
+                        pipeline.addLast(
+                                new MessageDecoder(
+                                        clientConfig.serializerFactory(),
+                                        clientConfig.compressorFactory()
+                                )
+                        );
                         pipeline.addLast(new RpcResponseHandler(waitingRequests));
                     }
                 });
     }
 
-    public void close() {
-        logger.info("rpc client close");
-        group.shutdownGracefully();
-    }
 }

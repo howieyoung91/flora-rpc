@@ -14,9 +14,9 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
-import xyz.yanghaoyu.flora.rpc.base.service.ServiceHandler;
+import xyz.yanghaoyu.flora.rpc.server.service.ServiceHandler;
 import xyz.yanghaoyu.flora.rpc.server.service.ServiceRegistry;
-import xyz.yanghaoyu.flora.rpc.server.config.Service;
+import xyz.yanghaoyu.flora.rpc.server.service.Service;
 import xyz.yanghaoyu.flora.rpc.base.transport.protocol.MessageDecoder;
 import xyz.yanghaoyu.flora.rpc.base.transport.protocol.MessageEncoder;
 import xyz.yanghaoyu.flora.rpc.server.config.ServerConfig;
@@ -26,17 +26,24 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
-public class RpcServer {
+public final class RpcServer {
     private final ServerConfig      serverConfig;
     private final ServiceRegistry   registry;
     private final ServiceHandler    serviceHandler;
     private final NioEventLoopGroup bossGroup = new NioEventLoopGroup();
     private final NioEventLoopGroup workGroup = new NioEventLoopGroup();
+    private final MessageEncoder    encoder;
 
     public RpcServer(ServerConfig serverConfig, ServiceRegistry registry, ServiceHandler serviceHandler) {
         this.serverConfig = serverConfig;
         this.registry = registry;
         this.serviceHandler = serviceHandler;
+        this.encoder = new MessageEncoder(
+                serverConfig.serializerFactory(),
+                serverConfig.defaultSerializer(),
+                serverConfig.compressorFactory(),
+                serverConfig.defaultCompressor()
+        );
     }
 
     public void start() {
@@ -55,8 +62,14 @@ public class RpcServer {
                         pipeline.addLast(new IdleStateHandler(
                                 30, 0, 0, TimeUnit.SECONDS)
                         );
-                        pipeline.addLast(new MessageEncoder(serverConfig.serializerFactory(), serverConfig.defaultSerializer()));
-                        pipeline.addLast(new MessageDecoder(serverConfig.serializerFactory()));
+
+                        pipeline.addLast(encoder);
+                        pipeline.addLast(
+                                new MessageDecoder(
+                                        serverConfig.serializerFactory(),
+                                        serverConfig.compressorFactory()
+                                )
+                        );
                         // todo 可以调用服务交给另一个线程完成
                         pipeline.addLast(new RpcRequestHandler(serviceHandler));
                     }

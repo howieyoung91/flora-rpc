@@ -5,6 +5,10 @@
 
 package xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder;
 
+import xyz.yanghaoyu.flora.rpc.base.compress.CompressorFactory;
+import xyz.yanghaoyu.flora.rpc.base.compress.SmartCompressor;
+import xyz.yanghaoyu.flora.rpc.base.compress.support.DefaultCompressorService;
+import xyz.yanghaoyu.flora.rpc.base.exception.RpcClientException;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SerializeService;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SerializerFactory;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SmartSerializer;
@@ -29,22 +33,40 @@ public class ClientConfigBuilder {
     }
 
     public ClientConfig build() {
-        DefaultSerializeService serializer        = getSerializers();
-        String                  defaultSerializer = getDefaultSerializer();
+        String                   defaultSerializer = getDefaultSerializer();
+        DefaultSerializeService  serializerService = getSerializers();
+        String                   defaultCompressor = getDefaultCompressor();
+        DefaultCompressorService compressorService = getCompressorService();
+
         return new ClientConfig() {
             @Override
             public SerializerFactory serializerFactory() {
-                return serializer;
+                return serializerService;
             }
 
             @Override
             public SerializeService serializeService() {
-                return serializer;
+                return serializerService;
+            }
+
+            @Override
+            public CompressorFactory compressorFactory() {
+                return compressorService;
+            }
+
+            @Override
+            public CompressorFactory compressorService() {
+                return compressorService;
             }
 
             @Override
             public String defaultSerializer() {
                 return defaultSerializer;
+            }
+
+            @Override
+            public String defaultCompressor() {
+                return defaultCompressor;
             }
         };
     }
@@ -56,6 +78,9 @@ public class ClientConfigBuilder {
             List<SmartSerializer> configurerSerializer = configurer.addSerializers();
             if (configurerSerializer != null) {
                 for (SmartSerializer serializer : configurerSerializer) {
+                    if (serializeService.containsSerializer(serializer.name())) {
+                        throw new RpcClientException("fail to build client config, cause: smart serializer [" + serializer.name() + "] has already existed!");
+                    }
                     serializeService.addSerializer(serializer);
                 }
             }
@@ -67,7 +92,7 @@ public class ClientConfigBuilder {
         String serializer = properties.getSerializer();
         if (configurer != null) {
             String serializerByConfigurer = configurer.setDefaultSerializer();
-            if (serializer != null) {
+            if (serializerByConfigurer != null) {
                 serializer = serializerByConfigurer;
             }
         }
@@ -75,5 +100,36 @@ public class ClientConfigBuilder {
             serializer = "KRYO";
         }
         return serializer;
+    }
+
+    private DefaultCompressorService compressorService = new DefaultCompressorService();
+
+    public DefaultCompressorService getCompressorService() {
+        if (configurer != null) {
+            List<SmartCompressor> compressors = configurer.addCompressors();
+            if (compressors != null) {
+                for (SmartCompressor compressor : compressors) {
+                    if (compressorService.containsCompressor(compressor.name())) {
+                        throw new RpcClientException("fail to build client config, cause: smart compressor [" + compressor.name() + "] has already existed!");
+                    }
+                    compressorService.addCompressor(compressor);
+                }
+            }
+        }
+        return compressorService;
+    }
+
+    public String getDefaultCompressor() {
+        String compressor = properties.getCompressor();
+        if (configurer != null) {
+            String compressorByConfigurer = configurer.setDefaultCompressor();
+            if (compressor != null) {
+                compressor = compressorByConfigurer;
+            }
+        }
+        if (compressor == null) {
+            compressor = "NOCOMPRESS";
+        }
+        return compressor;
     }
 }

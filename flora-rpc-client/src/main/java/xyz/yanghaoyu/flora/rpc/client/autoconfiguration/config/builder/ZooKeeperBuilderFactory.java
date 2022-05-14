@@ -7,7 +7,7 @@ package xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder;
 
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import xyz.yanghaoyu.flora.rpc.base.exception.RpcClientException;
-import xyz.yanghaoyu.flora.rpc.base.service.support.ZooKeeperBuilder;
+import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.ZooKeeperBuilder;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ZooKeeperConfigProperties;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ZooKeeperConfigurer;
 
@@ -33,7 +33,7 @@ public class ZooKeeperBuilderFactory {
     public String getZooKeeperAddress() {
         String address = properties.getZooKeeperAddress();
         if (configurer != null) {
-            String addressByConfigurer = configurer.getZooKeeperAddress();
+            String addressByConfigurer = configurer.zooKeeperAddress();
             if (addressByConfigurer != null) {
                 address = addressByConfigurer;
             }
@@ -47,7 +47,7 @@ public class ZooKeeperBuilderFactory {
     public Integer getBaseSleepTime() {
         Integer baseSleepTime = properties.getBaseSleepTime();
         if (configurer != null) {
-            Integer baseSleepTimeByConfigurer = configurer.getBaseSleepTime();
+            Integer baseSleepTimeByConfigurer = configurer.baseSleepTime();
             if (baseSleepTimeByConfigurer != null) {
                 baseSleepTime = baseSleepTimeByConfigurer;
             }
@@ -62,7 +62,7 @@ public class ZooKeeperBuilderFactory {
     public Integer getMaxRetries() {
         Integer maxRetries = properties.getMaxRetries();
         if (configurer != null) {
-            Integer maxRetriesByConfigurer = configurer.getMaxRetries();
+            Integer maxRetriesByConfigurer = configurer.maxRetries();
             if (maxRetriesByConfigurer != null) {
                 maxRetries = maxRetriesByConfigurer;
             }

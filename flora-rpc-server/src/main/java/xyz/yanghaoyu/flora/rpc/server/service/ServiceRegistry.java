@@ -5,8 +5,6 @@
 
 package xyz.yanghaoyu.flora.rpc.server.service;
 
-import xyz.yanghaoyu.flora.rpc.server.config.Service;
-
 import java.net.InetSocketAddress;
 
 public interface ServiceRegistry {

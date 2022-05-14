@@ -3,19 +3,18 @@
  * Copyright ©2022-2022 杨浩宇，保留所有权利。
  */
 
-package xyz.yanghaoyu.flora.rpc.base.transport.dto;
+package xyz.yanghaoyu.flora.rpc.client.transport;
 
-import xyz.yanghaoyu.flora.rpc.base.service.config.ServiceReferenceConfig;
+import xyz.yanghaoyu.flora.rpc.client.annotation.ServiceReferenceAttribute;
 
-import java.io.Serializable;
-
-public class RpcRequestConfig implements Serializable {
+public class RpcRequestConfig {
     private String                 id;
     private String                 methodName;
     private Object[]               params;
     private Class<?>[]             paramTypes;
-    private String                 serializerName;
-    private ServiceReferenceConfig serviceReferenceConfig;
+    private String                 serializer;
+    private String                    compressor;
+    private ServiceReferenceAttribute serviceReferenceConfig;
 
     public String getMethodName() {
         return methodName;
@@ -49,19 +48,27 @@ public class RpcRequestConfig implements Serializable {
         this.id = id;
     }
 
-    public ServiceReferenceConfig getServiceReferenceConfig() {
+    public ServiceReferenceAttribute getServiceReferenceConfig() {
         return serviceReferenceConfig;
     }
 
-    public void setServiceReferenceConfig(ServiceReferenceConfig serviceReferenceConfig) {
+    public void setServiceReferenceConfig(ServiceReferenceAttribute serviceReferenceConfig) {
         this.serviceReferenceConfig = serviceReferenceConfig;
     }
 
-    public String getSerializerName() {
-        return serializerName;
+    public String getSerializer() {
+        return serializer;
     }
 
-    public void setSerializerName(String serializerName) {
-        this.serializerName = serializerName;
+    public void setSerializer(String serializer) {
+        this.serializer = serializer;
+    }
+
+    public String getCompressor() {
+        return compressor;
+    }
+
+    public void setCompressor(String compressor) {
+        this.compressor = compressor;
     }
 }

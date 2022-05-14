@@ -15,6 +15,7 @@ public class ServerConfigProperties {
 
     private Integer port;
     private String  serializer;
+    private String  compressor;
 
     public Integer getPort() {
         return port;
@@ -22,5 +23,9 @@ public class ServerConfigProperties {
 
     public String getSerializer() {
         return serializer;
+    }
+
+    public String getCompressor() {
+        return compressor;
     }
 }

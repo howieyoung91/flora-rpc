@@ -6,6 +6,7 @@
 package xyz.yanghaoyu.flora.rpc.client.config;
 
 
+import xyz.yanghaoyu.flora.rpc.base.compress.CompressorFactory;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SerializeService;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SerializerFactory;
 
@@ -14,5 +15,11 @@ public interface ClientConfig {
 
     SerializeService serializeService();
 
+    CompressorFactory compressorFactory();
+
+    CompressorFactory compressorService();
+
     String defaultSerializer();
+
+    String defaultCompressor();
 }

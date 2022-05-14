@@ -9,5 +9,4 @@ public interface RpcServerConfigurer {
     default ServerConfigurer serverConfigurer() {
         return null;
     }
-
 }
