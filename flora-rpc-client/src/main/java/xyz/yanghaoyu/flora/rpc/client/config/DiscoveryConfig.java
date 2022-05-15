@@ -5,12 +5,12 @@
 
 package xyz.yanghaoyu.flora.rpc.client.config;
 
-import xyz.yanghaoyu.flora.rpc.client.strategy.loadbalance.ServiceLoadBalance;
-
-import java.util.Map;
+import xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance.AbstractLoadBalanceService;
 
 public interface DiscoveryConfig {
-    String getNamespace();
+    String namespace();
 
-    Map<String, ServiceLoadBalance> getLoadBalance();
+    AbstractLoadBalanceService loadBalanceService();
+
+    String defaultLoadBalance();
 }

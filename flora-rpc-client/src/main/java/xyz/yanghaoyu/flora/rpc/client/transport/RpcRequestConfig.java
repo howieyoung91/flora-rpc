@@ -8,13 +8,14 @@ package xyz.yanghaoyu.flora.rpc.client.transport;
 import xyz.yanghaoyu.flora.rpc.client.annotation.ServiceReferenceAttribute;
 
 public class RpcRequestConfig {
-    private String                 id;
-    private String                 methodName;
-    private Object[]               params;
-    private Class<?>[]             paramTypes;
-    private String                 serializer;
+    private String                    id;
+    private String                    methodName;
+    private Object[]                  params;
+    private Class<?>[]                paramTypes;
+    private String                    serializer;
     private String                    compressor;
-    private ServiceReferenceAttribute serviceReferenceConfig;
+    private String                    loadBalance;
+    private ServiceReferenceAttribute serviceRefAttr;
 
     public String getMethodName() {
         return methodName;
@@ -48,12 +49,12 @@ public class RpcRequestConfig {
         this.id = id;
     }
 
-    public ServiceReferenceAttribute getServiceReferenceConfig() {
-        return serviceReferenceConfig;
+    public ServiceReferenceAttribute getServiceRefAttr() {
+        return serviceRefAttr;
     }
 
-    public void setServiceReferenceConfig(ServiceReferenceAttribute serviceReferenceConfig) {
-        this.serviceReferenceConfig = serviceReferenceConfig;
+    public void setServiceRefAttr(ServiceReferenceAttribute serviceRefAttr) {
+        this.serviceRefAttr = serviceRefAttr;
     }
 
     public String getSerializer() {
@@ -70,5 +71,13 @@ public class RpcRequestConfig {
 
     public void setCompressor(String compressor) {
         this.compressor = compressor;
+    }
+
+    public String getLoadBalance() {
+        return loadBalance;
+    }
+
+    public void setLoadBalance(String loadBalance) {
+        this.loadBalance = loadBalance;
     }
 }

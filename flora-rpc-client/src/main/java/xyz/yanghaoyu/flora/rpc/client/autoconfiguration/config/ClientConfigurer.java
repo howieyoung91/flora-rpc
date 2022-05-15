@@ -19,11 +19,11 @@ public interface ClientConfigurer {
         return null;
     }
 
-    default String setDefaultSerializer() {
+    default String defaultSerializer() {
         return null;
     }
 
-    default String setDefaultCompressor() {
+    default String defaultCompressor() {
         return null;
     }
 }

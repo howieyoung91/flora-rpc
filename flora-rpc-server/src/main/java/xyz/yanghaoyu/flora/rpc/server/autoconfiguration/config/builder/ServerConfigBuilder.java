@@ -111,7 +111,7 @@ public class ServerConfigBuilder {
     public String getDefaultSerializer() {
         String serializer = properties.getSerializer();
         if (configurer != null) {
-            String serializerByConfigurer = configurer.setDefaultSerializer();
+            String serializerByConfigurer = configurer.defaultSerializer();
             if (serializer != null) {
                 serializer = serializerByConfigurer;
             }
@@ -142,7 +142,7 @@ public class ServerConfigBuilder {
     public String getDefaultCompressor() {
         String compressor = properties.getCompressor();
         if (configurer != null) {
-            String compressorByConfigurer = configurer.setDefaultCompressor();
+            String compressorByConfigurer = configurer.defaultCompressor();
             if (compressor != null) {
                 compressor = compressorByConfigurer;
             }

@@ -76,7 +76,7 @@ public final class RpcClient {
         RpcMessage message = buildMessage(reqConfig);
         channel.writeAndFlush(message).addListener((ChannelFutureListener) future -> {
             if (future.isSuccess()) {
-                logger.info("request service [{}]", reqConfig.getServiceReferenceConfig());
+                logger.info("request service [{}]", reqConfig.getServiceRefAttr());
                 return;
             }
 
@@ -105,7 +105,7 @@ public final class RpcClient {
         reqBody.setMethodName(reqConfig.getMethodName());
         reqBody.setId(reqConfig.getId());
         reqBody.setParamTypes(reqConfig.getParamTypes());
-        reqBody.setServiceName(reqConfig.getServiceReferenceConfig().getServiceName());
+        reqBody.setServiceName(reqConfig.getServiceRefAttr().getServiceName());
         reqBody.setParams(reqConfig.getParams());
         return reqBody;
     }
@@ -119,8 +119,8 @@ public final class RpcClient {
         }
     }
 
-    private InetSocketAddress discoverService(RpcRequestConfig request) throws ServiceNotFoundException {
-        return discovery.discover(request.getServiceReferenceConfig());
+    private InetSocketAddress discoverService(RpcRequestConfig reqConfig) throws ServiceNotFoundException {
+        return discovery.discover(reqConfig);
     }
 
     private Bootstrap buildBootstrap(NioEventLoopGroup group) {

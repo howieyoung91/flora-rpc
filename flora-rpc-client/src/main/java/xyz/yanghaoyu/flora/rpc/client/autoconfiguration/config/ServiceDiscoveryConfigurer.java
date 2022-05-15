@@ -6,10 +6,22 @@
 package xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config;
 
 
+import xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance.ServiceLoadBalance;
+
+import java.util.Map;
+
 public interface ServiceDiscoveryConfigurer {
     default String namespace() {
         return null;
     }
 
-    // String loadBalance();
+    default Map<String, ServiceLoadBalance> addLoadBalance() {
+        return null;
+    }
+
+    default String defaultLoadBalance() {
+        return null;
+    }
 }
+
+

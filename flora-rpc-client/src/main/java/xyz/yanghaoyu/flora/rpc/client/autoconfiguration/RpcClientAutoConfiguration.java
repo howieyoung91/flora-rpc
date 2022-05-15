@@ -7,18 +7,18 @@ package xyz.yanghaoyu.flora.rpc.client.autoconfiguration;
 
 import xyz.yanghaoyu.flora.annotation.Bean;
 import xyz.yanghaoyu.flora.annotation.Configuration;
+import xyz.yanghaoyu.flora.annotation.Enable;
 import xyz.yanghaoyu.flora.annotation.Inject;
-import xyz.yanghaoyu.flora.rpc.client.service.ServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ClientConfigProperties;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ClientConfigurer;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder.ClientConfigBuilder;
 import xyz.yanghaoyu.flora.rpc.client.config.ClientConfig;
+import xyz.yanghaoyu.flora.rpc.client.service.ServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
 
 @Configuration("flora-rpc-client$RpcClientAutoConfiguration$")
+@Enable.PropertySource(location = "classpath:flora-rpc-client.yaml")
 public class RpcClientAutoConfiguration {
-
-
     @Bean("flora-rpc-client$ClientConfig$")
     public ClientConfig clientConfig(
             @Inject.ByType(required = false)

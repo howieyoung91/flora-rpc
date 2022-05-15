@@ -7,9 +7,6 @@ package xyz.yanghaoyu.flora.rpc.server.annotation;
 
 import xyz.yanghaoyu.flora.rpc.base.util.ServiceUtil;
 
-/**
- * 注解 @Service
- */
 public class RpcServiceAttribute {
     private String serviceInterfaceName;
     private String group;

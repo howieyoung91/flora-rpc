@@ -1,0 +1,11 @@
+flora:
+  rpc:
+    server:
+      port: 2001
+      serializer: KRYO
+      compressor: NOCOMPRESS
+      registry:
+        zookeeper:
+          namespace: /flora/service/flora
+          base-sleep-time: 3000
+          max-retries: 3

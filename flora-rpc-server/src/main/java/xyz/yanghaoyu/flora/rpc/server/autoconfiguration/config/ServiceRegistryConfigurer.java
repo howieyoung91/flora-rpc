@@ -5,16 +5,8 @@
 
 package xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config;
 
-public interface ZooKeeperConfigurer {
-    default String address() {
-        return null;
-    }
-
-    default Integer baseSleepTime() {
-        return null;
-    }
-
-    default Integer maxRetries() {
+public interface ServiceRegistryConfigurer {
+    default String namespace() {
         return null;
     }
 }

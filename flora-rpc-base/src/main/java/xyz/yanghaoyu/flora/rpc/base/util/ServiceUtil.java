@@ -13,7 +13,7 @@ public abstract class ServiceUtil {
     }
 
     public static String buildServicePathWithAddress(String namespace, String serviceName, InetSocketAddress inetSocketAddress) {
-        return "/" + namespace + "/" + serviceName + inetSocketAddress.toString();
+        return namespace + "/" + serviceName + inetSocketAddress.toString();
     }
 
     public static String buildServiceName(String interfaceName, String group, String version) {

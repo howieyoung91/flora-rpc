@@ -74,12 +74,12 @@ public class RpcServerFactoryBean
                 continue;
             }
 
-            RpcServiceAttribute  serviceConfig     = ServiceUtil.buildServiceAttribute(rpcServiceAnn);
-            RpcResponseAttribute rpcResponseConfig = getRpcResponseConfig(clazz);
+            RpcServiceAttribute  serviceAttr = ServiceUtil.buildServiceAttribute(rpcServiceAnn);
+            RpcResponseAttribute rpcRespAttr = getRpcResponseConfig(clazz);
 
-            Service service = new Service(beanFactory.getBean(beanDefName), serviceConfig, rpcResponseConfig);
+            Service service = new Service(beanFactory.getBean(beanDefName), serviceAttr, rpcRespAttr);
 
-            loggerFactory.info("publish rpc service [{}]", serviceConfig);
+            loggerFactory.info("publish rpc service [{}]", serviceAttr);
             server.publishService(service);
         }
         return server;
@@ -94,7 +94,7 @@ public class RpcServerFactoryBean
         } else {
             rpcResponseAnnotationConfig = ServiceUtil.buildRpcResponseAttribute(rpcResponseAnn);
         }
-        
+
         return rpcResponseAnnotationConfig;
     }
 

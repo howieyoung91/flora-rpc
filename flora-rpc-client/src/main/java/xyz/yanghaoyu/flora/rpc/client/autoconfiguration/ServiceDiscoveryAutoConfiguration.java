@@ -9,7 +9,6 @@ import xyz.yanghaoyu.flora.annotation.Bean;
 import xyz.yanghaoyu.flora.annotation.Configuration;
 import xyz.yanghaoyu.flora.annotation.Enable;
 import xyz.yanghaoyu.flora.annotation.Inject;
-import xyz.yanghaoyu.flora.rpc.client.service.ServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.ZooKeeper;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ServiceDiscoveryConfigProperties;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ServiceDiscoveryConfigurer;
@@ -17,10 +16,9 @@ import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ZooKeeperConfigPr
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ZooKeeperConfigurer;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder.ServiceDiscoveryConfigBuilder;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder.ZooKeeperBuilderFactory;
-import xyz.yanghaoyu.flora.rpc.client.service.ZookeeperServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.client.config.DiscoveryConfig;
-import xyz.yanghaoyu.flora.rpc.client.strategy.loadbalance.RandomServiceLoadBalance;
-import xyz.yanghaoyu.flora.rpc.client.strategy.loadbalance.ServiceLoadBalance;
+import xyz.yanghaoyu.flora.rpc.client.service.ServiceDiscovery;
+import xyz.yanghaoyu.flora.rpc.client.service.ZookeeperServiceDiscovery;
 
 @Configuration(ServiceDiscoveryAutoConfiguration.BEAN_NAME)
 @Enable.ComponentScan(basePackages = "xyz.yanghaoyu.flora.rpc.client.autoconfiguration")
@@ -57,8 +55,7 @@ public class ServiceDiscoveryAutoConfiguration {
             @Inject.ByName("flora-rpc-client$ZooKeeper$")
                     ZooKeeper zooKeeper
     ) {
-        ServiceLoadBalance loadBalance = new RandomServiceLoadBalance();
-        return new ZookeeperServiceDiscovery(discoveryConfig, zooKeeper, loadBalance);
+        return new ZookeeperServiceDiscovery(discoveryConfig, zooKeeper);
     }
 
 }

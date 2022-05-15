@@ -12,29 +12,10 @@ import xyz.yanghaoyu.flora.annotation.Value;
 public class ServiceDiscoveryConfigProperties {
     public static final String BEAN_NAME = "flora-rpc-client$ServiceDiscoveryConfigProperties$";
 
-    @Value(value = "${flora.rpc.client.discovery.zookeeper.address}", required = false)
-    private String  zooKeeperAddress;
-    @Value(value = "${flora.rpc.client.discovery.zookeeper.base-sleep-time}", required = false)
-    private Integer baseSleepTime;
-    @Value(value = "${flora.rpc.client.discovery.zookeeper.max-retries}", required = false)
-    private Integer maxRetries;
-
     @Value(value = "${flora.rpc.client.discovery.zookeeper.namespace}", required = false)
     private String namespace;
     @Value(value = "${flora.rpc.client.discovery.zookeeper.load-balance}", required = false)
     private String loadBalance;
-
-    public String getZooKeeperAddress() {
-        return zooKeeperAddress;
-    }
-
-    public Integer getBaseSleepTime() {
-        return baseSleepTime;
-    }
-
-    public Integer getMaxRetries() {
-        return maxRetries;
-    }
 
     public String getNamespace() {
         return namespace;

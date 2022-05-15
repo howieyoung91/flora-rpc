@@ -9,11 +9,11 @@ import cn.hutool.core.lang.Snowflake;
 import cn.hutool.core.util.IdUtil;
 import xyz.yanghaoyu.flora.rpc.base.exception.RpcClientException;
 import xyz.yanghaoyu.flora.rpc.base.exception.ServiceNotFoundException;
-import xyz.yanghaoyu.flora.rpc.client.annotation.ServiceReferenceAttribute;
-import xyz.yanghaoyu.flora.rpc.client.transport.RpcRequestConfig;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcRequestAttribute;
+import xyz.yanghaoyu.flora.rpc.client.annotation.ServiceReferenceAttribute;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
+import xyz.yanghaoyu.flora.rpc.client.transport.RpcRequestConfig;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -25,9 +25,10 @@ public class ServiceReferenceProxy implements InvocationHandler {
     private static final Snowflake snowflake =
             IdUtil.getSnowflake(0, 0);
 
-    private RpcClient                  rpcClient;
+    private RpcClient                 rpcClient;
     private ServiceReferenceAttribute serviceReferenceConfig;
     private RpcRequestAttribute       requestConfig;
+    // private ServiceDiscovery          discovery;  // todo inject
 
     public ServiceReferenceProxy(RpcClient rpcClient, ServiceReferenceAttribute serviceReferenceConfig, RpcRequestAttribute requestConfig) {
         this.rpcClient = rpcClient;
@@ -46,6 +47,9 @@ public class ServiceReferenceProxy implements InvocationHandler {
 
     private Object request(Object proxy, Method method, Object[] args) throws InterruptedException, ExecutionException {
         RpcRequestConfig reqConfig = getRpcRequestConfig(method, args);
+
+        // discovery.discover()
+
 
         CompletableFuture<RpcResponseBody> promise;
 
@@ -82,7 +86,7 @@ public class ServiceReferenceProxy implements InvocationHandler {
         reqConfig.setMethodName(method.getName());
         reqConfig.setParamTypes(method.getParameterTypes());
         reqConfig.setParams(args);
-        reqConfig.setServiceReferenceConfig(serviceReferenceConfig);
+        reqConfig.setServiceRefAttr(serviceReferenceConfig);
         reqConfig.setId(snowflake.nextIdStr());
 
         applyRpcRequestAnnotationConfig(reqConfig);

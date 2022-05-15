@@ -20,7 +20,7 @@ public interface ServerConfigurer {
         return new ArrayList<>(0);
     }
 
-    default String setDefaultSerializer() {
+    default String defaultSerializer() {
         return null;
     }
 
@@ -28,7 +28,7 @@ public interface ServerConfigurer {
         return new ArrayList<>(0);
     }
 
-    default String setDefaultCompressor() {
+    default String defaultCompressor() {
         return null;
     }
 }

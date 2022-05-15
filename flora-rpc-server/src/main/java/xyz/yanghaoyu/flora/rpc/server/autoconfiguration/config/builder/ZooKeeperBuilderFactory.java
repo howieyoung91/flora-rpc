@@ -33,7 +33,7 @@ public class ZooKeeperBuilderFactory {
     public String getZooKeeperAddress() {
         String address = properties.getZooKeeperAddress();
         if (configurer != null) {
-            String addressByConfigurer = configurer.getZooKeeperAddress();
+            String addressByConfigurer = configurer.address();
             if (addressByConfigurer != null) {
                 address = addressByConfigurer;
             }
@@ -47,7 +47,7 @@ public class ZooKeeperBuilderFactory {
     public Integer getBaseSleepTime() {
         Integer baseSleepTime = properties.getBaseSleepTime();
         if (configurer != null) {
-            Integer baseSleepTimeByConfigurer = configurer.getBaseSleepTime();
+            Integer baseSleepTimeByConfigurer = configurer.baseSleepTime();
             if (baseSleepTimeByConfigurer != null) {
                 baseSleepTime = baseSleepTimeByConfigurer;
             }
@@ -62,7 +62,7 @@ public class ZooKeeperBuilderFactory {
     public Integer getMaxRetries() {
         Integer maxRetries = properties.getMaxRetries();
         if (configurer != null) {
-            Integer maxRetriesByConfigurer = configurer.getMaxRetries();
+            Integer maxRetriesByConfigurer = configurer.maxRetries();
             if (maxRetriesByConfigurer != null) {
                 maxRetries = maxRetriesByConfigurer;
             }

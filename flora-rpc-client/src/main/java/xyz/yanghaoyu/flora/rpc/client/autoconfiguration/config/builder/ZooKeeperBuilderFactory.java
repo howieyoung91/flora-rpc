@@ -6,10 +6,11 @@
 package xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder;
 
 import org.apache.curator.retry.ExponentialBackoffRetry;
-import xyz.yanghaoyu.flora.rpc.base.exception.RpcClientException;
 import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.ZooKeeperBuilder;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ZooKeeperConfigProperties;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ZooKeeperConfigurer;
+
+import java.util.Objects;
 
 public class ZooKeeperBuilderFactory {
     private ZooKeeperConfigurer       configurer;
@@ -38,9 +39,7 @@ public class ZooKeeperBuilderFactory {
                 address = addressByConfigurer;
             }
         }
-        if (address == null) {
-            throw new RpcClientException("found no zookeeper address, it is required!");
-        }
+        Objects.requireNonNull(address, "found no zookeeper address, it is required!");
         return address;
     }
 
@@ -53,9 +52,7 @@ public class ZooKeeperBuilderFactory {
             }
         }
 
-        if (baseSleepTime == null) {
-            baseSleepTime = 3000;
-        }
+        Objects.requireNonNull(baseSleepTime, "found no zookeeper base-sleep-time");
         return baseSleepTime;
     }
 
@@ -68,9 +65,7 @@ public class ZooKeeperBuilderFactory {
             }
         }
 
-        if (maxRetries == null) {
-            maxRetries = 3;
-        }
+        Objects.requireNonNull(maxRetries, "found no zookeeper max-retries");
         return maxRetries;
     }
 }

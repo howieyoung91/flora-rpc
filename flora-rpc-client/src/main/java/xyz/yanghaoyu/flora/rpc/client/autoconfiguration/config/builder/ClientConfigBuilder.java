@@ -18,6 +18,7 @@ import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ClientConfigurer;
 import xyz.yanghaoyu.flora.rpc.client.config.ClientConfig;
 
 import java.util.List;
+import java.util.Objects;
 
 public class ClientConfigBuilder {
     private ClientConfigurer       configurer;
@@ -91,14 +92,12 @@ public class ClientConfigBuilder {
     public String getDefaultSerializer() {
         String serializer = properties.getSerializer();
         if (configurer != null) {
-            String serializerByConfigurer = configurer.setDefaultSerializer();
+            String serializerByConfigurer = configurer.defaultSerializer();
             if (serializerByConfigurer != null) {
                 serializer = serializerByConfigurer;
             }
         }
-        if (serializer == null) {
-            serializer = "KRYO";
-        }
+        Objects.requireNonNull(serializer, "found no serializer");
         return serializer;
     }
 
@@ -122,14 +121,12 @@ public class ClientConfigBuilder {
     public String getDefaultCompressor() {
         String compressor = properties.getCompressor();
         if (configurer != null) {
-            String compressorByConfigurer = configurer.setDefaultCompressor();
+            String compressorByConfigurer = configurer.defaultCompressor();
             if (compressor != null) {
                 compressor = compressorByConfigurer;
             }
         }
-        if (compressor == null) {
-            compressor = "NOCOMPRESS";
-        }
+        Objects.requireNonNull(compressor, "found no default compressor");
         return compressor;
     }
 }
