@@ -13,9 +13,12 @@ import xyz.yanghaoyu.flora.core.beans.factory.PropertyValues;
 import xyz.yanghaoyu.flora.core.beans.factory.config.SmartInstantiationAwareBeanPostProcessor;
 import xyz.yanghaoyu.flora.exception.BeansException;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcRequest;
-import xyz.yanghaoyu.flora.rpc.client.annotation.RpcServiceReference;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcRequestAttribute;
+import xyz.yanghaoyu.flora.rpc.client.annotation.RpcServiceReference;
+import xyz.yanghaoyu.flora.rpc.client.annotation.ServiceReferenceAttribute;
+import xyz.yanghaoyu.flora.rpc.client.config.ClientConfig;
 import xyz.yanghaoyu.flora.rpc.client.proxy.ServiceReferenceProxyFactory;
+import xyz.yanghaoyu.flora.rpc.client.service.ServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
 import xyz.yanghaoyu.flora.rpc.client.util.RpcServiceClientUtil;
 import xyz.yanghaoyu.flora.util.ReflectUtil;
@@ -29,6 +32,8 @@ public class RpcClientStubBeanPostProcessor
 
     private volatile RpcClient                    client;
     private          ServiceReferenceProxyFactory proxyFactory;
+    private          ServiceDiscovery             discovery;
+    private          ClientConfig                 clientConfig;
 
     @Override
     public PropertyValues postProcessPropertyValues(PropertyValues pvs, Object bean, String beanName) throws BeansException {
@@ -47,11 +52,14 @@ public class RpcClientStubBeanPostProcessor
 
                 initClientIfNecessary();
 
-                // handler @RpcRequest
-                RpcRequest          rpcRequestAnn    = field.getAnnotation(RpcRequest.class);
-                RpcRequestAttribute rpcRequestConfig = getRequestAnnotationConfig(rpcRequestAnn);
+                // handle @RpcRequest
+                RpcRequest          rpcRequestAnn = field.getAnnotation(RpcRequest.class);
+                RpcRequestAttribute rpcReqAttr    = getRequestAnnotationConfig(rpcRequestAnn);
 
-                Object proxy = proxyFactory.getProxy(fieldClass, rpcRequestConfig, RpcServiceClientUtil.buildServiceReferenceAttribute(rpcServiceReferenceAnn));
+                ServiceReferenceAttribute serviceRefAttr = RpcServiceClientUtil.buildServiceReferenceAttribute(rpcServiceReferenceAnn, clientConfig, field);
+
+                Object proxy = proxyFactory
+                        .getProxy(fieldClass, rpcReqAttr, serviceRefAttr, discovery);
 
                 field.setAccessible(true);
                 // inject
@@ -64,13 +72,10 @@ public class RpcClientStubBeanPostProcessor
     }
 
     private RpcRequestAttribute getRequestAnnotationConfig(RpcRequest rpcRequestAnn) {
-        RpcRequestAttribute rpcRequestConfig;
         if (rpcRequestAnn == null) {
             return null;
         }
-
-        rpcRequestConfig = RpcServiceClientUtil.buildRpcRequestAttribute(rpcRequestAnn);
-        return rpcRequestConfig;
+        return RpcServiceClientUtil.buildRpcRequestAttribute(rpcRequestAnn);
     }
 
     private void initClientIfNecessary() {
@@ -86,6 +91,8 @@ public class RpcClientStubBeanPostProcessor
     private void initClient() {
         client = beanFactory.getBean("flora-rpc-client$RpcClient$", RpcClient.class);
         proxyFactory = new ServiceReferenceProxyFactory(client);
+        discovery = beanFactory.getBean("flora-rpc-client$ServiceDiscovery$", ServiceDiscovery.class);
+        clientConfig = beanFactory.getBean("flora-rpc-client$ClientConfig$", ClientConfig.class);
     }
 
     private RpcServiceReference getRpcServiceReferenceAnnotation(

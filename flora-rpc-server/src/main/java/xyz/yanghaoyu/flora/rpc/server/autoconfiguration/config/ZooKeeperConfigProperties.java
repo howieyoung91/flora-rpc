@@ -13,14 +13,14 @@ public class ZooKeeperConfigProperties {
     public static final String BEAN_NAME = "flora-rpc-server$ZooKeeperConfigProperties$";
 
     @Value(value = "${flora.rpc.server.registry.zookeeper.address}", required = false)
-    private String  zooKeeperAddress;
+    private String  address;
     @Value(value = "${flora.rpc.server.registry.zookeeper.base-sleep-time}", required = false)
     private Integer baseSleepTime;
     @Value(value = "${flora.rpc.server.registry.zookeeper.max-retries}", required = false)
     private Integer maxRetries;
 
-    public String getZooKeeperAddress() {
-        return zooKeeperAddress;
+    public String getAddress() {
+        return address;
     }
 
     public Integer getBaseSleepTime() {

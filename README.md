@@ -53,7 +53,7 @@ public interface Service {
 ```java
 @Component
 // 标记这是一个 rpc 服务
-@RpcService(interfaceName = "service", group = "xyz.yanghaoyu.rpc.test", version = "1.0")
+@RpcService(group = "xyz.yanghaoyu.rpc.test", version = "1.0")
 public class DefaultService implements Service {
     @Override
     public String echo(String str) {
@@ -106,7 +106,7 @@ public class App {
 ```java
 @Component
 public class ServiceConsumer {
-    @RpcServiceReference(interfaceName = "service", group = "xyz.yanghaoyu.rpc.test", version = "1.0")
+    @RpcServiceReference(group = "xyz.yanghaoyu.rpc.test", version = "1.0")
     private Service service;
 
     public String echo(String str) {

@@ -53,6 +53,15 @@ public final class RpcClient {
         );
     }
 
+    public CompletableFuture<RpcResponseBody> send(RpcRequestConfig request, InetSocketAddress address) {
+        // 连接到服务所在到服务器
+        Channel channel = connectService(address);
+
+        // 返回 CompletableFuture， 让调用线程去阻塞，提升客户端的吞吐量
+        return doSend(request.getId(), request, channel);
+    }
+
+    @Deprecated
     public CompletableFuture<RpcResponseBody> send(RpcRequestConfig request) throws ServiceNotFoundException {
         InetSocketAddress serviceAddress = discoverService(request);
 

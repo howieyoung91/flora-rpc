@@ -7,12 +7,12 @@ package xyz.yanghaoyu.flora.rpc.server.util;
 
 import xyz.yanghaoyu.flora.rpc.server.annotation.RpcResponse;
 import xyz.yanghaoyu.flora.rpc.server.annotation.RpcResponseAttribute;
-import xyz.yanghaoyu.flora.rpc.server.annotation.RpcServiceAttribute;
+import xyz.yanghaoyu.flora.rpc.server.annotation.ServiceAttribute;
 import xyz.yanghaoyu.flora.rpc.server.annotation.RpcService;
 
 public abstract class ServiceUtil {
-    public static RpcServiceAttribute buildServiceAttribute(RpcService rpcServiceAnn) {
-        return new RpcServiceAttribute(
+    public static ServiceAttribute buildServiceAttribute(RpcService rpcServiceAnn) {
+        return new ServiceAttribute(
                 rpcServiceAnn.namespace(),
                 rpcServiceAnn.interfaceName(),
                 rpcServiceAnn.group(),

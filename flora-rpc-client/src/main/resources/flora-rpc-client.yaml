@@ -3,10 +3,10 @@ flora:
     client:
       serializer: KRYO
       compressor: NOCOMPRESS
+      namespace: /flora/service/flora
       discovery:
         zookeeper:
           # address: 127.0.0.1:2181
           load-balance: RANDOM
-          namespace: /flora/service/flora
           base-sleep-time: 3000
           max-retries: 3

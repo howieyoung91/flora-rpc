@@ -11,15 +11,13 @@ import org.slf4j.LoggerFactory;
 import xyz.yanghaoyu.flora.rpc.base.exception.ServiceException;
 import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.ZooKeeper;
 import xyz.yanghaoyu.flora.rpc.base.util.ServiceUtil;
-import xyz.yanghaoyu.flora.rpc.server.annotation.RpcService;
-import xyz.yanghaoyu.flora.rpc.server.annotation.RpcServiceAttribute;
+import xyz.yanghaoyu.flora.rpc.server.annotation.ServiceAttribute;
 import xyz.yanghaoyu.flora.rpc.server.config.RegistryConfig;
 import xyz.yanghaoyu.flora.rpc.server.service.Service;
 import xyz.yanghaoyu.flora.rpc.server.service.ServiceRegistry;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ZooKeeperServiceRegistry implements ServiceRegistry {
@@ -36,10 +34,10 @@ public class ZooKeeperServiceRegistry implements ServiceRegistry {
 
     @Override
     public void register(InetSocketAddress address, Service service) {
-        RpcServiceAttribute serviceConfig = service.getServiceConfig();
+        ServiceAttribute serviceConfig = service.getServiceConfig();
 
         // namespace
-        String namespace = getNamespace(serviceConfig);
+        String namespace = serviceConfig.getNamespace();
 
         // service name
         String serviceName = serviceConfig.getServiceName();
@@ -51,13 +49,13 @@ public class ZooKeeperServiceRegistry implements ServiceRegistry {
         registeredServices.put(serviceName, service);
     }
 
-    private String getNamespace(RpcServiceAttribute serviceConfig) {
-        String namespace = serviceConfig.getNamespace();
-        if (Objects.equals(namespace, RpcService.EMPTY_NAMESPACE)) {
-            namespace = config.namespace();
-        }
-        return namespace;
-    }
+    // private String getNamespace(ServiceAttribute serviceConfig) {
+    //     String namespace = serviceConfig.getNamespace();
+    //     if (Objects.equals(namespace, RpcService.EMPTY_NAMESPACE)) {
+    //         namespace = config.namespace();
+    //     }
+    //     return namespace;
+    // }
 
     @Override
     public Service getService(String serviceName) {

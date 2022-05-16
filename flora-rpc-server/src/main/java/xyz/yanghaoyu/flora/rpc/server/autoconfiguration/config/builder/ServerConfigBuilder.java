@@ -18,6 +18,7 @@ import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.ServerConfigurer;
 import xyz.yanghaoyu.flora.rpc.server.config.ServerConfig;
 
 import java.util.List;
+import java.util.Objects;
 
 public class ServerConfigBuilder {
     private ServerConfigurer       configurer;
@@ -38,6 +39,9 @@ public class ServerConfigBuilder {
         DefaultSerializeService  serializerService = getSerializerService();
         String                   defaultCompressor = getDefaultCompressor();
         DefaultCompressorService compressorService = getCompressorService();
+        String                   namespace         = getNamespace();
+        String                   group             = getGroup();
+        String                   version           = getVersion();
         return new ServerConfig() {
             @Override
             public int port() {
@@ -73,6 +77,21 @@ public class ServerConfigBuilder {
             public String defaultCompressor() {
                 return defaultCompressor;
             }
+
+            @Override
+            public String namespace() {
+                return namespace;
+            }
+
+            @Override
+            public String group() {
+                return group;
+            }
+
+            @Override
+            public String version() {
+                return version;
+            }
         };
     }
 
@@ -84,15 +103,13 @@ public class ServerConfigBuilder {
                 port = portByConfigurer;
             }
         }
-        if (port == null) {
-            port = 2001;
-        }
+        Objects.requireNonNull(port, "found no port");
         return port;
     }
 
-    private DefaultSerializeService serializeService = new DefaultSerializeService();
 
     public DefaultSerializeService getSerializerService() {
+        DefaultSerializeService serializeService = new DefaultSerializeService();
         if (configurer != null) {
             List<SmartSerializer> configurerSerializer = configurer.addSerializers();
             if (configurerSerializer != null) {
@@ -112,19 +129,16 @@ public class ServerConfigBuilder {
         String serializer = properties.getSerializer();
         if (configurer != null) {
             String serializerByConfigurer = configurer.defaultSerializer();
-            if (serializer != null) {
+            if (serializerByConfigurer != null) {
                 serializer = serializerByConfigurer;
             }
-        }
-        if (serializer != null) {
-            serializer = "KRYO";
         }
         return serializer;
     }
 
-    private DefaultCompressorService compressorService = new DefaultCompressorService();
 
     public DefaultCompressorService getCompressorService() {
+        DefaultCompressorService compressorService = new DefaultCompressorService();
         if (configurer != null) {
             List<SmartCompressor> compressors = configurer.addCompressors();
             if (compressors != null) {
@@ -143,13 +157,45 @@ public class ServerConfigBuilder {
         String compressor = properties.getCompressor();
         if (configurer != null) {
             String compressorByConfigurer = configurer.defaultCompressor();
-            if (compressor != null) {
+            if (compressorByConfigurer != null) {
                 compressor = compressorByConfigurer;
             }
         }
-        if (compressor == null) {
-            compressor = "NOCOMPRESS";
-        }
         return compressor;
+    }
+
+    private String getNamespace() {
+        String namespace = properties.getNamespace();
+        if (configurer != null) {
+            String namespaceByConfigurer = configurer.namespace();
+            if (namespaceByConfigurer != null) {
+                namespace = namespaceByConfigurer;
+            }
+        }
+
+        Objects.requireNonNull(namespace, "found no namespace");
+        return namespace;
+    }
+
+    private String getGroup() {
+        String group = properties.getGroup();
+        if (configurer != null) {
+            String groupByConfigurer = configurer.group();
+            if (groupByConfigurer != null) {
+                group = groupByConfigurer;
+            }
+        }
+        return group;
+    }
+
+    private String getVersion() {
+        String version = properties.getVersion();
+        if (configurer != null) {
+            String versionByConfigurer = configurer.version();
+            if (versionByConfigurer != null) {
+                version = versionByConfigurer;
+            }
+        }
+        return version;
     }
 }

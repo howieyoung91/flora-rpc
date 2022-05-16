@@ -6,7 +6,7 @@
 package xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config;
 
 public interface ServiceRegistryConfigurer {
-    default String namespace() {
-        return null;
-    }
+    // default String namespace() {
+    //     return null;
+    // }
 }

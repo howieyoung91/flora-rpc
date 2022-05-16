@@ -12,11 +12,13 @@ import xyz.yanghaoyu.flora.rpc.base.exception.ServiceNotFoundException;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcRequestAttribute;
 import xyz.yanghaoyu.flora.rpc.client.annotation.ServiceReferenceAttribute;
+import xyz.yanghaoyu.flora.rpc.client.service.ServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcRequestConfig;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -26,15 +28,22 @@ public class ServiceReferenceProxy implements InvocationHandler {
             IdUtil.getSnowflake(0, 0);
 
     private RpcClient                 rpcClient;
-    private ServiceReferenceAttribute serviceReferenceConfig;
-    private RpcRequestAttribute       requestConfig;
-    // private ServiceDiscovery          discovery;  // todo inject
+    private ServiceReferenceAttribute serviceRefAttr;
+    private RpcRequestAttribute       rpcReqAttr;
+    private ServiceDiscovery          discovery;
 
-    public ServiceReferenceProxy(RpcClient rpcClient, ServiceReferenceAttribute serviceReferenceConfig, RpcRequestAttribute requestConfig) {
+    public ServiceReferenceProxy(RpcClient rpcClient, ServiceReferenceAttribute serviceRefAttr, RpcRequestAttribute rpcReqAttr, ServiceDiscovery serviceDiscovery) {
         this.rpcClient = rpcClient;
-        this.serviceReferenceConfig = serviceReferenceConfig;
-        this.requestConfig = requestConfig;
+        this.serviceRefAttr = serviceRefAttr;
+        this.rpcReqAttr = rpcReqAttr;
+        this.discovery = serviceDiscovery;
     }
+
+    // public ServiceReferenceProxy(RpcClient rpcClient, ServiceReferenceAttribute serviceReferenceConfig, RpcRequestAttribute requestConfig) {
+    //     this.rpcClient = rpcClient;
+    //     this.serviceRefAttr = serviceReferenceConfig;
+    //     this.rpcReqAttr = requestConfig;
+    // }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -48,17 +57,17 @@ public class ServiceReferenceProxy implements InvocationHandler {
     private Object request(Object proxy, Method method, Object[] args) throws InterruptedException, ExecutionException {
         RpcRequestConfig reqConfig = getRpcRequestConfig(method, args);
 
-        // discovery.discover()
-
-
-        CompletableFuture<RpcResponseBody> promise;
-
+        // 在 zookeeper 中发现服务
+        InetSocketAddress target = null;
         try {
-            promise = rpcClient.send(reqConfig);
+            target = discovery.discover(reqConfig);
         } catch (ServiceNotFoundException e) {
             e.printStackTrace();
             return null;
         }
+
+        // 发送 rpc 请求
+        CompletableFuture<RpcResponseBody> promise = rpcClient.send(reqConfig, target);
 
         // 等待服务器响应，代码阻塞在这里
         RpcResponseBody response = promise.get();
@@ -86,7 +95,7 @@ public class ServiceReferenceProxy implements InvocationHandler {
         reqConfig.setMethodName(method.getName());
         reqConfig.setParamTypes(method.getParameterTypes());
         reqConfig.setParams(args);
-        reqConfig.setServiceRefAttr(serviceReferenceConfig);
+        reqConfig.setServiceRefAttr(serviceRefAttr);
         reqConfig.setId(snowflake.nextIdStr());
 
         applyRpcRequestAnnotationConfig(reqConfig);
@@ -95,18 +104,18 @@ public class ServiceReferenceProxy implements InvocationHandler {
     }
 
     private void applyRpcRequestAnnotationConfig(RpcRequestConfig request) {
-        if (requestConfig == null) {
+        if (rpcReqAttr == null) {
             return;
         }
 
-        request.setCompressor(requestConfig.getCompressorName());
-        request.setSerializer(requestConfig.getSerializerName());
+        request.setCompressor(rpcReqAttr.getCompressorName());
+        request.setSerializer(rpcReqAttr.getSerializerName());
     }
 
     @Override
     public String toString() {
         return "ServiceReferenceProxy{" +
-               "serviceReferenceConfig=" + serviceReferenceConfig +
+               "serviceReferenceConfig=" + serviceRefAttr +
                '}';
     }
 }

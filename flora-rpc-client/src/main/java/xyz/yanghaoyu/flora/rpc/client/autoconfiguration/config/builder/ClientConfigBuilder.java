@@ -38,6 +38,9 @@ public class ClientConfigBuilder {
         DefaultSerializeService  serializerService = getSerializers();
         String                   defaultCompressor = getDefaultCompressor();
         DefaultCompressorService compressorService = getCompressorService();
+        String                   group             = getGroup();
+        String                   namespace         = getNamespace();
+        String                   version           = getVersion();
 
         return new ClientConfig() {
             @Override
@@ -68,6 +71,21 @@ public class ClientConfigBuilder {
             @Override
             public String defaultCompressor() {
                 return defaultCompressor;
+            }
+
+            @Override
+            public String group() {
+                return group;
+            }
+
+            @Override
+            public String namespace() {
+                return namespace;
+            }
+
+            @Override
+            public String version() {
+                return version;
             }
         };
     }
@@ -128,5 +146,40 @@ public class ClientConfigBuilder {
         }
         Objects.requireNonNull(compressor, "found no default compressor");
         return compressor;
+    }
+
+    private String getNamespace() {
+        String namespace = properties.getNamespace();
+        if (configurer != null) {
+            String namespaceByConfigurer = configurer.namespace();
+            if (namespaceByConfigurer != null) {
+                namespace = namespaceByConfigurer;
+            }
+        }
+
+        // Objects.requireNonNull(namespace, "found no namespace");
+        return namespace;
+    }
+
+    private String getGroup() {
+        String group = properties.getGroup();
+        if (configurer != null) {
+            String groupByConfigurer = configurer.group();
+            if (groupByConfigurer != null) {
+                group = groupByConfigurer;
+            }
+        }
+        return group;
+    }
+
+    private String getVersion() {
+        String version = properties.getVersion();
+        if (configurer != null) {
+            String versionByConfigurer = configurer.version();
+            if (versionByConfigurer != null) {
+                version = versionByConfigurer;
+            }
+        }
+        return version;
     }
 }

@@ -23,4 +23,10 @@ public interface ServerConfig {
     CompressorFactory compressorService();
 
     String defaultCompressor();
+
+    String namespace();
+
+    String group();
+
+    String version();
 }

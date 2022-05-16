@@ -8,8 +8,6 @@ package xyz.yanghaoyu.flora.rpc.client.config;
 import xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance.AbstractLoadBalanceService;
 
 public interface DiscoveryConfig {
-    String namespace();
-
     AbstractLoadBalanceService loadBalanceService();
 
     String defaultLoadBalance();

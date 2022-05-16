@@ -31,7 +31,7 @@ public class ZooKeeperBuilderFactory {
     }
 
     public String getZooKeeperAddress() {
-        String address = properties.getZooKeeperAddress();
+        String address = properties.getAddress();
         if (configurer != null) {
             String addressByConfigurer = configurer.address();
             if (addressByConfigurer != null) {

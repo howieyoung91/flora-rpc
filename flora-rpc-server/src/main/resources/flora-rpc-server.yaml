@@ -4,8 +4,8 @@ flora:
       port: 2001
       serializer: KRYO
       compressor: NOCOMPRESS
+      namespace: /flora/service/flora
       registry:
         zookeeper:
-          namespace: /flora/service/flora
           base-sleep-time: 3000
           max-retries: 3

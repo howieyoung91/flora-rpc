@@ -13,6 +13,9 @@ import java.lang.annotation.Target;
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RpcResponse {
+    String EMPTY_SERIALIZER = "";
+    String EMPTY_COMPRESSOR = "";
+
     String serializer() default "";
 
     String compressor() default "";

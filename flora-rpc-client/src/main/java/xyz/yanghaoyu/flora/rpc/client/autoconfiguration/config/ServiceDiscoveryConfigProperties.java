@@ -12,14 +12,8 @@ import xyz.yanghaoyu.flora.annotation.Value;
 public class ServiceDiscoveryConfigProperties {
     public static final String BEAN_NAME = "flora-rpc-client$ServiceDiscoveryConfigProperties$";
 
-    @Value(value = "${flora.rpc.client.discovery.zookeeper.namespace}", required = false)
-    private String namespace;
     @Value(value = "${flora.rpc.client.discovery.zookeeper.load-balance}", required = false)
     private String loadBalance;
-
-    public String getNamespace() {
-        return namespace;
-    }
 
     public String getLoadBalance() {
         return loadBalance;

@@ -6,5 +6,5 @@
 package xyz.yanghaoyu.flora.rpc.server.config;
 
 public interface RegistryConfig {
-    String namespace();
+    // String namespace();
 }

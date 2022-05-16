@@ -22,4 +22,10 @@ public interface ClientConfig {
     String defaultSerializer();
 
     String defaultCompressor();
+
+    String group();
+
+    String namespace();
+
+    String version();
 }

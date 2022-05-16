@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import xyz.yanghaoyu.flora.rpc.base.exception.ServiceNotFoundException;
 import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.ZooKeeper;
 import xyz.yanghaoyu.flora.rpc.base.util.ServiceUtil;
-import xyz.yanghaoyu.flora.rpc.client.annotation.RpcServiceReference;
 import xyz.yanghaoyu.flora.rpc.client.annotation.ServiceReferenceAttribute;
 import xyz.yanghaoyu.flora.rpc.client.cluster.RpcInvocation;
 import xyz.yanghaoyu.flora.rpc.client.cluster.URL;
@@ -56,7 +55,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
         ServiceReferenceAttribute serviceRefAttr = reqConfig.getServiceRefAttr();
 
         String    serviceName = serviceRefAttr.getServiceName();
-        String    namespace   = getNamespace(serviceRefAttr);
+        String    namespace   = reqConfig.getServiceRefAttr().getNamespace();
         String    servicePath = ServiceUtil.buildNamespacedServiceNodePath(namespace, serviceName);
         List<URL> urls        = getURL(servicePath);
 
@@ -78,16 +77,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
     }
 
     private RpcInvocation buildInvocation(RpcRequestConfig reqConfig, String serviceName) {
-        RpcInvocation rpcInvocation = new RpcInvocation(serviceName, reqConfig.getMethodName(), reqConfig.getParams(), reqConfig.getParamTypes());
-        return rpcInvocation;
-    }
-
-    private String getNamespace(ServiceReferenceAttribute serviceConfig) {
-        String namespace = serviceConfig.getNamespace();
-        if (serviceConfig.getNamespace().equals(RpcServiceReference.EMPTY_NAMESPACE)) {
-            namespace = config.namespace();
-        }
-        return namespace;
+        return new RpcInvocation(serviceName, reqConfig.getMethodName(), reqConfig.getParams(), reqConfig.getParamTypes());
     }
 
     private List<URL> getURL(String servicePath) {

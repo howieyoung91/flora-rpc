@@ -8,7 +8,7 @@ package xyz.yanghaoyu.flora.rpc.client.annotation;
 import xyz.yanghaoyu.flora.rpc.base.util.ServiceUtil;
 
 public class ServiceReferenceAttribute {
-    private String serviceInterfaceName;
+    private String interfaceName;
     private String group;
     private String version;
     private String namespace;
@@ -16,14 +16,14 @@ public class ServiceReferenceAttribute {
 
     public ServiceReferenceAttribute(String namespace, String serviceInterfaceName, String group, String version) {
         this.namespace = namespace;
-        this.serviceInterfaceName = serviceInterfaceName;
+        this.interfaceName = serviceInterfaceName;
         this.group = group;
         this.version = version;
         serviceName = ServiceUtil.buildServiceName(serviceInterfaceName, group, version);
     }
 
-    public String getServiceInterfaceName() {
-        return serviceInterfaceName;
+    public String getInterfaceName() {
+        return interfaceName;
     }
 
     public String getGroup() {
@@ -46,4 +46,5 @@ public class ServiceReferenceAttribute {
     public String toString() {
         return getServiceName();
     }
+
 }

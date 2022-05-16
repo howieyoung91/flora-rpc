@@ -7,6 +7,7 @@ package xyz.yanghaoyu.flora.rpc.client.proxy;
 
 import xyz.yanghaoyu.flora.rpc.client.annotation.ServiceReferenceAttribute;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcRequestAttribute;
+import xyz.yanghaoyu.flora.rpc.client.service.ServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
 
 import java.lang.reflect.Proxy;
@@ -18,11 +19,11 @@ public class ServiceReferenceProxyFactory {
         this.rpcClient = client;
     }
 
-    public <T> T getProxy(Class<T> aInterface, RpcRequestAttribute rpcRequestConfig, ServiceReferenceAttribute serviceReferenceConfig) {
+    public <T> T getProxy(Class<T> aInterface, RpcRequestAttribute rpcRequestConfig, ServiceReferenceAttribute serviceReferenceConfig, ServiceDiscovery discovery) {
         return (T) Proxy.newProxyInstance(
                 aInterface.getClassLoader(),
                 new Class[]{aInterface},
-                new ServiceReferenceProxy(rpcClient, serviceReferenceConfig, rpcRequestConfig)
+                new ServiceReferenceProxy(rpcClient, serviceReferenceConfig, rpcRequestConfig, discovery)
         );
     }
 }

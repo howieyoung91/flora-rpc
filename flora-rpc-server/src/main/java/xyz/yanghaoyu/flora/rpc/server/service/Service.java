@@ -6,14 +6,14 @@
 package xyz.yanghaoyu.flora.rpc.server.service;
 
 import xyz.yanghaoyu.flora.rpc.server.annotation.RpcResponseAttribute;
-import xyz.yanghaoyu.flora.rpc.server.annotation.RpcServiceAttribute;
+import xyz.yanghaoyu.flora.rpc.server.annotation.ServiceAttribute;
 
 public class Service {
     private final Object               serviceBean;
-    private final RpcServiceAttribute  serviceConfig;
+    private final ServiceAttribute     serviceConfig;
     private final RpcResponseAttribute rpcResponseConfig;
 
-    public Service(Object serviceBean, RpcServiceAttribute serviceConfig, RpcResponseAttribute rpcResponseConfig) {
+    public Service(Object serviceBean, ServiceAttribute serviceConfig, RpcResponseAttribute rpcResponseConfig) {
         this.serviceBean = serviceBean;
         this.serviceConfig = serviceConfig;
         this.rpcResponseConfig = rpcResponseConfig;
@@ -27,7 +27,7 @@ public class Service {
         return serviceBean;
     }
 
-    public RpcServiceAttribute getServiceConfig() {
+    public ServiceAttribute getServiceConfig() {
         return serviceConfig;
     }
 }

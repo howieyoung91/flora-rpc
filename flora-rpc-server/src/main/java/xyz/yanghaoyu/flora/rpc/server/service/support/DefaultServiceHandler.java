@@ -36,10 +36,10 @@ public class DefaultServiceHandler implements ServiceHandler {
 
         Object result = invokeTargetMethod(serviceBean, reqBody);
 
-        RpcResponseConfig    respConfig       = new RpcResponseConfig();
-        RpcResponseAttribute rpcRespAnnConfig = service.getRpcResponseConfig();
-        respConfig.setSerializer(rpcRespAnnConfig.getSerializerName());
-        respConfig.setCompressor(rpcRespAnnConfig.getCompressorName());
+        RpcResponseConfig    respConfig  = new RpcResponseConfig();
+        RpcResponseAttribute rpcRespAttr = service.getRpcResponseConfig();
+        respConfig.setSerializer(rpcRespAttr.getSerializerName());
+        respConfig.setCompressor(rpcRespAttr.getCompressorName());
         respConfig.setData(result);
         return respConfig;
     }

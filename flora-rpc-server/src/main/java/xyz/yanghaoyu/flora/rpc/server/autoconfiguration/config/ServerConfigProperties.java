@@ -16,6 +16,9 @@ public class ServerConfigProperties {
     private Integer port;
     private String  serializer;
     private String  compressor;
+    private String  namespace;
+    private String  group;
+    private String  version;
 
     public Integer getPort() {
         return port;
@@ -27,5 +30,17 @@ public class ServerConfigProperties {
 
     public String getCompressor() {
         return compressor;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public String getGroup() {
+        return group;
+    }
+
+    public String getVersion() {
+        return version;
     }
 }

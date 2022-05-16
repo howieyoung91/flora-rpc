@@ -26,4 +26,16 @@ public interface ClientConfigurer {
     default String defaultCompressor() {
         return null;
     }
+
+    default String namespace() {
+        return null;
+    }
+
+    default String group() {
+        return null;
+    }
+
+    default String version() {
+        return null;
+    }
 }

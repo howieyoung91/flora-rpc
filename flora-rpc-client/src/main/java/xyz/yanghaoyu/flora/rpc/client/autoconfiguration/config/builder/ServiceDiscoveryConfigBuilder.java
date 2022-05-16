@@ -33,15 +33,9 @@ public class ServiceDiscoveryConfigBuilder {
     }
 
     public DiscoveryConfig build() {
-        String                     namespace          = getNamespace();
         String                     defaultLoadBalance = getDefaultLoadBalance();
         AbstractLoadBalanceService loadBalanceService = getLoadBalanceService();
         return new DiscoveryConfig() {
-            @Override
-            public String namespace() {
-                return namespace;
-            }
-
             @Override
             public AbstractLoadBalanceService loadBalanceService() {
                 return loadBalanceService;
@@ -51,20 +45,8 @@ public class ServiceDiscoveryConfigBuilder {
             public String defaultLoadBalance() {
                 return defaultLoadBalance;
             }
+
         };
-    }
-
-    private String getNamespace() {
-        String namespace = properties.getNamespace();
-        if (configurer != null) {
-            String namespaceByConfigurer = configurer.namespace();
-            if (namespaceByConfigurer != null) {
-                namespace = namespaceByConfigurer;
-            }
-        }
-
-        Objects.requireNonNull(namespace, "found no namespace");
-        return namespace;
     }
 
 
@@ -96,4 +78,5 @@ public class ServiceDiscoveryConfigBuilder {
         Objects.requireNonNull(loadBalance, "found no load balance");
         return loadBalance;
     }
+
 }

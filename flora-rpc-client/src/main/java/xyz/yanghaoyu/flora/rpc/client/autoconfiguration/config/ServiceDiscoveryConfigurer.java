@@ -11,10 +11,6 @@ import xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance.ServiceLoadBalance;
 import java.util.Map;
 
 public interface ServiceDiscoveryConfigurer {
-    default String namespace() {
-        return null;
-    }
-
     default Map<String, ServiceLoadBalance> addLoadBalance() {
         return null;
     }

@@ -13,13 +13,16 @@ import java.lang.annotation.Target;
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RpcServiceReference {
-    String EMPTY_NAMESPACE = "";
+    String EMPTY_NAMESPACE      = "";
+    String EMPTY_GROUP          = "";
+    String EMPTY_INTERFACE_NAME = "";
+    String EMPTY_VERSION        = "";
 
     String namespace() default EMPTY_NAMESPACE;
 
-    String interfaceName();
+    String interfaceName() default EMPTY_INTERFACE_NAME;
 
-    String group();
+    String group() default EMPTY_GROUP;
 
-    String version();
+    String version() default EMPTY_VERSION;
 }

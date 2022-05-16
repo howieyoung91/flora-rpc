@@ -8,7 +8,6 @@ package xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config;
 import xyz.yanghaoyu.flora.rpc.base.compress.SmartCompressor;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SmartSerializer;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public interface ServerConfigurer {
@@ -17,7 +16,7 @@ public interface ServerConfigurer {
     }
 
     default List<SmartSerializer> addSerializers() {
-        return new ArrayList<>(0);
+        return null;
     }
 
     default String defaultSerializer() {
@@ -25,10 +24,23 @@ public interface ServerConfigurer {
     }
 
     default List<SmartCompressor> addCompressors() {
-        return new ArrayList<>(0);
+        return null;
     }
 
     default String defaultCompressor() {
+        return null;
+    }
+
+
+    default String namespace() {
+        return null;
+    }
+
+    default String group() {
+        return null;
+    }
+
+    default String version() {
         return null;
     }
 }

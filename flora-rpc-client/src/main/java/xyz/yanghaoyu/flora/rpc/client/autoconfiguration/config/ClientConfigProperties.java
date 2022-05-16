@@ -15,6 +15,9 @@ public class ClientConfigProperties {
 
     private String serializer;
     private String compressor;
+    private String namespace;
+    private String group;
+    private String version;
 
     public String getSerializer() {
         return serializer;
@@ -22,5 +25,17 @@ public class ClientConfigProperties {
 
     public String getCompressor() {
         return compressor;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public String getGroup() {
+        return group;
+    }
+
+    public String getVersion() {
+        return version;
     }
 }

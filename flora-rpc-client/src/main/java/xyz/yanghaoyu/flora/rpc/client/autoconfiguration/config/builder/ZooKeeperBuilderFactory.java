@@ -52,7 +52,7 @@ public class ZooKeeperBuilderFactory {
             }
         }
 
-        Objects.requireNonNull(baseSleepTime, "found no zookeeper base-sleep-time");
+        // Objects.requireNonNull(baseSleepTime, "found no zookeeper base-sleep-time");
         return baseSleepTime;
     }
 
@@ -65,7 +65,7 @@ public class ZooKeeperBuilderFactory {
             }
         }
 
-        Objects.requireNonNull(maxRetries, "found no zookeeper max-retries");
+        // Objects.requireNonNull(maxRetries, "found no zookeeper max-retries");
         return maxRetries;
     }
 }
