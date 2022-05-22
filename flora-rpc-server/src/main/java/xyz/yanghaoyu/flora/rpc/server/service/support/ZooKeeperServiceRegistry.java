@@ -5,7 +5,6 @@
 
 package xyz.yanghaoyu.flora.rpc.server.service.support;
 
-import org.apache.dubbo.registry.zookeeper.ZookeeperRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.yanghaoyu.flora.rpc.base.exception.ServiceException;
@@ -21,7 +20,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ZooKeeperServiceRegistry implements ServiceRegistry {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ZookeeperRegistry.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ZooKeeperServiceRegistry.class);
 
     private final ZooKeeper            zooKeeper;
     private final Map<String, Service> registeredServices = new ConcurrentHashMap<>();
@@ -34,13 +33,12 @@ public class ZooKeeperServiceRegistry implements ServiceRegistry {
 
     @Override
     public void register(InetSocketAddress address, Service service) {
-        ServiceAttribute serviceConfig = service.getServiceConfig();
+        ServiceAttribute attribute = service.getServiceAttribute();
 
         // namespace
-        String namespace = serviceConfig.getNamespace();
-
+        String namespace = attribute.getNamespace();
         // service name
-        String serviceName = serviceConfig.getServiceName();
+        String serviceName = attribute.getServiceName();
 
         String path = ServiceUtil.buildServicePathWithAddress(namespace, serviceName, address);
 
@@ -48,14 +46,6 @@ public class ZooKeeperServiceRegistry implements ServiceRegistry {
         zooKeeper.createPersistentNode(path);
         registeredServices.put(serviceName, service);
     }
-
-    // private String getNamespace(ServiceAttribute serviceConfig) {
-    //     String namespace = serviceConfig.getNamespace();
-    //     if (Objects.equals(namespace, RpcService.EMPTY_NAMESPACE)) {
-    //         namespace = config.namespace();
-    //     }
-    //     return namespace;
-    // }
 
     @Override
     public Service getService(String serviceName) {
@@ -65,5 +55,4 @@ public class ZooKeeperServiceRegistry implements ServiceRegistry {
         }
         return service;
     }
-
 }

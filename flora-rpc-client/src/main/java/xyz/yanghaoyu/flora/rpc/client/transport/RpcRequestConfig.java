@@ -15,7 +15,7 @@ public class RpcRequestConfig {
     private String                    serializer;
     private String                    compressor;
     private String                    loadBalance;
-    private ServiceReferenceAttribute serviceRefAttr;
+    private ServiceReferenceAttribute serviceReferenceAttribute;
 
     public String getMethodName() {
         return methodName;
@@ -49,12 +49,12 @@ public class RpcRequestConfig {
         this.id = id;
     }
 
-    public ServiceReferenceAttribute getServiceRefAttr() {
-        return serviceRefAttr;
+    public ServiceReferenceAttribute getServiceReferenceAttribute() {
+        return serviceReferenceAttribute;
     }
 
-    public void setServiceRefAttr(ServiceReferenceAttribute serviceRefAttr) {
-        this.serviceRefAttr = serviceRefAttr;
+    public void setServiceReferenceAttribute(ServiceReferenceAttribute serviceReferenceAttribute) {
+        this.serviceReferenceAttribute = serviceReferenceAttribute;
     }
 
     public String getSerializer() {

@@ -51,22 +51,22 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
     }
 
     @Override
-    public InetSocketAddress discover(RpcRequestConfig reqConfig) throws ServiceNotFoundException {
-        ServiceReferenceAttribute serviceRefAttr = reqConfig.getServiceRefAttr();
+    public InetSocketAddress discover(RpcRequestConfig requestConfig) throws ServiceNotFoundException {
+        ServiceReferenceAttribute serviceReferenceAttribute = requestConfig.getServiceReferenceAttribute();
 
-        String    serviceName = serviceRefAttr.getServiceName();
-        String    namespace   = reqConfig.getServiceRefAttr().getNamespace();
-        String    servicePath = ServiceUtil.buildNamespacedServiceNodePath(namespace, serviceName);
-        List<URL> urls        = getURL(servicePath);
+        String    serviceName = serviceReferenceAttribute.getServiceName();
+        String    namespace   = requestConfig.getServiceReferenceAttribute().getNamespace();
+        String    path        = ServiceUtil.buildNamespacedServiceNodePath(namespace, serviceName);
+        List<URL> urls        = getURL(path);
 
-        URL url = getServiceLoadBalance(reqConfig.getLoadBalance())
-                .select(urls, buildInvocation(reqConfig, serviceName));
+        URL url = getServiceLoadBalance(requestConfig.getLoadBalance())
+                .select(urls, buildInvocation(requestConfig, serviceName));
 
         if (url == null) {
-            throw new ServiceNotFoundException("discovered no service [" + serviceRefAttr.getServiceName() + "] in namespace [" + namespace + "]");
+            throw new ServiceNotFoundException("discovered no service [" + serviceReferenceAttribute.getServiceName() + "] in namespace [" + namespace + "]");
         }
 
-        logger.info("discovered service [{}] at [{}]", serviceRefAttr, url);
+        logger.info("discovered service [{}] at [{}]", serviceReferenceAttribute, url);
         return ServiceUtil.buildAddress(url.getAddress());
     }
 
@@ -76,8 +76,8 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
                 : config.loadBalanceService().getLoadBalance(loadBalanceName);
     }
 
-    private RpcInvocation buildInvocation(RpcRequestConfig reqConfig, String serviceName) {
-        return new RpcInvocation(serviceName, reqConfig.getMethodName(), reqConfig.getParams(), reqConfig.getParamTypes());
+    private RpcInvocation buildInvocation(RpcRequestConfig requestConfig, String serviceName) {
+        return new RpcInvocation(serviceName, requestConfig.getMethodName(), requestConfig.getParams(), requestConfig.getParamTypes());
     }
 
     private List<URL> getURL(String servicePath) {

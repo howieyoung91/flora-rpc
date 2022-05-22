@@ -28,20 +28,20 @@ public class DefaultServiceHandler implements ServiceHandler {
     }
 
     @Override
-    public RpcResponseConfig handle(RpcRequestBody reqBody) {
-        logger.info("handle service request [{}#{}]", reqBody.getServiceName(), reqBody.getMethodName());
+    public RpcResponseConfig handle(RpcRequestBody requestBody) {
+        logger.info("handle service request [{}#{}]", requestBody.getServiceName(), requestBody.getMethodName());
 
-        Service service     = registry.getService(reqBody.getServiceName());
+        Service service     = registry.getService(requestBody.getServiceName());
         Object  serviceBean = service.getServiceBean();
 
-        Object result = invokeTargetMethod(serviceBean, reqBody);
+        Object result = invokeTargetMethod(serviceBean, requestBody);
 
-        RpcResponseConfig    respConfig  = new RpcResponseConfig();
-        RpcResponseAttribute rpcRespAttr = service.getRpcResponseConfig();
-        respConfig.setSerializer(rpcRespAttr.getSerializerName());
-        respConfig.setCompressor(rpcRespAttr.getCompressorName());
-        respConfig.setData(result);
-        return respConfig;
+        RpcResponseConfig    responseConfig    = new RpcResponseConfig();
+        RpcResponseAttribute responseAttribute = service.getResponseAttribute();
+        responseConfig.setSerializer(responseAttribute.getSerializerName());
+        responseConfig.setCompressor(responseAttribute.getCompressorName());
+        responseConfig.setData(result);
+        return responseConfig;
     }
 
     private Object invokeTargetMethod(Object serviceBean, RpcRequestBody request) {

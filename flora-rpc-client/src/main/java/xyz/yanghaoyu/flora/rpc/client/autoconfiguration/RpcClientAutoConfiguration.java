@@ -13,7 +13,6 @@ import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ClientConfigPrope
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ClientConfigurer;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder.ClientConfigBuilder;
 import xyz.yanghaoyu.flora.rpc.client.config.ClientConfig;
-import xyz.yanghaoyu.flora.rpc.client.service.ServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
 
 @Configuration("flora-rpc-client$RpcClientAutoConfiguration$")
@@ -31,11 +30,9 @@ public class RpcClientAutoConfiguration {
 
     @Bean("flora-rpc-client$RpcClient$")
     public RpcClient rpcClient(
-            @Inject.ByName("flora-rpc-client$ServiceDiscovery$")
-                    ServiceDiscovery discovery,
             @Inject.ByName("flora-rpc-client$ClientConfig$")
                     ClientConfig clientConfig
     ) {
-        return new RpcClient(clientConfig, discovery);
+        return new RpcClient(clientConfig);
     }
 }

@@ -9,5 +9,5 @@ import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestBody;
 import xyz.yanghaoyu.flora.rpc.server.transport.RpcResponseConfig;
 
 public interface ServiceHandler {
-    RpcResponseConfig handle(RpcRequestBody request);
+    RpcResponseConfig handle(RpcRequestBody requestBody);
 }

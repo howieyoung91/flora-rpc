@@ -1,0 +1,30 @@
+/*
+ * Copyright ©2022-2022 Howie Young, All rights reserved.
+ * Copyright ©2022-2022 杨浩宇，保留所有权利。
+ */
+
+package xyz.yanghaoyu.flora.rpc.client.service.config;
+
+import xyz.yanghaoyu.flora.core.Ordered;
+import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
+import xyz.yanghaoyu.flora.rpc.client.transport.RpcRequestConfig;
+
+import java.net.InetSocketAddress;
+
+public interface ServiceInterceptor extends Ordered {
+    default void beforeRequest(InetSocketAddress target, RpcRequestConfig requestConfig) {
+    }
+
+    default void afterRequest() {
+    }
+
+    default void afterResponse(RpcResponseBody responseBody) {
+    }
+
+    @Override
+    default int getOrder() {
+        return Ordered.HIGHEST_PRECEDENCE / 2;
+    }
+
+    boolean shouldIntercept(Object bean, String beanName);
+}

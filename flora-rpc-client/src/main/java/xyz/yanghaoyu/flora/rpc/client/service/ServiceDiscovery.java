@@ -11,5 +11,5 @@ import xyz.yanghaoyu.flora.rpc.client.transport.RpcRequestConfig;
 import java.net.InetSocketAddress;
 
 public interface ServiceDiscovery {
-    InetSocketAddress discover(RpcRequestConfig reqConfig) throws ServiceNotFoundException;
+    InetSocketAddress discover(RpcRequestConfig requestConfig) throws ServiceNotFoundException;
 }

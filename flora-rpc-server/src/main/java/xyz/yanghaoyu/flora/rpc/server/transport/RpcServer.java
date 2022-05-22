@@ -27,17 +27,17 @@ import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
 public final class RpcServer {
-    private final ServerConfig      serverConfig;
+    private final ServerConfig      config;
     private final ServiceRegistry   registry;
-    private final ServiceHandler    serviceHandler;
+    private final ServiceHandler    handler;
     private final NioEventLoopGroup bossGroup = new NioEventLoopGroup();
     private final NioEventLoopGroup workGroup = new NioEventLoopGroup();
     private final MessageEncoder    encoder;
 
     public RpcServer(ServerConfig serverConfig, ServiceRegistry registry, ServiceHandler serviceHandler) {
-        this.serverConfig = serverConfig;
+        this.config = serverConfig;
         this.registry = registry;
-        this.serviceHandler = serviceHandler;
+        this.handler = serviceHandler;
         this.encoder = new MessageEncoder(
                 serverConfig.serializerFactory(),
                 serverConfig.defaultSerializer(),
@@ -49,7 +49,7 @@ public final class RpcServer {
     public void start() {
         Runtime.getRuntime().addShutdownHook(new Thread(this::close));
 
-        ServerBootstrap serverBootstrap = new ServerBootstrap()
+        ServerBootstrap bootstrap = new ServerBootstrap()
                 .channel(NioServerSocketChannel.class)
                 .group(bossGroup, workGroup)
                 .option(ChannelOption.SO_BACKLOG, 256)
@@ -59,24 +59,21 @@ public final class RpcServer {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) {
                         ChannelPipeline pipeline = socketChannel.pipeline();
-                        pipeline.addLast(new IdleStateHandler(
-                                30, 0, 0, TimeUnit.SECONDS)
-                        );
-
+                        pipeline.addLast(new IdleStateHandler(30, 0, 0, TimeUnit.SECONDS));
                         pipeline.addLast(encoder);
                         pipeline.addLast(
                                 new MessageDecoder(
-                                        serverConfig.serializerFactory(),
-                                        serverConfig.compressorFactory()
+                                        config.serializerFactory(),
+                                        config.compressorFactory()
                                 )
                         );
                         // todo 可以调用服务交给另一个线程完成
-                        pipeline.addLast(new RpcRequestHandler(serviceHandler));
+                        pipeline.addLast(new RpcRequestHandler(handler));
                     }
                 });
 
         try {
-            ChannelFuture future = serverBootstrap.bind(serverConfig.port());
+            ChannelFuture future = bootstrap.bind(config.port());
             future.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -87,7 +84,7 @@ public final class RpcServer {
 
     public void publishService(Service service) {
         try {
-            registry.register(new InetSocketAddress(Inet4Address.getLocalHost().getHostAddress(), serverConfig.port()), service);
+            registry.register(new InetSocketAddress(Inet4Address.getLocalHost().getHostAddress(), config.port()), service);
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }

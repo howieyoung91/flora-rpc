@@ -10,24 +10,24 @@ import xyz.yanghaoyu.flora.rpc.server.annotation.ServiceAttribute;
 
 public class Service {
     private final Object               serviceBean;
-    private final ServiceAttribute     serviceConfig;
-    private final RpcResponseAttribute rpcResponseConfig;
+    private final ServiceAttribute     serviceAttribute;
+    private final RpcResponseAttribute responseAttribute;
 
-    public Service(Object serviceBean, ServiceAttribute serviceConfig, RpcResponseAttribute rpcResponseConfig) {
+    public Service(Object serviceBean, ServiceAttribute serviceAttribute, RpcResponseAttribute responseAttribute) {
         this.serviceBean = serviceBean;
-        this.serviceConfig = serviceConfig;
-        this.rpcResponseConfig = rpcResponseConfig;
+        this.serviceAttribute = serviceAttribute;
+        this.responseAttribute = responseAttribute;
     }
 
-    public RpcResponseAttribute getRpcResponseConfig() {
-        return rpcResponseConfig;
+    public RpcResponseAttribute getResponseAttribute() {
+        return responseAttribute;
     }
 
     public Object getServiceBean() {
         return serviceBean;
     }
 
-    public ServiceAttribute getServiceConfig() {
-        return serviceConfig;
+    public ServiceAttribute getServiceAttribute() {
+        return serviceAttribute;
     }
 }
