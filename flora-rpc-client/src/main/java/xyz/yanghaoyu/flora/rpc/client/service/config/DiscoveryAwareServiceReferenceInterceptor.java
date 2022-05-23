@@ -9,7 +9,7 @@ import xyz.yanghaoyu.flora.rpc.client.transport.RpcRequestConfig;
 
 import java.net.InetSocketAddress;
 
-public interface DiscoveryAwareRpcServiceInterceptor extends ServiceInterceptor {
+public interface DiscoveryAwareServiceReferenceInterceptor extends ServiceReferenceInterceptor {
     default InetSocketAddress adviseTargetService(RpcRequestConfig requestConfig) {
         return null;
     }

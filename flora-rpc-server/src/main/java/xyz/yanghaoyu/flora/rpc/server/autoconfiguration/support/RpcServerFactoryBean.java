@@ -27,6 +27,8 @@ import xyz.yanghaoyu.flora.rpc.server.service.Service;
 import xyz.yanghaoyu.flora.rpc.server.service.ServiceHandler;
 import xyz.yanghaoyu.flora.rpc.server.service.ServiceRegistry;
 import xyz.yanghaoyu.flora.rpc.server.transport.RpcServer;
+import xyz.yanghaoyu.flora.rpc.server.transport.RpcServerBuilder;
+import xyz.yanghaoyu.flora.rpc.server.transport.interceptor.ServiceInterceptor;
 import xyz.yanghaoyu.flora.rpc.server.util.ServiceUtil;
 import xyz.yanghaoyu.flora.util.ReflectUtil;
 
@@ -55,7 +57,9 @@ public class RpcServerFactoryBean
 
     @Override
     public RpcServer getObject() {
-        RpcServer server = new RpcServer(serverConfig, registry, handler);
+        RpcServer server = RpcServerBuilder.aServer(serverConfig, registry, handler)
+                .addInterceptors(beanFactory.getBeansOfType(ServiceInterceptor.class).values())
+                .build();
 
         for (String beanDefName : beanFactory.getBeanDefinitionNames()) {
             BeanDefinition beanDef    = beanFactory.getBeanDefinition(beanDefName);
@@ -66,7 +70,7 @@ public class RpcServerFactoryBean
             }
 
             ServiceAttribute     serviceAttribute  = resolveServiceAttribute(serviceAnn, clazz);
-            RpcResponseAttribute responseAttribute = resolveRpcResponseAttribute(clazz);
+            RpcResponseAttribute responseAttribute = resolveResponseAttribute(clazz);
 
             Service service = new Service(beanFactory.getBean(beanDefName), serviceAttribute, responseAttribute);
 
@@ -81,7 +85,7 @@ public class RpcServerFactoryBean
         return ServiceUtil.buildServiceAttribute(serviceAnn, clazz, serverConfig);
     }
 
-    private RpcResponseAttribute resolveRpcResponseAttribute(Class<?> clazz) {
+    private RpcResponseAttribute resolveResponseAttribute(Class<?> clazz) {
         return ServiceUtil.buildRpcResponseAttribute(clazz, serverConfig);
     }
 

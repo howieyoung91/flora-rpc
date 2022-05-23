@@ -14,16 +14,18 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
-import xyz.yanghaoyu.flora.rpc.server.service.ServiceHandler;
-import xyz.yanghaoyu.flora.rpc.server.service.ServiceRegistry;
-import xyz.yanghaoyu.flora.rpc.server.service.Service;
 import xyz.yanghaoyu.flora.rpc.base.transport.protocol.MessageDecoder;
 import xyz.yanghaoyu.flora.rpc.base.transport.protocol.MessageEncoder;
 import xyz.yanghaoyu.flora.rpc.server.config.ServerConfig;
+import xyz.yanghaoyu.flora.rpc.server.service.Service;
+import xyz.yanghaoyu.flora.rpc.server.service.ServiceHandler;
+import xyz.yanghaoyu.flora.rpc.server.service.ServiceRegistry;
+import xyz.yanghaoyu.flora.rpc.server.transport.interceptor.ServiceInterceptor;
 
 import java.net.Inet4Address;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 public final class RpcServer {
@@ -33,6 +35,8 @@ public final class RpcServer {
     private final NioEventLoopGroup bossGroup = new NioEventLoopGroup();
     private final NioEventLoopGroup workGroup = new NioEventLoopGroup();
     private final MessageEncoder    encoder;
+
+    private TreeSet<ServiceInterceptor> interceptors;
 
     public RpcServer(ServerConfig serverConfig, ServiceRegistry registry, ServiceHandler serviceHandler) {
         this.config = serverConfig;
@@ -44,6 +48,19 @@ public final class RpcServer {
                 serverConfig.compressorFactory(),
                 serverConfig.defaultCompressor()
         );
+    }
+
+    private volatile RpcRequestHandler requestHandler;
+
+    private RpcRequestHandler getRequestHandler() {
+        if (requestHandler == null) {
+            synchronized (this) {
+                if (requestHandler == null) {
+                    requestHandler = new RpcRequestHandler(handler, interceptors);
+                }
+            }
+        }
+        return requestHandler;
     }
 
     public void start() {
@@ -68,7 +85,7 @@ public final class RpcServer {
                                 )
                         );
                         // todo 可以调用服务交给另一个线程完成
-                        pipeline.addLast(new RpcRequestHandler(handler));
+                        pipeline.addLast(getRequestHandler());
                     }
                 });
 
@@ -88,6 +105,10 @@ public final class RpcServer {
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
+    }
+
+    void setInterceptors(TreeSet<ServiceInterceptor> interceptors) {
+        this.interceptors = interceptors;
     }
 
     public void close() {

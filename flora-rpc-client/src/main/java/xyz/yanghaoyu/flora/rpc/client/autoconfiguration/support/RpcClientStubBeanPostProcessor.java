@@ -16,7 +16,7 @@ import xyz.yanghaoyu.flora.rpc.client.annotation.*;
 import xyz.yanghaoyu.flora.rpc.client.config.ClientConfig;
 import xyz.yanghaoyu.flora.rpc.client.service.ServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.client.service.ServiceReference;
-import xyz.yanghaoyu.flora.rpc.client.service.config.ServiceInterceptor;
+import xyz.yanghaoyu.flora.rpc.client.service.config.ServiceReferenceInterceptor;
 import xyz.yanghaoyu.flora.rpc.client.service.proxy.ServiceReferenceProxyFactory;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
 import xyz.yanghaoyu.flora.rpc.client.util.RpcServiceClientUtil;
@@ -35,8 +35,8 @@ public class RpcClientStubBeanPostProcessor
     private RpcClient                      client;
     private ServiceReferenceProxyFactory   proxyFactory;
     private ServiceDiscovery               discovery;
-    private ClientConfig                   clientConfig;
-    private Collection<ServiceInterceptor> interceptors;
+    private ClientConfig                            clientConfig;
+    private Collection<ServiceReferenceInterceptor> interceptors;
 
     private void initClientIfNecessary() {
         if (client == null) {
@@ -49,7 +49,7 @@ public class RpcClientStubBeanPostProcessor
         proxyFactory = new ServiceReferenceProxyFactory(client);
         discovery = beanFactory.getBean("flora-rpc-client$ServiceDiscovery$", ServiceDiscovery.class);
         clientConfig = beanFactory.getBean("flora-rpc-client$ClientConfig$", ClientConfig.class);
-        interceptors = beanFactory.getBeansOfType(ServiceInterceptor.class).values();
+        interceptors = beanFactory.getBeansOfType(ServiceReferenceInterceptor.class).values();
     }
 
     @Override
@@ -72,8 +72,8 @@ public class RpcClientStubBeanPostProcessor
                 ServiceReferenceAttribute serviceReferenceAttribute = resolveServiceReferenceAttribute(field, serviceReferenceAnn);
                 RpcRequestAttribute       requestAttribute          = resolveRpcRequestAttribute(field.getAnnotation(RpcRequest.class));
 
-                List<ServiceInterceptor> interceptors = selectInterceptors(bean, beanName);
-                ServiceReferenceContext  context      = new ServiceReferenceContext(bean, beanName);
+                List<ServiceReferenceInterceptor> interceptors = selectInterceptors(bean, beanName);
+                ServiceReferenceContext           context      = new ServiceReferenceContext(bean, beanName);
                 ServiceReference         reference    = new ServiceReference(requestAttribute, serviceReferenceAttribute, context);
 
                 // create proxy
@@ -93,7 +93,7 @@ public class RpcClientStubBeanPostProcessor
         return RpcServiceClientUtil.buildServiceReferenceAttribute(rpcServiceReferenceAnn, clientConfig, field);
     }
 
-    private List<ServiceInterceptor> selectInterceptors(Object bean, String beanName) {
+    private List<ServiceReferenceInterceptor> selectInterceptors(Object bean, String beanName) {
         return interceptors.stream()
                 .filter(interceptor -> interceptor.shouldIntercept(bean, beanName))
                 .collect(Collectors.toList());

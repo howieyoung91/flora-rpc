@@ -7,7 +7,7 @@ package xyz.yanghaoyu.flora.rpc.client.service.proxy;
 
 import xyz.yanghaoyu.flora.rpc.client.service.ServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.client.service.ServiceReference;
-import xyz.yanghaoyu.flora.rpc.client.service.config.ServiceInterceptor;
+import xyz.yanghaoyu.flora.rpc.client.service.config.ServiceReferenceInterceptor;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
 
 import java.lang.reflect.Proxy;
@@ -24,7 +24,7 @@ public class ServiceReferenceProxyFactory {
             Class<T> aInterface,
             ServiceReference reference,
             ServiceDiscovery discovery,
-            List<ServiceInterceptor> interceptors
+            List<ServiceReferenceInterceptor> interceptors
     ) {
         ServiceReferenceProxy proxy = new ServiceReferenceProxy(client, reference, discovery);
         proxy.addServiceInterceptor(interceptors);

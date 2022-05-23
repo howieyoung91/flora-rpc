@@ -7,6 +7,8 @@ package xyz.yanghaoyu.flora.rpc.client.service.proxy;
 
 import cn.hutool.core.lang.Snowflake;
 import cn.hutool.core.util.IdUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import xyz.yanghaoyu.flora.core.OrderComparator;
 import xyz.yanghaoyu.flora.rpc.base.exception.RpcClientException;
 import xyz.yanghaoyu.flora.rpc.base.exception.ServiceNotFoundException;
@@ -14,8 +16,8 @@ import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcRequestAttribute;
 import xyz.yanghaoyu.flora.rpc.client.service.ServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.client.service.ServiceReference;
-import xyz.yanghaoyu.flora.rpc.client.service.config.DiscoveryAwareRpcServiceInterceptor;
-import xyz.yanghaoyu.flora.rpc.client.service.config.ServiceInterceptor;
+import xyz.yanghaoyu.flora.rpc.client.service.config.DiscoveryAwareServiceReferenceInterceptor;
+import xyz.yanghaoyu.flora.rpc.client.service.config.ServiceReferenceInterceptor;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcRequestConfig;
 
@@ -30,12 +32,13 @@ import java.util.concurrent.CompletableFuture;
 
 public class ServiceReferenceProxy implements InvocationHandler {
     private static final Snowflake SNOWFLAKE = IdUtil.getSnowflake(0, 0);
+    private static final Logger    LOGGER    = LoggerFactory.getLogger(ServiceReferenceProxy.class);
 
-    private RpcClient                                client;
-    private ServiceReference                         reference;
-    private ServiceDiscovery                         discovery;
-    private Set<ServiceInterceptor>                  interceptors               = new TreeSet<>(OrderComparator.INSTANCE);
-    private Set<DiscoveryAwareRpcServiceInterceptor> discoveryAwareInterceptors = new TreeSet<>(OrderComparator.INSTANCE);
+    private RpcClient                                      client;
+    private ServiceReference                               reference;
+    private ServiceDiscovery                               discovery;
+    private Set<ServiceReferenceInterceptor>               interceptors               = new TreeSet<>(OrderComparator.INSTANCE);
+    private Set<DiscoveryAwareServiceReferenceInterceptor> discoveryAwareInterceptors = new TreeSet<>(OrderComparator.INSTANCE);
 
     ServiceReferenceProxy(RpcClient client, ServiceReference serviceReference, ServiceDiscovery discovery) {
         this.client = client;
@@ -65,6 +68,8 @@ public class ServiceReferenceProxy implements InvocationHandler {
                 e.printStackTrace();
                 return applyInterceptorOnNoServiceDiscovered(requestConfig);
             }
+        } else {
+            LOGGER.info("advised service: {}", target);
         }
 
         // 这里可以再一次修改 target
@@ -88,14 +93,14 @@ public class ServiceReferenceProxy implements InvocationHandler {
 
     private Object applyInterceptorOnNoServiceDiscovered(RpcRequestConfig requestConfig) {
         Object result = null;
-        for (DiscoveryAwareRpcServiceInterceptor interceptor : discoveryAwareInterceptors) {
+        for (DiscoveryAwareServiceReferenceInterceptor interceptor : discoveryAwareInterceptors) {
             result = interceptor.onNoServiceDiscovered(requestConfig, reference);
         }
         return result;
     }
 
     private InetSocketAddress applyInterceptorsAfterServiceDiscover(InetSocketAddress target) {
-        for (DiscoveryAwareRpcServiceInterceptor interceptor : discoveryAwareInterceptors) {
+        for (DiscoveryAwareServiceReferenceInterceptor interceptor : discoveryAwareInterceptors) {
             InetSocketAddress address = interceptor.afterDiscoverService(target);
             if (address != null) {
                 return address;
@@ -105,7 +110,7 @@ public class ServiceReferenceProxy implements InvocationHandler {
     }
 
     private InetSocketAddress applyInterceptorsBeforeServiceDiscover(RpcRequestConfig reqConfig) {
-        for (DiscoveryAwareRpcServiceInterceptor interceptor : discoveryAwareInterceptors) {
+        for (DiscoveryAwareServiceReferenceInterceptor interceptor : discoveryAwareInterceptors) {
             InetSocketAddress address = interceptor.adviseTargetService(reqConfig);
             if (address != null) {
                 return address;
@@ -115,19 +120,19 @@ public class ServiceReferenceProxy implements InvocationHandler {
     }
 
     private void applyInterceptorsBeforeRequest(InetSocketAddress target, RpcRequestConfig requestConfig) {
-        for (ServiceInterceptor interceptor : interceptors) {
+        for (ServiceReferenceInterceptor interceptor : interceptors) {
             interceptor.beforeRequest(target, requestConfig);
         }
     }
 
     private void applyInterceptorsAfterRequest() {
-        for (ServiceInterceptor interceptor : interceptors) {
+        for (ServiceReferenceInterceptor interceptor : interceptors) {
             interceptor.afterRequest();
         }
     }
 
     private void applyInterceptorsAfterResponse(RpcResponseBody responseBody) {
-        for (ServiceInterceptor interceptor : interceptors) {
+        for (ServiceReferenceInterceptor interceptor : interceptors) {
             interceptor.afterResponse(responseBody);
         }
     }
@@ -169,11 +174,11 @@ public class ServiceReferenceProxy implements InvocationHandler {
         request.setSerializer(attribute.getSerializerName());
     }
 
-    void addServiceInterceptor(List<ServiceInterceptor> interceptors) {
-        for (ServiceInterceptor interceptor : interceptors) {
+    void addServiceInterceptor(List<ServiceReferenceInterceptor> interceptors) {
+        for (ServiceReferenceInterceptor interceptor : interceptors) {
             this.interceptors.add(interceptor);
-            if (interceptor instanceof DiscoveryAwareRpcServiceInterceptor) {
-                this.discoveryAwareInterceptors.add((DiscoveryAwareRpcServiceInterceptor) interceptor);
+            if (interceptor instanceof DiscoveryAwareServiceReferenceInterceptor) {
+                this.discoveryAwareInterceptors.add((DiscoveryAwareServiceReferenceInterceptor) interceptor);
             }
         }
     }

@@ -11,7 +11,7 @@ import xyz.yanghaoyu.flora.rpc.client.transport.RpcRequestConfig;
 
 import java.net.InetSocketAddress;
 
-public interface ServiceInterceptor extends Ordered {
+public interface ServiceReferenceInterceptor extends Ordered {
     default void beforeRequest(InetSocketAddress target, RpcRequestConfig requestConfig) {
     }
 
@@ -19,11 +19,6 @@ public interface ServiceInterceptor extends Ordered {
     }
 
     default void afterResponse(RpcResponseBody responseBody) {
-    }
-
-    @Override
-    default int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE / 2;
     }
 
     boolean shouldIntercept(Object bean, String beanName);
