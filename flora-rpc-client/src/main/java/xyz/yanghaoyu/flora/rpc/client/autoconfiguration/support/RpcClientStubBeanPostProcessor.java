@@ -10,12 +10,15 @@ import xyz.yanghaoyu.flora.core.beans.factory.BeanFactory;
 import xyz.yanghaoyu.flora.core.beans.factory.BeanFactoryAware;
 import xyz.yanghaoyu.flora.core.beans.factory.ConfigurableListableBeanFactory;
 import xyz.yanghaoyu.flora.core.beans.factory.PropertyValues;
-import xyz.yanghaoyu.flora.core.beans.factory.config.SmartInstantiationAwareBeanPostProcessor;
+import xyz.yanghaoyu.flora.core.beans.factory.config.InstantiationAwareBeanPostProcessor;
 import xyz.yanghaoyu.flora.exception.BeansException;
+import xyz.yanghaoyu.flora.rpc.base.annotation.RpcRequestAttribute;
+import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceReferenceAttribute;
+import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceReferenceContext;
 import xyz.yanghaoyu.flora.rpc.client.annotation.*;
-import xyz.yanghaoyu.flora.rpc.client.config.ClientConfig;
-import xyz.yanghaoyu.flora.rpc.client.service.ServiceDiscovery;
-import xyz.yanghaoyu.flora.rpc.client.service.ServiceReference;
+import xyz.yanghaoyu.flora.rpc.base.config.ClientConfig;
+import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
+import xyz.yanghaoyu.flora.rpc.base.service.ServiceReference;
 import xyz.yanghaoyu.flora.rpc.client.service.config.ServiceReferenceInterceptor;
 import xyz.yanghaoyu.flora.rpc.client.service.proxy.ServiceReferenceProxyFactory;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
@@ -29,12 +32,11 @@ import java.util.stream.Collectors;
 
 @Component("flora-rpc-client$RpcClientStubBeanPostProcessor$")
 public class RpcClientStubBeanPostProcessor
-        implements SmartInstantiationAwareBeanPostProcessor, BeanFactoryAware {
-    private ConfigurableListableBeanFactory beanFactory;
-
-    private RpcClient                      client;
-    private ServiceReferenceProxyFactory   proxyFactory;
-    private ServiceDiscovery               discovery;
+        implements InstantiationAwareBeanPostProcessor, BeanFactoryAware {
+    private ConfigurableListableBeanFactory         beanFactory;
+    private RpcClient                               client;
+    private ServiceReferenceProxyFactory            proxyFactory;
+    private ServiceDiscovery                        discovery;
     private ClientConfig                            clientConfig;
     private Collection<ServiceReferenceInterceptor> interceptors;
 
@@ -54,7 +56,6 @@ public class RpcClientStubBeanPostProcessor
 
     @Override
     public PropertyValues postProcessPropertyValues(PropertyValues pvs, Object bean, String beanName) throws BeansException {
-
         Class<?> clazz  = ReflectUtil.getBeanClassFromCglibProxy(bean.getClass());
         Field[]  fields = clazz.getDeclaredFields();
 
@@ -74,7 +75,7 @@ public class RpcClientStubBeanPostProcessor
 
                 List<ServiceReferenceInterceptor> interceptors = selectInterceptors(bean, beanName);
                 ServiceReferenceContext           context      = new ServiceReferenceContext(bean, beanName);
-                ServiceReference         reference    = new ServiceReference(requestAttribute, serviceReferenceAttribute, context);
+                ServiceReference                  reference    = new ServiceReference(requestAttribute, serviceReferenceAttribute, context);
 
                 // create proxy
                 Object proxy = proxyFactory.getProxy(fieldClass, reference, discovery, interceptors);
@@ -89,8 +90,8 @@ public class RpcClientStubBeanPostProcessor
         return null;
     }
 
-    private ServiceReferenceAttribute resolveServiceReferenceAttribute(Field field, RpcServiceReference rpcServiceReferenceAnn) {
-        return RpcServiceClientUtil.buildServiceReferenceAttribute(rpcServiceReferenceAnn, clientConfig, field);
+    private ServiceReferenceAttribute resolveServiceReferenceAttribute(Field field, RpcServiceReference serviceReferenceAnn) {
+        return RpcServiceClientUtil.buildServiceReferenceAttribute(serviceReferenceAnn, clientConfig, field);
     }
 
     private List<ServiceReferenceInterceptor> selectInterceptors(Object bean, String beanName) {
@@ -100,10 +101,7 @@ public class RpcClientStubBeanPostProcessor
     }
 
     private RpcRequestAttribute resolveRpcRequestAttribute(RpcRequest requestAnn) {
-        if (requestAnn == null) {
-            return null;
-        }
-        return RpcServiceClientUtil.buildRpcRequestAttribute(requestAnn);
+        return RpcServiceClientUtil.buildRpcRequestAttribute(requestAnn, clientConfig);
     }
 
     private RpcServiceReference getRpcServiceReferenceAnnotation(Field field, Class<?> fieldClass) {

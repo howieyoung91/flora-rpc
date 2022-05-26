@@ -3,7 +3,7 @@
  * Copyright ©2022-2022 杨浩宇，保留所有权利。
  */
 
-package xyz.yanghaoyu.flora.rpc.server.transport;
+package xyz.yanghaoyu.flora.rpc.base.transport;
 
 public class RpcResponseConfig {
     private String serializer;  // response 序列化

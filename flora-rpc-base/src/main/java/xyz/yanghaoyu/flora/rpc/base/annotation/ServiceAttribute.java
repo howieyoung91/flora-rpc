@@ -3,7 +3,7 @@
  * Copyright ©2022-2022 杨浩宇，保留所有权利。
  */
 
-package xyz.yanghaoyu.flora.rpc.server.annotation;
+package xyz.yanghaoyu.flora.rpc.base.annotation;
 
 import xyz.yanghaoyu.flora.rpc.base.util.ServiceUtil;
 

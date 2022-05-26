@@ -16,51 +16,48 @@ import xyz.yanghaoyu.flora.core.beans.factory.FactoryBean;
 import xyz.yanghaoyu.flora.core.beans.factory.config.BeanDefinition;
 import xyz.yanghaoyu.flora.core.beans.factory.support.InitializingBean;
 import xyz.yanghaoyu.flora.exception.BeansException;
-import xyz.yanghaoyu.flora.rpc.server.annotation.RpcResponseAttribute;
+import xyz.yanghaoyu.flora.rpc.base.annotation.RpcResponseAttribute;
+import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceAttribute;
+import xyz.yanghaoyu.flora.rpc.base.config.ServerConfig;
+import xyz.yanghaoyu.flora.rpc.base.service.Service;
+import xyz.yanghaoyu.flora.rpc.base.service.ServiceHandler;
+import xyz.yanghaoyu.flora.rpc.base.service.ServiceRegistry;
+import xyz.yanghaoyu.flora.rpc.base.transport.RpcRequestHandler;
+import xyz.yanghaoyu.flora.rpc.base.transport.interceptor.ServiceInterceptor;
 import xyz.yanghaoyu.flora.rpc.server.annotation.RpcService;
-import xyz.yanghaoyu.flora.rpc.server.annotation.ServiceAttribute;
-import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.ServerConfigProperties;
-import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.ServerConfigurer;
-import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.builder.ServerConfigBuilder;
-import xyz.yanghaoyu.flora.rpc.server.config.ServerConfig;
-import xyz.yanghaoyu.flora.rpc.server.service.Service;
-import xyz.yanghaoyu.flora.rpc.server.service.ServiceHandler;
-import xyz.yanghaoyu.flora.rpc.server.service.ServiceRegistry;
 import xyz.yanghaoyu.flora.rpc.server.transport.RpcServer;
 import xyz.yanghaoyu.flora.rpc.server.transport.RpcServerBuilder;
-import xyz.yanghaoyu.flora.rpc.server.transport.interceptor.ServiceInterceptor;
 import xyz.yanghaoyu.flora.rpc.server.util.ServiceUtil;
 import xyz.yanghaoyu.flora.util.ReflectUtil;
 
 @Component(RpcServerFactoryBean.BEAN_NAME)
 public class RpcServerFactoryBean
-        implements FactoryBean<RpcServer>, BeanFactoryAware, InitializingBean {
-    private static final Logger loggerFactory = LoggerFactory.getLogger(RpcServerFactoryBean.class);
-    public static final  String BEAN_NAME     = "floraRpcServer$RpcServer$";
+        implements FactoryBean<RpcServer>, InitializingBean, BeanFactoryAware {
+    private static final Logger LOGGER    = LoggerFactory.getLogger(RpcServerFactoryBean.class);
+    public static final  String BEAN_NAME = "flora-rpc-server$RpcServer$";
 
     private ConfigurableListableBeanFactory beanFactory;
 
-    @Inject.ByName("floraRpcServer$ServiceRegistry$")
-    private ServiceRegistry        registry;
-    @Inject.ByName("floraRpcServer$ServiceHandler$")
-    private ServiceHandler         handler;
-    @Inject.ByType(required = false)
-    private ServerConfigurer       configurer;
-    @Inject.ByName(ServerConfigProperties.BEAN_NAME)
-    private ServerConfigProperties properties;
-    private ServerConfig           serverConfig;
+    @Inject.ByName("flora-rpc-server$ServiceRegistry$")
+    private ServiceRegistry registry;
+    @Inject.ByName("flora-rpc-server$ServiceHandler$")
+    private ServiceHandler  handler;
+    @Inject.ByName("flora-rpc-server$ServerConfig$")
+    private ServerConfig    config;
+
+    private RpcServer server;
 
     @Override
     public void afterPropertiesSet() {
-        this.serverConfig = ServerConfigBuilder.aServerConfig(configurer, properties).build();
+        server = RpcServerBuilder.aServer(config, registry, handler)
+                .addInterceptors(beanFactory.getBeansOfType(ServiceInterceptor.class).values())
+                .build();
+        RpcRequestHandler requestHandler = server.getRequestHandler();
+        beanFactory.registerSingleton("flora-rpc-server$RpcRequestHandler$", requestHandler);
     }
 
     @Override
     public RpcServer getObject() {
-        RpcServer server = RpcServerBuilder.aServer(serverConfig, registry, handler)
-                .addInterceptors(beanFactory.getBeansOfType(ServiceInterceptor.class).values())
-                .build();
-
         for (String beanDefName : beanFactory.getBeanDefinitionNames()) {
             BeanDefinition beanDef    = beanFactory.getBeanDefinition(beanDefName);
             Class<?>       clazz      = ReflectUtil.getBeanClassFromCglibProxy(beanDef.getBeanClass());
@@ -74,7 +71,7 @@ public class RpcServerFactoryBean
 
             Service service = new Service(beanFactory.getBean(beanDefName), serviceAttribute, responseAttribute);
 
-            loggerFactory.info("publish rpc service [{}]", serviceAttribute.getServiceName());
+            LOGGER.info("publish rpc service [{}]", serviceAttribute.getServiceName());
             server.publishService(service);
         }
         return server;
@@ -82,11 +79,11 @@ public class RpcServerFactoryBean
 
 
     private ServiceAttribute resolveServiceAttribute(RpcService serviceAnn, Class<?> clazz) {
-        return ServiceUtil.buildServiceAttribute(serviceAnn, clazz, serverConfig);
+        return ServiceUtil.buildServiceAttribute(serviceAnn, clazz, config);
     }
 
     private RpcResponseAttribute resolveResponseAttribute(Class<?> clazz) {
-        return ServiceUtil.buildRpcResponseAttribute(clazz, serverConfig);
+        return ServiceUtil.buildRpcResponseAttribute(clazz, config);
     }
 
     @Override

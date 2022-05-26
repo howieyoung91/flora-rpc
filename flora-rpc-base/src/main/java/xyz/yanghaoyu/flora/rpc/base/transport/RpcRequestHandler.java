@@ -3,7 +3,7 @@
  * Copyright ©2022-2022 杨浩宇，保留所有权利。
  */
 
-package xyz.yanghaoyu.flora.rpc.server.transport;
+package xyz.yanghaoyu.flora.rpc.base.transport;
 
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
@@ -17,15 +17,15 @@ import xyz.yanghaoyu.flora.core.OrderComparator;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcMessage;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestBody;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
-import xyz.yanghaoyu.flora.rpc.server.service.ServiceHandler;
-import xyz.yanghaoyu.flora.rpc.server.transport.interceptor.ResponseAwareServiceInterceptor;
-import xyz.yanghaoyu.flora.rpc.server.transport.interceptor.ServiceInterceptor;
+import xyz.yanghaoyu.flora.rpc.base.service.ServiceHandler;
+import xyz.yanghaoyu.flora.rpc.base.transport.interceptor.ResponseAwareServiceInterceptor;
+import xyz.yanghaoyu.flora.rpc.base.transport.interceptor.ServiceInterceptor;
 
 import java.util.TreeSet;
 
 @ChannelHandler.Sharable
 public class RpcRequestHandler extends ChannelInboundHandlerAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(RpcRequestHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RpcRequestHandler.class);
 
     private ServiceHandler                           serviceHandler;
     private TreeSet<ServiceInterceptor>              interceptors;
@@ -36,7 +36,8 @@ public class RpcRequestHandler extends ChannelInboundHandlerAdapter {
         this.interceptors = interceptors;
         this.responseAwareInterceptors = new TreeSet<>(OrderComparator.INSTANCE);
         if (interceptors != null) {
-            interceptors.stream().filter(interceptor -> interceptor instanceof ResponseAwareServiceInterceptor)
+            interceptors.stream()
+                    .filter(interceptor -> interceptor instanceof ResponseAwareServiceInterceptor)
                     .forEach(interceptor -> responseAwareInterceptors.add((ResponseAwareServiceInterceptor) interceptor));
         }
     }
@@ -48,21 +49,22 @@ public class RpcRequestHandler extends ChannelInboundHandlerAdapter {
 
             RpcResponseConfig responseConfig = null;
 
-            responseConfig = applyAdviseHandle(requestBody);
-
-            if (responseConfig == null) {
-                applyInterceptorsBeforeHandle(requestBody);
-                responseConfig = serviceHandler.handle(requestBody);
-                applyInterceptorsAfterHandle(requestBody, responseConfig);
-            }
-
+            responseConfig = handleRequestBody(requestBody);
 
             RpcMessage<RpcResponseBody> message = buildRpcMessage(requestBody.getId(), responseConfig);
 
-            applyInterceptorBeforeResponse(message);
             write(context, requestBody, message);
-            // applyInterceptorAfterResponse();
         }
+    }
+
+    public RpcResponseConfig handleRequestBody(RpcRequestBody requestBody) {
+        RpcResponseConfig responseConfig = applyAdviseHandle(requestBody);
+        if (responseConfig == null) {
+            applyInterceptorsBeforeHandle(requestBody);
+            responseConfig = serviceHandler.handle(requestBody);
+            applyInterceptorsAfterHandle(requestBody, responseConfig);
+        }
+        return responseConfig;
     }
 
     private void applyInterceptorBeforeResponse(RpcMessage<RpcResponseBody> message) {
@@ -93,21 +95,22 @@ public class RpcRequestHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-
+    /**
+     * 写出消息
+     */
     private void write(ChannelHandlerContext context, RpcRequestBody requestBody, RpcMessage<RpcResponseBody> message) {
+        applyInterceptorBeforeResponse(message);
         // check active
         if (!isChannelOK(context)) {
             RpcResponseBody responseBody = buildRpcResponseBodyOnError(requestBody);
             message.setBody(responseBody);
-            logger.error("message dropped. cause: channel is not writable");
+            LOGGER.error("message dropped. cause: channel is not writable");
         }
 
         // write out
         context.writeAndFlush(message)
                 .addListener(ChannelFutureListener.CLOSE_ON_FAILURE)
-                .addListener(future -> {
-                    applyInterceptorAfterResponse(requestBody, message);
-                });
+                .addListener(future -> applyInterceptorAfterResponse(requestBody, message));
     }
 
     private void applyInterceptorAfterResponse(RpcRequestBody requestBody, RpcMessage<RpcResponseBody> message) {
@@ -135,7 +138,7 @@ public class RpcRequestHandler extends ChannelInboundHandlerAdapter {
         return message;
     }
 
-    private RpcResponseBody buildResponseBody(String requestId, RpcResponseConfig responseConfig) {
+    public RpcResponseBody buildResponseBody(String requestId, RpcResponseConfig responseConfig) {
         RpcResponseBody responseBody = new RpcResponseBody();
         responseBody.setMessage("ok");
         responseBody.setCode(200);

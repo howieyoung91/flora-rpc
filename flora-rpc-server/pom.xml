@@ -9,7 +9,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>xyz.yanghaoyu.flora.rpc.server</groupId>
     <artifactId>flora-rpc-server</artifactId>
     <version>1.0</version>
 
@@ -23,7 +22,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>xyz.yanghaoyu.flora.rpc.base</groupId>
+            <groupId>xyz.yanghaoyu.flora.rpc</groupId>
             <artifactId>flora-rpc-base</artifactId>
             <version>1.0</version>
         </dependency>

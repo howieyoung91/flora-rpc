@@ -10,7 +10,6 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>xyz.yanghaoyu.flora.rpc.base</groupId>
     <artifactId>flora-rpc-base</artifactId>
     <version>1.0</version>
 

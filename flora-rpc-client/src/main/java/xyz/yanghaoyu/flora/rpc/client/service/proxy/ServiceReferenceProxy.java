@@ -13,13 +13,13 @@ import xyz.yanghaoyu.flora.core.OrderComparator;
 import xyz.yanghaoyu.flora.rpc.base.exception.RpcClientException;
 import xyz.yanghaoyu.flora.rpc.base.exception.ServiceNotFoundException;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
-import xyz.yanghaoyu.flora.rpc.client.annotation.RpcRequestAttribute;
-import xyz.yanghaoyu.flora.rpc.client.service.ServiceDiscovery;
-import xyz.yanghaoyu.flora.rpc.client.service.ServiceReference;
+import xyz.yanghaoyu.flora.rpc.base.annotation.RpcRequestAttribute;
+import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
+import xyz.yanghaoyu.flora.rpc.base.service.ServiceReference;
 import xyz.yanghaoyu.flora.rpc.client.service.config.DiscoveryAwareServiceReferenceInterceptor;
 import xyz.yanghaoyu.flora.rpc.client.service.config.ServiceReferenceInterceptor;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
-import xyz.yanghaoyu.flora.rpc.client.transport.RpcRequestConfig;
+import xyz.yanghaoyu.flora.rpc.base.transport.RpcRequestConfig;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -37,8 +37,10 @@ public class ServiceReferenceProxy implements InvocationHandler {
     private RpcClient                                      client;
     private ServiceReference                               reference;
     private ServiceDiscovery                               discovery;
-    private Set<ServiceReferenceInterceptor>               interceptors               = new TreeSet<>(OrderComparator.INSTANCE);
-    private Set<DiscoveryAwareServiceReferenceInterceptor> discoveryAwareInterceptors = new TreeSet<>(OrderComparator.INSTANCE);
+    private Set<ServiceReferenceInterceptor>               interceptors
+            = new TreeSet<>(OrderComparator.INSTANCE);
+    private Set<DiscoveryAwareServiceReferenceInterceptor> discoveryAwareInterceptors
+            = new TreeSet<>(OrderComparator.INSTANCE);
 
     ServiceReferenceProxy(RpcClient client, ServiceReference serviceReference, ServiceDiscovery discovery) {
         this.client = client;
@@ -55,7 +57,7 @@ public class ServiceReferenceProxy implements InvocationHandler {
     }
 
     private Object request(Method method, Object[] args) throws Exception {
-        RpcRequestConfig  requestConfig = getRpcRequestConfig(method, args);
+        RpcRequestConfig  requestConfig = buildRpcRequestConfig(method, args);
         InetSocketAddress target        = null;
 
         target = applyInterceptorsBeforeServiceDiscover(requestConfig);
@@ -100,13 +102,7 @@ public class ServiceReferenceProxy implements InvocationHandler {
     }
 
     private InetSocketAddress applyInterceptorsAfterServiceDiscover(InetSocketAddress target) {
-        for (DiscoveryAwareServiceReferenceInterceptor interceptor : discoveryAwareInterceptors) {
-            InetSocketAddress address = interceptor.afterDiscoverService(target);
-            if (address != null) {
-                return address;
-            }
-        }
-        return target;
+        return discoveryAwareInterceptors.stream().map(interceptor -> interceptor.afterDiscoverService(target)).filter(Objects::nonNull).findFirst().orElse(target);
     }
 
     private InetSocketAddress applyInterceptorsBeforeServiceDiscover(RpcRequestConfig reqConfig) {
@@ -149,7 +145,7 @@ public class ServiceReferenceProxy implements InvocationHandler {
         }
     }
 
-    private RpcRequestConfig getRpcRequestConfig(Method method, Object[] args) {
+    private RpcRequestConfig buildRpcRequestConfig(Method method, Object[] args) {
         RpcRequestConfig requestConfig = new RpcRequestConfig();
 
         // service reference config
@@ -159,19 +155,20 @@ public class ServiceReferenceProxy implements InvocationHandler {
         requestConfig.setServiceReferenceAttribute(reference.getServiceReferenceAttribute());
         requestConfig.setId(SNOWFLAKE.nextIdStr());
 
-        applyRpcRequestAnnotationConfig(requestConfig);
+        resolveRequestAttribute(requestConfig);
 
         return requestConfig;
     }
 
-    private void applyRpcRequestAnnotationConfig(RpcRequestConfig request) {
+    private void resolveRequestAttribute(RpcRequestConfig requestConfig) {
         RpcRequestAttribute attribute = reference.getRequestAttribute();
         if (attribute == null) {
             return;
         }
 
-        request.setCompressor(attribute.getCompressorName());
-        request.setSerializer(attribute.getSerializerName());
+        requestConfig.setCompressor(attribute.getCompressorName());
+        requestConfig.setSerializer(attribute.getSerializerName());
+        requestConfig.setAlwaysRemote(attribute.isAlwaysRemote());
     }
 
     void addServiceInterceptor(List<ServiceReferenceInterceptor> interceptors) {

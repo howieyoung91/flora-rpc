@@ -5,8 +5,8 @@
 
 package xyz.yanghaoyu.flora.rpc.client.service.proxy;
 
-import xyz.yanghaoyu.flora.rpc.client.service.ServiceDiscovery;
-import xyz.yanghaoyu.flora.rpc.client.service.ServiceReference;
+import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
+import xyz.yanghaoyu.flora.rpc.base.service.ServiceReference;
 import xyz.yanghaoyu.flora.rpc.client.service.config.ServiceReferenceInterceptor;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
 

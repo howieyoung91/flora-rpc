@@ -3,7 +3,7 @@
  * Copyright ©2022-2022 杨浩宇，保留所有权利。
  */
 
-package xyz.yanghaoyu.flora.rpc.client.annotation;
+package xyz.yanghaoyu.flora.rpc.base.annotation;
 
 public class ServiceReferenceContext {
     private Object bean;

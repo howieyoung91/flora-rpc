@@ -8,6 +8,6 @@ package xyz.yanghaoyu.flora.rpc.base.compress.support;
 public class DefaultCompressorService extends AbstractCompressorService {
     public DefaultCompressorService() {
         addCompressor(new NoCompressSmartCompressor());
-        addCompressor(new GzipCompressor());
+        addCompressor(new GzipSmartCompressor());
     }
 }

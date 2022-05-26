@@ -3,11 +3,12 @@
  * Copyright ©2022-2022 杨浩宇，保留所有权利。
  */
 
-package xyz.yanghaoyu.flora.rpc.server.annotation;
+package xyz.yanghaoyu.flora.rpc.base.annotation;
 
-public class RpcResponseAttribute {
-    private String serializerName;
-    private String compressorName;
+public class RpcRequestAttribute {
+    private String  serializerName;
+    private String  compressorName;
+    private boolean alwaysRemote;
 
     public String getSerializerName() {
         return serializerName;
@@ -23,5 +24,13 @@ public class RpcResponseAttribute {
 
     public void setCompressorName(String compressorName) {
         this.compressorName = compressorName;
+    }
+
+    public boolean isAlwaysRemote() {
+        return alwaysRemote;
+    }
+
+    public void setAlwaysRemote(boolean remote) {
+        this.alwaysRemote = remote;
     }
 }

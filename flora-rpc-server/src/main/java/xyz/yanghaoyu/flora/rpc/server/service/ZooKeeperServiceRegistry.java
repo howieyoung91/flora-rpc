@@ -3,17 +3,17 @@
  * Copyright ©2022-2022 杨浩宇，保留所有权利。
  */
 
-package xyz.yanghaoyu.flora.rpc.server.service.support;
+package xyz.yanghaoyu.flora.rpc.server.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.yanghaoyu.flora.rpc.base.exception.ServiceException;
 import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.ZooKeeper;
 import xyz.yanghaoyu.flora.rpc.base.util.ServiceUtil;
-import xyz.yanghaoyu.flora.rpc.server.annotation.ServiceAttribute;
+import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceAttribute;
 import xyz.yanghaoyu.flora.rpc.server.config.RegistryConfig;
-import xyz.yanghaoyu.flora.rpc.server.service.Service;
-import xyz.yanghaoyu.flora.rpc.server.service.ServiceRegistry;
+import xyz.yanghaoyu.flora.rpc.base.service.Service;
+import xyz.yanghaoyu.flora.rpc.base.service.ServiceRegistry;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
@@ -54,5 +54,10 @@ public class ZooKeeperServiceRegistry implements ServiceRegistry {
             throw new ServiceException("unknown service: " + serviceName);
         }
         return service;
+    }
+
+    @Override
+    public boolean contains(String serviceName) {
+        return registeredServices.containsKey(serviceName);
     }
 }

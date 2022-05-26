@@ -82,7 +82,7 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
 
         if (messageType == RpcMessage.HEARTBEAT_REQUEST_MESSAGE_TYPE) {
             // server
-            LOGGER.info("{} ping", ctx.channel().remoteAddress());
+            LOGGER.debug("{} ping", ctx.channel().remoteAddress());
 
             RpcMessage<Object> pong = RpcMessage.of(RpcMessage.HEARTBEAT_RESPONSE_MESSAGE_TYPE, null);
             pong.setId(id);
@@ -92,7 +92,7 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
             return null;
         } else if (messageType == RpcMessage.HEARTBEAT_RESPONSE_MESSAGE_TYPE) {
             // client
-            LOGGER.info("{} pong", ctx.channel().remoteAddress());
+            LOGGER.debug("{} pong", ctx.channel().remoteAddress());
             return null;
         }
 

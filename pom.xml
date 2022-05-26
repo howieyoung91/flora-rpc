@@ -61,14 +61,14 @@
         <dependency>
             <groupId>xyz.yanghaoyu.flora.framework</groupId>
             <artifactId>flora-framework</artifactId>
-            <version>1.0</version>
+            <version>1.1</version>
             <scope>provided</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.apache.dubbo</groupId>-->
-<!--            <artifactId>dubbo</artifactId>-->
-<!--            <version>3.0.7</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.apache.dubbo</groupId>-->
+        <!--            <artifactId>dubbo</artifactId>-->
+        <!--            <version>3.0.7</version>-->
+        <!--        </dependency>-->
     </dependencies>
     <build>
         <pluginManagement>

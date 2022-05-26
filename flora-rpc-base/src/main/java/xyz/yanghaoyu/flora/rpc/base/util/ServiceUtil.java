@@ -5,7 +5,9 @@
 
 package xyz.yanghaoyu.flora.rpc.base.util;
 
+import java.net.Inet4Address;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 
 public abstract class ServiceUtil {
     public static String buildNamespacedServiceNodePath(String namespace, String serviceName) {
@@ -28,6 +30,15 @@ public abstract class ServiceUtil {
         String host = socketAddressArray[0];
         int    port = Integer.parseInt(socketAddressArray[1]);
         return new InetSocketAddress(host, port);
+    }
+
+    public static InetSocketAddress getLocalAddress(int port) {
+        try {
+            return new InetSocketAddress(Inet4Address.getLocalHost(), port);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        throw new NullPointerException("fail to get local address. port: [" + port + "]");
     }
 }
 

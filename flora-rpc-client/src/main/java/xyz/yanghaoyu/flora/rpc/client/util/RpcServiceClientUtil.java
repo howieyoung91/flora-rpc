@@ -5,11 +5,11 @@
 
 package xyz.yanghaoyu.flora.rpc.client.util;
 
+import xyz.yanghaoyu.flora.rpc.base.annotation.RpcRequestAttribute;
+import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceReferenceAttribute;
+import xyz.yanghaoyu.flora.rpc.base.config.ClientConfig;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcRequest;
-import xyz.yanghaoyu.flora.rpc.client.annotation.RpcRequestAttribute;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcServiceReference;
-import xyz.yanghaoyu.flora.rpc.client.annotation.ServiceReferenceAttribute;
-import xyz.yanghaoyu.flora.rpc.client.config.ClientConfig;
 
 import java.lang.reflect.Field;
 import java.util.Objects;
@@ -47,10 +47,28 @@ public abstract class RpcServiceClientUtil {
         return new ServiceReferenceAttribute(namespace, interfaceName, group, version);
     }
 
-    public static RpcRequestAttribute buildRpcRequestAttribute(RpcRequest rpcRequestAnn) {
+    public static RpcRequestAttribute buildRpcRequestAttribute(RpcRequest rpcRequestAnn, ClientConfig config) {
         RpcRequestAttribute attribute = new RpcRequestAttribute();
-        attribute.setSerializerName(rpcRequestAnn.serializer());
-        attribute.setCompressorName(rpcRequestAnn.compressor());
+        if (rpcRequestAnn == null) {
+            attribute.setSerializerName(config.defaultSerializer());
+            attribute.setCompressorName(config.defaultCompressor());
+            attribute.setAlwaysRemote(RpcRequest.DEFAULT_ALWAYS_REMOTE);
+            return attribute;
+        }
+
+        String serializer = rpcRequestAnn.serializer();
+        if (serializer.equals("")) {
+            serializer = config.defaultSerializer();
+        }
+
+        String compressor = rpcRequestAnn.compressor();
+        if (compressor.equals("")) {
+            compressor = config.defaultCompressor();
+        }
+
+        attribute.setSerializerName(serializer);
+        attribute.setCompressorName(compressor);
+        attribute.setAlwaysRemote(rpcRequestAnn.alwaysRemote());
         return attribute;
     }
 }

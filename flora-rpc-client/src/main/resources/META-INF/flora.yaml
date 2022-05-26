@@ -1,4 +1,4 @@
 flora:
   framework:
     autoconfiguration:
-      - xyz.yanghaoyu.flora.rpc.client.autoconfiguration.ServiceDiscoveryAutoConfiguration
+      - xyz.yanghaoyu.flora.rpc.client.autoconfiguration.RpcClientAutoConfiguration

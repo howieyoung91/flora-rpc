@@ -3,7 +3,10 @@ flora:
     client:
       serializer: KRYO
       compressor: NOCOMPRESS
-      namespace: /flora/service/flora
+      application:
+        namespace: /flora/service/flora
+        # group: flora.rpc
+        # version: 1.0
       discovery:
         zookeeper:
           # address: 127.0.0.1:2181

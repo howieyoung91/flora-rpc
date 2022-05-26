@@ -3,9 +3,9 @@
  * Copyright ©2022-2022 杨浩宇，保留所有权利。
  */
 
-package xyz.yanghaoyu.flora.rpc.client.transport;
+package xyz.yanghaoyu.flora.rpc.base.transport;
 
-import xyz.yanghaoyu.flora.rpc.client.annotation.ServiceReferenceAttribute;
+import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceReferenceAttribute;
 
 public class RpcRequestConfig {
     private String                    id;
@@ -15,6 +15,7 @@ public class RpcRequestConfig {
     private String                    serializer;
     private String                    compressor;
     private String                    loadBalance;
+    private boolean                   alwaysRemote;
     private ServiceReferenceAttribute serviceReferenceAttribute;
 
     public String getMethodName() {
@@ -79,5 +80,13 @@ public class RpcRequestConfig {
 
     public void setLoadBalance(String loadBalance) {
         this.loadBalance = loadBalance;
+    }
+
+    public boolean isAlwaysRemote() {
+        return alwaysRemote;
+    }
+
+    public void setAlwaysRemote(boolean alwaysRemote) {
+        this.alwaysRemote = alwaysRemote;
     }
 }

@@ -16,7 +16,7 @@ import java.util.Objects;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-public class GzipCompressor implements SmartCompressor {
+public class GzipSmartCompressor implements SmartCompressor {
     private static final int    BUFFER_SIZE = 1024 * 4;
     public static final  byte   CODE        = -2;
     public static final  String NAME        = "GZIP";

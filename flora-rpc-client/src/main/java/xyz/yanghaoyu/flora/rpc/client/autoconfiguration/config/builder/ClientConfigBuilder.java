@@ -15,7 +15,7 @@ import xyz.yanghaoyu.flora.rpc.base.serialize.SmartSerializer;
 import xyz.yanghaoyu.flora.rpc.base.serialize.support.DefaultSerializeService;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ClientConfigProperties;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ClientConfigurer;
-import xyz.yanghaoyu.flora.rpc.client.config.ClientConfig;
+import xyz.yanghaoyu.flora.rpc.base.config.ClientConfig;
 
 import java.util.List;
 import java.util.Objects;

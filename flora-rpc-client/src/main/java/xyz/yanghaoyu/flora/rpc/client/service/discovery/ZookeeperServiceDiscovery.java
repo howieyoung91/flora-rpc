@@ -3,20 +3,21 @@
  * Copyright ©2022-2022 杨浩宇，保留所有权利。
  */
 
-package xyz.yanghaoyu.flora.rpc.client.service;
+package xyz.yanghaoyu.flora.rpc.client.service.discovery;
 
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceReferenceAttribute;
 import xyz.yanghaoyu.flora.rpc.base.exception.ServiceNotFoundException;
 import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.ZooKeeper;
 import xyz.yanghaoyu.flora.rpc.base.util.ServiceUtil;
-import xyz.yanghaoyu.flora.rpc.client.annotation.ServiceReferenceAttribute;
 import xyz.yanghaoyu.flora.rpc.client.cluster.RpcInvocation;
 import xyz.yanghaoyu.flora.rpc.client.cluster.URL;
 import xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance.ServiceLoadBalance;
 import xyz.yanghaoyu.flora.rpc.client.config.DiscoveryConfig;
-import xyz.yanghaoyu.flora.rpc.client.transport.RpcRequestConfig;
+import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
+import xyz.yanghaoyu.flora.rpc.base.transport.RpcRequestConfig;
 
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -63,7 +64,8 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
                 .select(urls, buildInvocation(requestConfig, serviceName));
 
         if (url == null) {
-            throw new ServiceNotFoundException("discovered no service [" + serviceReferenceAttribute.getServiceName() + "] in namespace [" + namespace + "]");
+            return null;
+            // throw new ServiceNotFoundException("discovered no service [" + serviceReferenceAttribute.getServiceName() + "] in namespace [" + namespace + "]");
         }
 
         logger.info("discovered service [{}] at [{}]", serviceReferenceAttribute, url);

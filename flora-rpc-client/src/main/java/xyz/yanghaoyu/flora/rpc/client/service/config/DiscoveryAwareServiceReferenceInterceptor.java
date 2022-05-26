@@ -4,8 +4,8 @@
  */
 package xyz.yanghaoyu.flora.rpc.client.service.config;
 
-import xyz.yanghaoyu.flora.rpc.client.service.ServiceReference;
-import xyz.yanghaoyu.flora.rpc.client.transport.RpcRequestConfig;
+import xyz.yanghaoyu.flora.rpc.base.service.ServiceReference;
+import xyz.yanghaoyu.flora.rpc.base.transport.RpcRequestConfig;
 
 import java.net.InetSocketAddress;
 

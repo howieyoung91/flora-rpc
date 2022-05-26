@@ -3,7 +3,7 @@
  * Copyright ©2022-2022 杨浩宇，保留所有权利。
  */
 
-package xyz.yanghaoyu.flora.rpc.client.transport;
+package xyz.yanghaoyu.flora.rpc.base.transport;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -61,7 +61,6 @@ public class RpcResponseHandler extends ChannelInboundHandlerAdapter {
                 RpcMessage<String> pingMessage = RpcMessage.of(RpcMessage.HEARTBEAT_REQUEST_MESSAGE_TYPE, null);
                 // todo set id
 
-                
                 pingMessage.setSerializer(KryoSmartSerializer.NAME);
                 pingMessage.setCompressor(NoCompressSmartCompressor.NAME);
 

@@ -119,11 +119,11 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
                 return serializer.serialize(message.getBody());
             }
             case RpcMessage.HEARTBEAT_REQUEST_MESSAGE_TYPE: {
-                LOGGER.info("ping {}", context.channel().remoteAddress());
+                LOGGER.debug("ping {}", context.channel().remoteAddress());
                 break;
             }
             case RpcMessage.HEARTBEAT_RESPONSE_MESSAGE_TYPE: {
-                LOGGER.info("pong {}", context.channel().remoteAddress());
+                LOGGER.debug("pong {}", context.channel().remoteAddress());
                 break;
             }
         }

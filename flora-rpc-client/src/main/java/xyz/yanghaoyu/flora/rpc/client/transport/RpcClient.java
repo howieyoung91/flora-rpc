@@ -14,13 +14,17 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xyz.yanghaoyu.flora.rpc.base.config.ClientConfig;
 import xyz.yanghaoyu.flora.rpc.base.exception.RpcClientException;
+import xyz.yanghaoyu.flora.rpc.base.transport.RpcRequestConfig;
+import xyz.yanghaoyu.flora.rpc.base.transport.RpcRequestHandler;
+import xyz.yanghaoyu.flora.rpc.base.transport.RpcResponseConfig;
+import xyz.yanghaoyu.flora.rpc.base.transport.RpcResponseHandler;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcMessage;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestBody;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
 import xyz.yanghaoyu.flora.rpc.base.transport.protocol.MessageDecoder;
 import xyz.yanghaoyu.flora.rpc.base.transport.protocol.MessageEncoder;
-import xyz.yanghaoyu.flora.rpc.client.config.ClientConfig;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
@@ -29,17 +33,21 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public final class RpcClient {
-    private static final Logger logger = LoggerFactory.getLogger(RpcClient.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RpcClient.class);
 
     private final ClientConfig      config;
+    private final InetSocketAddress localhost;
+    private final RpcRequestHandler requestHandler;
     private final NioEventLoopGroup group     = new NioEventLoopGroup();
     private final Bootstrap         bootstrap = buildBootstrap(group);
     private final MessageEncoder    encoder;
 
     private final Map<String, CompletableFuture<RpcResponseBody>> waitingRequests = new ConcurrentHashMap<>();
 
-    public RpcClient(ClientConfig config) {
+    public RpcClient(ClientConfig config, InetSocketAddress localServerAddress, RpcRequestHandler requestHandler) {
         this.config = config;
+        this.localhost = localServerAddress;
+        this.requestHandler = requestHandler;
         encoder = new MessageEncoder(
                 config.serializerFactory(),
                 config.defaultSerializer(),
@@ -49,20 +57,35 @@ public final class RpcClient {
     }
 
     public void close() {
-        logger.info("rpc client close");
+        LOGGER.info("rpc client close");
         group.shutdownGracefully();
     }
 
-    public CompletableFuture<RpcResponseBody> send(RpcRequestConfig requestConfig, InetSocketAddress address) {
-        if (address == null) {
+    public CompletableFuture<RpcResponseBody> send(RpcRequestConfig requestConfig, InetSocketAddress target) {
+        if (target == null) {
             throw new NullPointerException("the target address is null. method: " + requestConfig.getMethodName());
         }
 
+        // 服务在本地 直接在本地处理 减少网络开销
+        if (requestHandler != null && target.equals(localhost)) {
+            return handleRequestLocally(requestConfig);
+        }
+
         // 连接到服务所在到服务器
-        Channel channel = connectService(address);
+        Channel channel = connectService(target);
 
         // 返回 CompletableFuture， 让调用线程去阻塞，提升客户端的吞吐量
         return doSend(requestConfig, channel);
+    }
+
+    private CompletableFuture<RpcResponseBody> handleRequestLocally(RpcRequestConfig requestConfig) {
+        RpcRequestBody    requestBody    = buildRpcRequestBody(requestConfig);
+        RpcResponseConfig responseConfig = requestHandler.handleRequestBody(requestBody);
+        RpcResponseBody   responseBody   = requestHandler.buildResponseBody(requestConfig.getId(), responseConfig);
+
+        CompletableFuture<RpcResponseBody> promise = new CompletableFuture<>();
+        promise.complete(responseBody);
+        return promise;
     }
 
     private CompletableFuture<RpcResponseBody> doSend(RpcRequestConfig requestConfig, Channel channel) {
@@ -73,13 +96,13 @@ public final class RpcClient {
         RpcMessage message = buildMessage(requestConfig);
         channel.writeAndFlush(message).addListener((ChannelFutureListener) future -> {
             if (future.isSuccess()) {
-                logger.info("request service [{}]", requestConfig.getServiceReferenceAttribute());
+                LOGGER.info("request service [{}]", requestConfig.getServiceReferenceAttribute());
                 return;
             }
 
             future.channel().close();
             promise.completeExceptionally(future.cause());
-            logger.error("client fail to send. cause:", future.cause());
+            LOGGER.error("client fail to send. cause:", future.cause());
         });
         return promise;
     }

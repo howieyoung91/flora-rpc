@@ -3,11 +3,11 @@
  * Copyright ©2022-2022 杨浩宇，保留所有权利。
  */
 
-package xyz.yanghaoyu.flora.rpc.client.service;
+package xyz.yanghaoyu.flora.rpc.base.service;
 
-import xyz.yanghaoyu.flora.rpc.client.annotation.RpcRequestAttribute;
-import xyz.yanghaoyu.flora.rpc.client.annotation.ServiceReferenceAttribute;
-import xyz.yanghaoyu.flora.rpc.client.annotation.ServiceReferenceContext;
+import xyz.yanghaoyu.flora.rpc.base.annotation.RpcRequestAttribute;
+import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceReferenceAttribute;
+import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceReferenceContext;
 
 public class ServiceReference {
     private RpcRequestAttribute       requestAttribute;

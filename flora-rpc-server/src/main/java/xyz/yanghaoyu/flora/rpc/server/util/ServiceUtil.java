@@ -6,31 +6,14 @@
 package xyz.yanghaoyu.flora.rpc.server.util;
 
 import xyz.yanghaoyu.flora.rpc.server.annotation.RpcResponse;
-import xyz.yanghaoyu.flora.rpc.server.annotation.RpcResponseAttribute;
+import xyz.yanghaoyu.flora.rpc.base.annotation.RpcResponseAttribute;
 import xyz.yanghaoyu.flora.rpc.server.annotation.RpcService;
-import xyz.yanghaoyu.flora.rpc.server.annotation.ServiceAttribute;
-import xyz.yanghaoyu.flora.rpc.server.config.ServerConfig;
+import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceAttribute;
+import xyz.yanghaoyu.flora.rpc.base.config.ServerConfig;
 
 import java.util.Objects;
 
 public abstract class ServiceUtil {
-    // public static ServiceAttribute buildServiceAttribute(RpcService rpcServiceAnn) {
-    //     return new ServiceAttribute(
-    //             rpcServiceAnn.namespace(),
-    //             rpcServiceAnn.interfaceName(),
-    //             rpcServiceAnn.group(),
-    //             rpcServiceAnn.version()
-    //     );
-    // }
-
-    // public static RpcResponseAttribute buildRpcResponseAttribute(RpcResponse rpcResponse) {
-    //     RpcResponseAttribute attribute = new RpcResponseAttribute();
-    //     attribute.setSerializerName(rpcResponse.serializer());
-    //     attribute.setCompressorName(rpcResponse.compressor());
-    //     return attribute;
-    // }
-
-
     public static ServiceAttribute buildServiceAttribute(RpcService serviceAnn, Class<?> clazz, ServerConfig serverConfig) {
         String group = serviceAnn.group();
         if (group.equals(RpcService.EMPTY_GROUP)) {
