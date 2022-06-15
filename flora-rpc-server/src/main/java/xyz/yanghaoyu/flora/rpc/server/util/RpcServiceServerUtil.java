@@ -5,15 +5,16 @@
 
 package xyz.yanghaoyu.flora.rpc.server.util;
 
-import xyz.yanghaoyu.flora.rpc.server.annotation.RpcResponse;
 import xyz.yanghaoyu.flora.rpc.base.annotation.RpcResponseAttribute;
-import xyz.yanghaoyu.flora.rpc.server.annotation.RpcService;
 import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceAttribute;
 import xyz.yanghaoyu.flora.rpc.base.config.ServerConfig;
+import xyz.yanghaoyu.flora.rpc.base.exception.ServiceException;
+import xyz.yanghaoyu.flora.rpc.server.annotation.RpcResponse;
+import xyz.yanghaoyu.flora.rpc.server.annotation.RpcService;
 
 import java.util.Objects;
 
-public abstract class ServiceUtil {
+public abstract class RpcServiceServerUtil {
     public static ServiceAttribute buildServiceAttribute(RpcService serviceAnn, Class<?> clazz, ServerConfig serverConfig) {
         String group = serviceAnn.group();
         if (group.equals(RpcService.EMPTY_GROUP)) {
@@ -29,13 +30,7 @@ public abstract class ServiceUtil {
             namespace = defaultNamespace;
         }
 
-        String interfaceName = serviceAnn.interfaceName();
-        if (interfaceName.equals(RpcService.EMPTY_INTERFACE_NAME)) {
-            Class<?>[] interfaces = clazz.getInterfaces();
-            // 没有实现接口 就直接用类名作为 service name
-            // 有接口 就直接用第一个实现的接口名字作为 service name
-            interfaceName = interfaces.length == 0 ? clazz.getName() : interfaces[0].getName();
-        }
+        String interfaceName = determineInterfaceName(serviceAnn, clazz);
 
         String version = serviceAnn.version();
         if (version.equals(RpcService.EMPTY_VERSION)) {
@@ -43,12 +38,34 @@ public abstract class ServiceUtil {
             Objects.requireNonNull(defaultVersion, "found no version");
             version = defaultVersion;
         }
-
         return new ServiceAttribute(namespace, interfaceName, group, version);
     }
 
+    private static String determineInterfaceName(RpcService serviceAnn, Class<?> clazz) {
+        String interfaceName = serviceAnn.interfaceName();
+        Class  interfaceType = serviceAnn.interfaceType();
+        if (interfaceName.equals(RpcService.EMPTY_INTERFACE_NAME)) {
+            if (interfaceType.equals(RpcService.EMPTY_INTERFACE_TYPE)) {
+                Class<?>[] interfaces = clazz.getInterfaces();
+                // 没有实现接口 就直接用类名作为 service name
+                // 有接口 就直接用第一个实现的接口名字作为 interface name
+                interfaceName = interfaces.length == 0 ? clazz.getName() : interfaces[0].getName();
+            }
+            else {
+                interfaceName = interfaceType.getName();
+            }
+        }
+        else {
+            if (!interfaceType.equals(RpcService.EMPTY_INTERFACE_TYPE)) {
+                throw new ServiceException("cannot determine interface name on class [" + clazz + "]. cause: interfaceName [" + interfaceName + "] and interfaceType [" + interfaceType + "]. Which should I use?");
+            }
+        }
+        return interfaceName;
+    }
+
     public static RpcResponseAttribute buildRpcResponseAttribute(
-            Class<?> clazz, ServerConfig serverConfig
+            Class<?> clazz, ServerConfig
+            serverConfig
     ) {
         RpcResponse rpcResponseAnn = clazz.getAnnotation(RpcResponse.class);
         if (rpcResponseAnn == null) {

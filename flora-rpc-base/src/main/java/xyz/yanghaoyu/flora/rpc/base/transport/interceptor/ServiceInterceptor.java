@@ -7,7 +7,7 @@ package xyz.yanghaoyu.flora.rpc.base.transport.interceptor;
 
 import xyz.yanghaoyu.flora.core.Ordered;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestBody;
-import xyz.yanghaoyu.flora.rpc.base.transport.RpcResponseConfig;
+import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseConfig;
 
 public interface ServiceInterceptor extends Ordered {
     default RpcResponseConfig adviseHandle(RpcRequestBody requestBody) {

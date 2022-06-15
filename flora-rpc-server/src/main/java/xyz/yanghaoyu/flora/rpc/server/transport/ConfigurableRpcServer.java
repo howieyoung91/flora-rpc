@@ -5,8 +5,8 @@
 
 package xyz.yanghaoyu.flora.rpc.server.transport;
 
-public interface RpcServer {
-    void start();
+import xyz.yanghaoyu.flora.rpc.base.config.ServerConfig;
 
-    void close();
+public interface ConfigurableRpcServer extends RpcServer {
+    ServerConfig getConfig();
 }

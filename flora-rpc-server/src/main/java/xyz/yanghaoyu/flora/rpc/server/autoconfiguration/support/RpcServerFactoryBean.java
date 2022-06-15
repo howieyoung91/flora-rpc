@@ -22,17 +22,17 @@ import xyz.yanghaoyu.flora.rpc.base.config.ServerConfig;
 import xyz.yanghaoyu.flora.rpc.base.service.Service;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceHandler;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceRegistry;
-import xyz.yanghaoyu.flora.rpc.base.transport.RpcRequestHandler;
+import xyz.yanghaoyu.flora.rpc.base.transport.DefaultRpcRequestHandler;
 import xyz.yanghaoyu.flora.rpc.base.transport.interceptor.ServiceInterceptor;
 import xyz.yanghaoyu.flora.rpc.server.annotation.RpcService;
-import xyz.yanghaoyu.flora.rpc.server.transport.RpcServer;
-import xyz.yanghaoyu.flora.rpc.server.transport.RpcServerBuilder;
-import xyz.yanghaoyu.flora.rpc.server.util.ServiceUtil;
+import xyz.yanghaoyu.flora.rpc.server.transport.support.AbstractRpcServer;
+import xyz.yanghaoyu.flora.rpc.server.transport.support.RpcServerBuilder;
+import xyz.yanghaoyu.flora.rpc.server.util.RpcServiceServerUtil;
 import xyz.yanghaoyu.flora.util.ReflectUtil;
 
 @Component(RpcServerFactoryBean.BEAN_NAME)
 public class RpcServerFactoryBean
-        implements FactoryBean<RpcServer>, InitializingBean, BeanFactoryAware {
+        implements FactoryBean<AbstractRpcServer>, InitializingBean, BeanFactoryAware {
     private static final Logger LOGGER    = LoggerFactory.getLogger(RpcServerFactoryBean.class);
     public static final  String BEAN_NAME = "flora-rpc-server$RpcServer$";
 
@@ -45,22 +45,22 @@ public class RpcServerFactoryBean
     @Inject.ByName("flora-rpc-server$ServerConfig$")
     private ServerConfig    config;
 
-    private RpcServer server;
+    private AbstractRpcServer server;
 
     @Override
     public void afterPropertiesSet() {
         server = RpcServerBuilder.aServer(config, registry, handler)
                 .addInterceptors(beanFactory.getBeansOfType(ServiceInterceptor.class).values())
                 .build();
-        RpcRequestHandler requestHandler = server.getRequestHandler();
+        DefaultRpcRequestHandler requestHandler = server.getRequestHandler();
         beanFactory.registerSingleton("flora-rpc-server$RpcRequestHandler$", requestHandler);
     }
 
     @Override
-    public RpcServer getObject() {
-        for (String beanDefName : beanFactory.getBeanDefinitionNames()) {
-            BeanDefinition beanDef    = beanFactory.getBeanDefinition(beanDefName);
-            Class<?>       clazz      = ReflectUtil.getBeanClassFromCglibProxy(beanDef.getBeanClass());
+    public AbstractRpcServer getObject() {
+        for (String beanName : beanFactory.getBeanDefinitionNames()) {
+            BeanDefinition beanDef    = beanFactory.getBeanDefinition(beanName);
+            Class<?>       clazz      = ReflectUtil.getBeanClassFromCglibProxyIfNecessary(beanDef.getBeanClass());
             RpcService     serviceAnn = clazz.getAnnotation(RpcService.class);
             if (serviceAnn == null) {
                 continue;
@@ -69,7 +69,7 @@ public class RpcServerFactoryBean
             ServiceAttribute     serviceAttribute  = resolveServiceAttribute(serviceAnn, clazz);
             RpcResponseAttribute responseAttribute = resolveResponseAttribute(clazz);
 
-            Service service = new Service(beanFactory.getBean(beanDefName), serviceAttribute, responseAttribute);
+            Service service = new Service(beanFactory.getBean(beanName), serviceAttribute, responseAttribute);
 
             LOGGER.info("publish rpc service [{}]", serviceAttribute.getServiceName());
             server.publishService(service);
@@ -79,11 +79,11 @@ public class RpcServerFactoryBean
 
 
     private ServiceAttribute resolveServiceAttribute(RpcService serviceAnn, Class<?> clazz) {
-        return ServiceUtil.buildServiceAttribute(serviceAnn, clazz, config);
+        return RpcServiceServerUtil.buildServiceAttribute(serviceAnn, clazz, config);
     }
 
     private RpcResponseAttribute resolveResponseAttribute(Class<?> clazz) {
-        return ServiceUtil.buildRpcResponseAttribute(clazz, config);
+        return RpcServiceServerUtil.buildRpcResponseAttribute(clazz, config);
     }
 
     @Override

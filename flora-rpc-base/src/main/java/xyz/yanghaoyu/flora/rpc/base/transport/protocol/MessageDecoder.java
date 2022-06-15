@@ -29,7 +29,7 @@ import java.util.Arrays;
 
   0       4         5              6                7               8    11      15
   +-------+---------+--------------+----------------+---------------+----+--------+
-  | magic | version | message type | serialize type | compress type | id | length |
+  | magic | version | message type | serialize type | compress type |  ? | length |
   +-------------------------------------------------------------------------------+
   |                                     body                                      |
   +-------------------------------------------------------------------------------+
@@ -39,7 +39,7 @@ import java.util.Arrays;
   3. message type       消息类型        可能是请求包，响应包，心跳检测请求包，心跳检测响应包
   4. serialize type     序列化类型
   5. compress type      body 压缩类型
-  6. id                 报文 id
+  6. ?                  未使用
   7. length             报文长度
   8. body               报文数据
  */
@@ -78,14 +78,14 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
         byte         messageType  = in.readByte();
         Deserializer deserializer = getDeserializer(in.readByte());
         Decompressor decompressor = getDecompressor(in.readByte());
-        int          id           = in.readInt();
+        // 跳过四个未使用的字节
+        in.readInt();
 
         if (messageType == RpcMessage.HEARTBEAT_REQUEST_MESSAGE_TYPE) {
             // server
             LOGGER.debug("{} ping", ctx.channel().remoteAddress());
 
             RpcMessage<Object> pong = RpcMessage.of(RpcMessage.HEARTBEAT_RESPONSE_MESSAGE_TYPE, null);
-            pong.setId(id);
             pong.setSerializer(KryoSmartSerializer.NAME);
             pong.setCompressor(NoCompressSmartCompressor.NAME);
             ctx.writeAndFlush(pong);
@@ -109,6 +109,7 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
 
     private byte[] readBody(ByteBuf in) {
         int length = in.readInt();
+
         // handle rpc
         int bodyLength = length - RpcMessage.HEADER_LENGTH;
         if (bodyLength == 0) {

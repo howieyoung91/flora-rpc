@@ -54,16 +54,12 @@ public class RpcResponseHandler extends ChannelInboundHandlerAdapter {
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof IdleStateEvent) {
             IdleState state = ((IdleStateEvent) evt).state();
-
             // 长时间未写
             // 发送 ping 包
             if (state == IdleState.WRITER_IDLE) {
                 RpcMessage<String> pingMessage = RpcMessage.of(RpcMessage.HEARTBEAT_REQUEST_MESSAGE_TYPE, null);
-                // todo set id
-
                 pingMessage.setSerializer(KryoSmartSerializer.NAME);
                 pingMessage.setCompressor(NoCompressSmartCompressor.NAME);
-
                 Channel channel = ctx.channel();
                 if (channel.isWritable()) {
                     ctx.channel().writeAndFlush(pingMessage).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);

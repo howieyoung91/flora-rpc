@@ -17,7 +17,7 @@ import xyz.yanghaoyu.flora.rpc.client.cluster.URL;
 import xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance.ServiceLoadBalance;
 import xyz.yanghaoyu.flora.rpc.client.config.DiscoveryConfig;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
-import xyz.yanghaoyu.flora.rpc.base.transport.RpcRequestConfig;
+import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestConfig;
 
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -97,9 +97,8 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
      * 从 zookeeper 拉取最新数据
      */
     private List<URL> pullURL(String servicePath) {
-        return zooKeeper.getChildrenNodes(servicePath)
-                .stream().map(URL::new)
-                .collect(Collectors.toList());
+        return zooKeeper.getChildrenNodes(servicePath).stream()
+                .map(URL::new).collect(Collectors.toList());
     }
 
     private void cacheService(String servicePath, List<URL> nodes) {

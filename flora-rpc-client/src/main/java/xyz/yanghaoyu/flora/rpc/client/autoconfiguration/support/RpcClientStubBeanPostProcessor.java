@@ -15,10 +15,11 @@ import xyz.yanghaoyu.flora.exception.BeansException;
 import xyz.yanghaoyu.flora.rpc.base.annotation.RpcRequestAttribute;
 import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceReferenceAttribute;
 import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceReferenceContext;
-import xyz.yanghaoyu.flora.rpc.client.annotation.*;
 import xyz.yanghaoyu.flora.rpc.base.config.ClientConfig;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceReference;
+import xyz.yanghaoyu.flora.rpc.client.annotation.RpcRequest;
+import xyz.yanghaoyu.flora.rpc.client.annotation.RpcServiceReference;
 import xyz.yanghaoyu.flora.rpc.client.service.config.ServiceReferenceInterceptor;
 import xyz.yanghaoyu.flora.rpc.client.service.proxy.ServiceReferenceProxyFactory;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
@@ -56,7 +57,7 @@ public class RpcClientStubBeanPostProcessor
 
     @Override
     public PropertyValues postProcessPropertyValues(PropertyValues pvs, Object bean, String beanName) throws BeansException {
-        Class<?> clazz  = ReflectUtil.getBeanClassFromCglibProxy(bean.getClass());
+        Class<?> clazz  = ReflectUtil.getBeanClassFromCglibProxyIfNecessary(bean.getClass());
         Field[]  fields = clazz.getDeclaredFields();
 
         try {
@@ -84,7 +85,8 @@ public class RpcClientStubBeanPostProcessor
                 // inject
                 field.set(bean, proxy);
             }
-        } catch (IllegalAccessException e) {
+        }
+        catch (IllegalAccessException e) {
             e.printStackTrace();
         }
         return null;
@@ -95,8 +97,7 @@ public class RpcClientStubBeanPostProcessor
     }
 
     private List<ServiceReferenceInterceptor> selectInterceptors(Object bean, String beanName) {
-        return interceptors.stream()
-                .filter(interceptor -> interceptor.shouldIntercept(bean, beanName))
+        return interceptors.stream().filter(interceptor -> interceptor.shouldIntercept(bean, beanName))
                 .collect(Collectors.toList());
     }
 

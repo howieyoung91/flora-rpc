@@ -16,10 +16,9 @@ import xyz.yanghaoyu.flora.exception.BeansException;
 import xyz.yanghaoyu.flora.rpc.base.config.ClientConfig;
 import xyz.yanghaoyu.flora.rpc.base.config.ServerConfig;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
-import xyz.yanghaoyu.flora.rpc.base.service.ServiceHandler;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceRegistry;
 import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.ZooKeeper;
-import xyz.yanghaoyu.flora.rpc.base.transport.RpcRequestHandler;
+import xyz.yanghaoyu.flora.rpc.base.transport.DefaultRpcRequestHandler;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.*;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder.ClientConfigBuilder;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder.ServiceDiscoveryConfigBuilder;
@@ -27,7 +26,8 @@ import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder.ZooKeeper
 import xyz.yanghaoyu.flora.rpc.client.config.DiscoveryConfig;
 import xyz.yanghaoyu.flora.rpc.client.service.discovery.DefaultServiceDiscoveryChain;
 import xyz.yanghaoyu.flora.rpc.client.service.discovery.ZookeeperServiceDiscovery;
-import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
+import xyz.yanghaoyu.flora.rpc.client.transport.support.AbstractRpcClient;
+import xyz.yanghaoyu.flora.rpc.client.transport.support.DefaultRpcClient;
 
 import java.net.Inet4Address;
 import java.net.InetSocketAddress;
@@ -45,8 +45,8 @@ public class RpcClientAutoConfiguration implements BeanFactoryAware {
     private ServerConfig    serverConfig;
     @Inject.ByName(value = "flora-rpc-server$ServiceRegistry$", required = false)
     private ServiceRegistry registry;
-    @Inject.ByName(value = "flora-rpc-server$ServiceHandler$", required = false)
-    private ServiceHandler  handler;
+    // @Inject.ByName(value = "flora-rpc-server$ServiceHandler$", required = false)
+    // private ServiceHandler  handler;
 
     @Bean("flora-rpc-client$ZooKeeper$")
     public ZooKeeper zooKeeper(
@@ -99,20 +99,21 @@ public class RpcClientAutoConfiguration implements BeanFactoryAware {
     }
 
     @Bean("flora-rpc-client$RpcClient$")
-    public RpcClient rpcClient(
+    public AbstractRpcClient rpcClient(
             @Inject.ByName("flora-rpc-client$ClientConfig$")
                     ClientConfig clientConfig
     ) {
-        RpcRequestHandler handler   = (RpcRequestHandler) beanFactory.getSingleton("flora-rpc-server$RpcRequestHandler$");
-        InetSocketAddress localhost = null;
+        DefaultRpcRequestHandler handler   = (DefaultRpcRequestHandler) beanFactory.getSingleton("flora-rpc-server$RpcRequestHandler$");
+        InetSocketAddress        localhost = null;
         if (serverConfig != null) {
             try {
                 localhost = new InetSocketAddress(Inet4Address.getLocalHost().getHostAddress(), serverConfig.port());
-            } catch (UnknownHostException e) {
+            }
+            catch (UnknownHostException e) {
                 e.printStackTrace();
             }
         }
-        return new RpcClient(clientConfig, localhost, handler);
+        return new DefaultRpcClient(clientConfig, localhost, handler);
     }
 
     @Override

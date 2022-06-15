@@ -9,7 +9,11 @@ import xyz.yanghaoyu.flora.rpc.base.compress.CompressorFactory;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SerializeService;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SerializerFactory;
 
+import java.net.InetSocketAddress;
+
 public interface ServerConfig {
+    InetSocketAddress address();
+
     int port();
 
     SerializerFactory serializerFactory();

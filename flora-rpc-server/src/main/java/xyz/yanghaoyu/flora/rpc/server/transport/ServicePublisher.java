@@ -5,8 +5,8 @@
 
 package xyz.yanghaoyu.flora.rpc.server.transport;
 
-public interface RpcServer {
-    void start();
+import xyz.yanghaoyu.flora.rpc.base.service.Service;
 
-    void close();
+public interface ServicePublisher {
+    void publishService(Service service);
 }

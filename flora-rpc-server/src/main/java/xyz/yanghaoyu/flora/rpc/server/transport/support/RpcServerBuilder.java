@@ -3,7 +3,7 @@
  * Copyright ©2022-2022 杨浩宇，保留所有权利。
  */
 
-package xyz.yanghaoyu.flora.rpc.server.transport;
+package xyz.yanghaoyu.flora.rpc.server.transport.support;
 
 import xyz.yanghaoyu.flora.core.OrderComparator;
 import xyz.yanghaoyu.flora.rpc.base.config.ServerConfig;
@@ -33,8 +33,8 @@ public class RpcServerBuilder {
         return this;
     }
 
-    public RpcServer build() {
-        RpcServer server = new RpcServer(config, registry, handler);
+    public AbstractRpcServer build() {
+        AbstractRpcServer server = new DefaultRpcServer(config, registry, handler);
         server.setInterceptors(interceptors);
         return server;
     }

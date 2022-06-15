@@ -14,10 +14,13 @@ public @interface RpcService {
     String EMPTY_INTERFACE_NAME = "";
     String EMPTY_GROUP          = "";
     String EMPTY_VERSION        = "";
+    Class  EMPTY_INTERFACE_TYPE = Object.class;
 
     String namespace() default EMPTY_NAMESPACE;
 
     String interfaceName() default EMPTY_INTERFACE_NAME;
+
+    Class interfaceType() default Object.class;
 
     String group() default EMPTY_GROUP;
 

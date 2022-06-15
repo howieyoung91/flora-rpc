@@ -8,6 +8,7 @@ package xyz.yanghaoyu.flora.rpc.client.util;
 import xyz.yanghaoyu.flora.rpc.base.annotation.RpcRequestAttribute;
 import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceReferenceAttribute;
 import xyz.yanghaoyu.flora.rpc.base.config.ClientConfig;
+import xyz.yanghaoyu.flora.rpc.base.exception.ServiceException;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcRequest;
 import xyz.yanghaoyu.flora.rpc.client.annotation.RpcServiceReference;
 
@@ -32,10 +33,19 @@ public abstract class RpcServiceClientUtil {
             namespace = defaultNamespace;
         }
 
-        String interfaceName = rpcServiceReference.interfaceName();
-        if (interfaceName.equals(RpcServiceReference.EMPTY_INTERFACE_NAME)) {
-            // 默认把接口名字作为服务名
-            interfaceName = field.getType().getName();
+        String   interfaceName = rpcServiceReference.interfaceName();
+        Class<?> interfaceType = rpcServiceReference.interfaceType();
+        if (RpcServiceReference.EMPTY_INTERFACE_NAME.equals(interfaceName)) {
+            if (interfaceType.equals(RpcServiceReference.EMPTY_INTERFACE_TYPE)) {
+                // 默认把接口名字作为服务名
+                interfaceName = field.getType().getName();
+            } else {
+                interfaceName = interfaceType.getName();
+            }
+        } else {
+            if (!interfaceType.equals(RpcServiceReference.EMPTY_INTERFACE_TYPE)) {
+                throw new ServiceException("cannot determine interface name on field [" + field.getDeclaringClass().getName() + '#' + field.getName() + "]. cause: interfaceName [" + interfaceName + "] and interfaceType [" + interfaceType + "]. Which should I use?");
+            }
         }
 
         String version = rpcServiceReference.version();

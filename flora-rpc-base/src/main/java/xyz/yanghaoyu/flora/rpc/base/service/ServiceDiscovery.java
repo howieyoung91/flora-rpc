@@ -6,7 +6,7 @@
 package xyz.yanghaoyu.flora.rpc.base.service;
 
 import xyz.yanghaoyu.flora.rpc.base.exception.ServiceNotFoundException;
-import xyz.yanghaoyu.flora.rpc.base.transport.RpcRequestConfig;
+import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestConfig;
 
 import java.net.InetSocketAddress;
 

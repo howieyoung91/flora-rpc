@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceRegistry;
-import xyz.yanghaoyu.flora.rpc.base.transport.RpcRequestConfig;
+import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestConfig;
 
 import java.net.InetSocketAddress;
 

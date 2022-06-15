@@ -10,16 +10,16 @@ import cn.hutool.core.util.IdUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.yanghaoyu.flora.core.OrderComparator;
+import xyz.yanghaoyu.flora.rpc.base.annotation.RpcRequestAttribute;
 import xyz.yanghaoyu.flora.rpc.base.exception.RpcClientException;
 import xyz.yanghaoyu.flora.rpc.base.exception.ServiceNotFoundException;
-import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
-import xyz.yanghaoyu.flora.rpc.base.annotation.RpcRequestAttribute;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceReference;
+import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestConfig;
+import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
 import xyz.yanghaoyu.flora.rpc.client.service.config.DiscoveryAwareServiceReferenceInterceptor;
 import xyz.yanghaoyu.flora.rpc.client.service.config.ServiceReferenceInterceptor;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
-import xyz.yanghaoyu.flora.rpc.base.transport.RpcRequestConfig;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -66,11 +66,13 @@ public class ServiceReferenceProxy implements InvocationHandler {
             // 在 zookeeper 中发现服务
             try {
                 target = discovery.discover(requestConfig);
-            } catch (ServiceNotFoundException e) {
+            }
+            catch (ServiceNotFoundException e) {
                 e.printStackTrace();
                 return applyInterceptorOnNoServiceDiscovered(requestConfig);
             }
-        } else {
+        }
+        else {
             LOGGER.info("advised service: {}", target);
         }
 
@@ -102,7 +104,9 @@ public class ServiceReferenceProxy implements InvocationHandler {
     }
 
     private InetSocketAddress applyInterceptorsAfterServiceDiscover(InetSocketAddress target) {
-        return discoveryAwareInterceptors.stream().map(interceptor -> interceptor.afterDiscoverService(target)).filter(Objects::nonNull).findFirst().orElse(target);
+        return discoveryAwareInterceptors.stream()
+                .map(interceptor -> interceptor.afterDiscoverService(target))
+                .filter(Objects::nonNull).findFirst().orElse(target);
     }
 
     private InetSocketAddress applyInterceptorsBeforeServiceDiscover(RpcRequestConfig reqConfig) {

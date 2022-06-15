@@ -8,15 +8,17 @@ package xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.builder;
 import xyz.yanghaoyu.flora.rpc.base.compress.CompressorFactory;
 import xyz.yanghaoyu.flora.rpc.base.compress.SmartCompressor;
 import xyz.yanghaoyu.flora.rpc.base.compress.support.DefaultCompressorService;
+import xyz.yanghaoyu.flora.rpc.base.config.ServerConfig;
 import xyz.yanghaoyu.flora.rpc.base.exception.RpcServerException;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SerializeService;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SerializerFactory;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SmartSerializer;
 import xyz.yanghaoyu.flora.rpc.base.serialize.support.DefaultSerializeService;
+import xyz.yanghaoyu.flora.rpc.base.util.ServiceUtil;
 import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.ServerConfigProperties;
 import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.ServerConfigurer;
-import xyz.yanghaoyu.flora.rpc.base.config.ServerConfig;
 
+import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Objects;
 
@@ -34,7 +36,7 @@ public class ServerConfigBuilder {
     }
 
     public ServerConfig build() {
-        Integer                  port              = determinePort();
+        Integer                  port              = getPort();
         String                   defaultSerializer = getDefaultSerializer();
         DefaultSerializeService  serializerService = getSerializerService();
         String                   defaultCompressor = getDefaultCompressor();
@@ -42,7 +44,13 @@ public class ServerConfigBuilder {
         String                   namespace         = getNamespace();
         String                   group             = getGroup();
         String                   version           = getVersion();
+        InetSocketAddress        address           = ServiceUtil.getLocalAddress(port);
         return new ServerConfig() {
+            @Override
+            public InetSocketAddress address() {
+                return address;
+            }
+
             @Override
             public int port() {
                 return port;
@@ -95,7 +103,7 @@ public class ServerConfigBuilder {
         };
     }
 
-    private Integer determinePort() {
+    private Integer getPort() {
         Integer port = properties.getPort();
         if (configurer != null) {
             Integer portByConfigurer = configurer.port();

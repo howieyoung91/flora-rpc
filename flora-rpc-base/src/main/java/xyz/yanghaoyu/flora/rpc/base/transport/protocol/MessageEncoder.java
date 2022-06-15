@@ -17,14 +17,12 @@ import xyz.yanghaoyu.flora.rpc.base.serialize.Serializer;
 import xyz.yanghaoyu.flora.rpc.base.serialize.SerializerFactory;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcMessage;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 /*
   自定义一个 rpc 协议
 
   0       4         5              6                7               8    11      15
   +-------+---------+--------------+----------------+---------------+----+--------+
-  | magic | version | message type | serialize type | compress type | id | length |
+  | magic | version | message type | serialize type | compress type |  ? | length |
   +-------------------------------------------------------------------------------+
   |                                     body                                      |
   +-------------------------------------------------------------------------------+
@@ -34,17 +32,15 @@ import java.util.concurrent.atomic.AtomicInteger;
   3. message type       消息类型        可能是请求包，响应包，心跳检测请求包，心跳检测响应包
   4. serialize type     序列化类型
   5. compress type      body 压缩类型
-  6. id                 报文 id
+  6. ?                  未使用
   7. length             报文长度
   8. body               报文数据
  */
 @ChannelHandler.Sharable
 public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
-    private static final Logger LOGGER                         = LoggerFactory.getLogger(MessageEncoder.class);
-    private static final String SYSTEM_DEFAULT_SERIALIZER_NAME = "KRYO";
-    private static final String SYSTEM_DEFAULT_COMPRESSOR_NAME = "NOCOMPRESS";
-
-    private AtomicInteger ID_GENERATOR = new AtomicInteger(0);
+    private static final Logger LOGGER                        = LoggerFactory.getLogger(MessageEncoder.class);
+    private static final String FLORA_DEFAULT_SERIALIZER_NAME = "KRYO";
+    private static final String FLORA_DEFAULT_COMPRESSOR_NAME = "NOCOMPRESS";
 
     private SerializerFactory serializerFactory;
     private Serializer        defaultSerializer;
@@ -60,22 +56,22 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
         this.compressorFactory = compressorFactory;
 
         if (defaultSerializerName == null) {
-            this.defaultSerializer = serializerFactory.getSerializer(SYSTEM_DEFAULT_SERIALIZER_NAME);
+            this.defaultSerializer = serializerFactory.getSerializer(FLORA_DEFAULT_SERIALIZER_NAME);
         } else {
             this.defaultSerializer = serializerFactory.getSerializer(defaultSerializerName);
             if (this.defaultSerializer == null) {
                 LOGGER.warn("unknown default serializer [{}]", defaultSerializerName);
-                this.defaultSerializer = serializerFactory.getSerializer(SYSTEM_DEFAULT_SERIALIZER_NAME);
+                this.defaultSerializer = serializerFactory.getSerializer(FLORA_DEFAULT_SERIALIZER_NAME);
             }
         }
 
         if (defaultCompressorName == null) {
-            this.defaultCompressor = compressorFactory.getCompressor(SYSTEM_DEFAULT_COMPRESSOR_NAME);
+            this.defaultCompressor = compressorFactory.getCompressor(FLORA_DEFAULT_COMPRESSOR_NAME);
         } else {
             this.defaultCompressor = compressorFactory.getCompressor(defaultCompressorName);
             if (this.defaultCompressor == null) {
                 LOGGER.warn("unknown default compressor [{}]", defaultCompressorName);
-                this.defaultCompressor = compressorFactory.getCompressor(SYSTEM_DEFAULT_COMPRESSOR_NAME);
+                this.defaultCompressor = compressorFactory.getCompressor(FLORA_DEFAULT_COMPRESSOR_NAME);
             }
         }
     }
@@ -93,7 +89,8 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
         final Compressor compressor = getCompressor(message.getCompressor());
         byteBuf.writeByte(compressor.code());
 
-        byteBuf.writeInt(ID_GENERATOR.getAndIncrement());
+        // 跳过 4 个未使用的字节
+        byteBuf.writeInt(0);
 
         // mark length field index
         byteBuf.markWriterIndex();
@@ -147,7 +144,6 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
         if (serializerName == null) {
             return defaultSerializer;
         }
-
         Serializer serializer = serializerFactory.getSerializer(serializerName);
         if (serializer == null) {
             LOGGER.warn("unknown serializer [{}]", serializerName);

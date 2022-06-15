@@ -8,7 +8,7 @@ package xyz.yanghaoyu.flora.rpc.client.service.discovery;
 import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceReferenceAttribute;
 import xyz.yanghaoyu.flora.rpc.base.exception.ServiceNotFoundException;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
-import xyz.yanghaoyu.flora.rpc.base.transport.RpcRequestConfig;
+import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestConfig;
 
 import java.net.InetSocketAddress;
 
