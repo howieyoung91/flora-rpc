@@ -20,12 +20,8 @@ public class ServiceReferenceProxyFactory {
         this.client = client;
     }
 
-    public <T> T getProxy(
-            Class<T> aInterface,
-            ServiceReference reference,
-            ServiceDiscovery discovery,
-            List<ServiceReferenceInterceptor> interceptors
-    ) {
+    public <T> T getProxy(Class<T> aInterface, ServiceReference reference,
+                          ServiceDiscovery discovery, List<ServiceReferenceInterceptor> interceptors) {
         ServiceReferenceProxy proxy = new ServiceReferenceProxy(client, reference, discovery);
         proxy.addServiceInterceptor(interceptors);
         return (T) Proxy.newProxyInstance(aInterface.getClassLoader(), new Class[]{aInterface}, proxy);

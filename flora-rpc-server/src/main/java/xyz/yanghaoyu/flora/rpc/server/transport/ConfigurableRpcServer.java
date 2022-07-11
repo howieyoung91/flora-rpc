@@ -8,5 +8,5 @@ package xyz.yanghaoyu.flora.rpc.server.transport;
 import xyz.yanghaoyu.flora.rpc.base.config.ServerConfig;
 
 public interface ConfigurableRpcServer extends RpcServer {
-    ServerConfig getConfig();
+    ServerConfig getConfiguration();
 }

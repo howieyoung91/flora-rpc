@@ -33,8 +33,8 @@ public class RpcServerBuilder {
         return this;
     }
 
-    public AbstractRpcServer build() {
-        AbstractRpcServer server = new DefaultRpcServer(config, registry, handler);
+    public DefaultRpcServer build() {
+        DefaultRpcServer server = new DefaultRpcServer(config, registry, handler);
         server.setInterceptors(interceptors);
         return server;
     }

@@ -11,7 +11,7 @@ import xyz.yanghaoyu.flora.annotation.Enable;
 import xyz.yanghaoyu.flora.annotation.Inject;
 import xyz.yanghaoyu.flora.rpc.base.config.ServerConfig;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceRegistry;
-import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.ZooKeeper;
+import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.Zookeeper;
 import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.*;
 import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.builder.ServerConfigBuilder;
 import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.builder.ServiceRegistryConfigBuilder;
@@ -19,7 +19,7 @@ import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.builder.ZooKeeper
 import xyz.yanghaoyu.flora.rpc.server.config.RegistryConfig;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceHandler;
 import xyz.yanghaoyu.flora.rpc.server.service.DefaultServiceHandler;
-import xyz.yanghaoyu.flora.rpc.server.service.ZooKeeperServiceRegistry;
+import xyz.yanghaoyu.flora.rpc.server.service.ZookeeperServiceRegistry;
 
 @Configuration
 @Enable.ComponentScan(basePackages = "xyz.yanghaoyu.flora.rpc.server.autoconfiguration")
@@ -30,7 +30,7 @@ public class FloraRpcServerAutoConfiguration {
      * zookeeper
      */
     @Bean("flora-rpc-server$ZooKeeper$")
-    public ZooKeeper zooKeeper(
+    public Zookeeper zooKeeper(
             @Inject.ByType(required = false) ZooKeeperConfigurer configurer,
             @Inject.ByName(ZooKeeperConfigProperties.BEAN_NAME) ZooKeeperConfigProperties properties
     ) {
@@ -42,9 +42,9 @@ public class FloraRpcServerAutoConfiguration {
     @Bean("flora-rpc-server$ServiceRegistryConfiguration$")
     public RegistryConfig registryConfig(
             @Inject.ByType(required = false)
-                    ServiceRegistryConfigurer configurer,
+            ServiceRegistryConfigurer configurer,
             @Inject.ByName(ServiceRegistryProperties.BEAN_NAME)
-                    ServiceRegistryProperties properties
+            ServiceRegistryProperties properties
     ) {
         return ServiceRegistryConfigBuilder.aServiceRegistryConfiguration(configurer, properties).build();
     }
@@ -56,11 +56,11 @@ public class FloraRpcServerAutoConfiguration {
     @Bean("flora-rpc-server$ServiceRegistry$")
     public ServiceRegistry registry(
             @Inject.ByName("flora-rpc-server$ServiceRegistryConfiguration$")
-                    RegistryConfig registryConfig,
+            RegistryConfig registryConfig,
             @Inject.ByName("flora-rpc-server$ZooKeeper$")
-                    ZooKeeper zooKeeper
+            Zookeeper zooKeeper
     ) {
-        return new ZooKeeperServiceRegistry(registryConfig, zooKeeper);
+        return new ZookeeperServiceRegistry(registryConfig, zooKeeper);
     }
 
     /**
@@ -69,7 +69,7 @@ public class FloraRpcServerAutoConfiguration {
     @Bean("flora-rpc-server$ServiceHandler$")
     public ServiceHandler handler(
             @Inject.ByName("flora-rpc-server$ServiceRegistry$")
-                    ServiceRegistry registry
+            ServiceRegistry registry
     ) {
         return new DefaultServiceHandler(registry);
     }
@@ -77,9 +77,9 @@ public class FloraRpcServerAutoConfiguration {
     @Bean("flora-rpc-server$ServerConfig$")
     public ServerConfig serverConfig(
             @Inject.ByType(required = false)
-                    ServerConfigurer configurer,
+            ServerConfigurer configurer,
             @Inject.ByName(ServerConfigProperties.BEAN_NAME)
-                    ServerConfigProperties properties
+            ServerConfigProperties properties
     ) {
         return ServerConfigBuilder.aServerConfig(configurer, properties).build();
     }

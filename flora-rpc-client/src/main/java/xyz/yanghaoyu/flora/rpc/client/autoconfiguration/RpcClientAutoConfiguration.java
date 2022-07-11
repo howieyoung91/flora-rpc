@@ -17,7 +17,7 @@ import xyz.yanghaoyu.flora.rpc.base.config.ClientConfig;
 import xyz.yanghaoyu.flora.rpc.base.config.ServerConfig;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceRegistry;
-import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.ZooKeeper;
+import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.Zookeeper;
 import xyz.yanghaoyu.flora.rpc.base.transport.DefaultRpcRequestHandler;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.*;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder.ClientConfigBuilder;
@@ -49,11 +49,11 @@ public class RpcClientAutoConfiguration implements BeanFactoryAware {
     // private ServiceHandler  handler;
 
     @Bean("flora-rpc-client$ZooKeeper$")
-    public ZooKeeper zooKeeper(
+    public Zookeeper zooKeeper(
             @Inject.ByType(required = false)
-                    ZooKeeperConfigurer configurer,
+            ZooKeeperConfigurer configurer,
             @Inject.ByName(ZooKeeperConfigProperties.BEAN_NAME)
-                    ZooKeeperConfigProperties properties
+            ZooKeeperConfigProperties properties
     ) {
         return ZooKeeperBuilderFactory.aZooKeeperConfigBuilder(configurer, properties)
                 .build().build();
@@ -62,9 +62,9 @@ public class RpcClientAutoConfiguration implements BeanFactoryAware {
     @Bean("flora-rpc-client$ServiceDiscoveryConfig$")
     public DiscoveryConfig discoveryConfig(
             @Inject.ByType(required = false)
-                    ServiceDiscoveryConfigurer configurer,
+            ServiceDiscoveryConfigurer configurer,
             @Inject.ByName(ServiceDiscoveryConfigProperties.BEAN_NAME)
-                    ServiceDiscoveryConfigProperties properties
+            ServiceDiscoveryConfigProperties properties
     ) {
         return ServiceDiscoveryConfigBuilder
                 .aServiceDiscoveryConfig(configurer, properties)
@@ -74,9 +74,9 @@ public class RpcClientAutoConfiguration implements BeanFactoryAware {
     @Bean("flora-rpc-client$ServiceDiscovery$")
     public ServiceDiscovery discovery(
             @Inject.ByName("flora-rpc-client$ServiceDiscoveryConfig$")
-                    DiscoveryConfig discoveryConfig,
+            DiscoveryConfig discoveryConfig,
             @Inject.ByName("flora-rpc-client$ZooKeeper$")
-                    ZooKeeper zooKeeper
+            Zookeeper zooKeeper
     ) {
         DefaultServiceDiscoveryChain.Builder builder =
                 DefaultServiceDiscoveryChain.Builder.aChain()
@@ -91,9 +91,9 @@ public class RpcClientAutoConfiguration implements BeanFactoryAware {
     @Bean("flora-rpc-client$ClientConfig$")
     public ClientConfig clientConfig(
             @Inject.ByType(required = false)
-                    ClientConfigurer configurer,
+            ClientConfigurer configurer,
             @Inject.ByName(ClientConfigProperties.BEAN_NAME)
-                    ClientConfigProperties properties
+            ClientConfigProperties properties
     ) {
         return ClientConfigBuilder.aClientConfig(configurer, properties).build();
     }
@@ -101,7 +101,7 @@ public class RpcClientAutoConfiguration implements BeanFactoryAware {
     @Bean("flora-rpc-client$RpcClient$")
     public AbstractRpcClient rpcClient(
             @Inject.ByName("flora-rpc-client$ClientConfig$")
-                    ClientConfig clientConfig
+            ClientConfig clientConfig
     ) {
         DefaultRpcRequestHandler handler   = (DefaultRpcRequestHandler) beanFactory.getSingleton("flora-rpc-server$RpcRequestHandler$");
         InetSocketAddress        localhost = null;

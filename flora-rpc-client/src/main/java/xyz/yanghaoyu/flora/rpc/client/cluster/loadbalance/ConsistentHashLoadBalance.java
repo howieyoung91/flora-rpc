@@ -29,20 +29,18 @@ public class ConsistentHashLoadBalance extends AbstractServiceLoadBalance {
 
         ConsistentHashCircle hashCircle = circles.get(serviceName);
         int                  hashcode   = System.identityHashCode(serverAddresses);
-
         if (hashCircle == null || !hashCircle.valid(hashcode)) {
             circles.put(serviceName, new ConsistentHashCircle(serverAddresses, 10, hashcode));
             // 这里要先 put 再 get, 最大限度保证数据一致
             hashCircle = circles.get(serviceName);
         }
 
-        String key = serviceName +
-                     Arrays.hashCode(Arrays.stream(
-                             invocation.getArguments() == null
-                                     ? NULL
-                                     : invocation.getArguments()
-                     ).toArray());
+        String key = buildKey(serviceName, invocation.getArguments());
         return hashCircle.select(key);
+    }
+
+    private String buildKey(String serviceName, Object[] args) {
+        return serviceName + Arrays.hashCode(Arrays.stream(args == null ? NULL : args).toArray());
     }
 
     private static class ConsistentHashCircle {
@@ -102,7 +100,8 @@ public class ConsistentHashLoadBalance extends AbstractServiceLoadBalance {
                 md5 = MessageDigest.getInstance("MD5");
                 byte[] bytes = key.getBytes(StandardCharsets.UTF_8);
                 md5.update(bytes);
-            } catch (NoSuchAlgorithmException e) {
+            }
+            catch (NoSuchAlgorithmException e) {
                 throw new IllegalStateException(e.getMessage(), e);
             }
             return md5.digest();

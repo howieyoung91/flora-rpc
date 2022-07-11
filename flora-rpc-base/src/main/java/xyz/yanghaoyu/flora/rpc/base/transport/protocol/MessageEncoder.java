@@ -49,15 +49,14 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
 
     public MessageEncoder(
             SerializerFactory serializerFactory, String defaultSerializerName,
-            CompressorFactory compressorFactory, String defaultCompressorName
-    ) {
+            CompressorFactory compressorFactory, String defaultCompressorName) {
         this.serializerFactory = serializerFactory;
-
         this.compressorFactory = compressorFactory;
 
         if (defaultSerializerName == null) {
             this.defaultSerializer = serializerFactory.getSerializer(FLORA_DEFAULT_SERIALIZER_NAME);
-        } else {
+        }
+        else {
             this.defaultSerializer = serializerFactory.getSerializer(defaultSerializerName);
             if (this.defaultSerializer == null) {
                 LOGGER.warn("unknown default serializer [{}]", defaultSerializerName);
@@ -67,7 +66,8 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
 
         if (defaultCompressorName == null) {
             this.defaultCompressor = compressorFactory.getCompressor(FLORA_DEFAULT_COMPRESSOR_NAME);
-        } else {
+        }
+        else {
             this.defaultCompressor = compressorFactory.getCompressor(defaultCompressorName);
             if (this.defaultCompressor == null) {
                 LOGGER.warn("unknown default compressor [{}]", defaultCompressorName);
@@ -75,6 +75,7 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
             }
         }
     }
+
 
     @Override
     protected void encode(ChannelHandlerContext context, RpcMessage message, ByteBuf byteBuf) {
@@ -108,6 +109,9 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
         byteBuf.writerIndex(end);
     }
 
+    // -----------------------------------------------------------------------------------------------------
+    // --------------------------------------    private methods    ----------------------------------------
+    // -----------------------------------------------------------------------------------------------------
 
     private byte[] doSerialize(Serializer serializer, RpcMessage message, ChannelHandlerContext context) {
         switch (message.getType()) {
@@ -164,4 +168,8 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
         }
         return compressor;
     }
+
+    // -----------------------------------------------------------------------------------------------------
+    // --------------------------------------    private methods    ----------------------------------------
+    // -----------------------------------------------------------------------------------------------------
 }

@@ -9,4 +9,6 @@ import xyz.yanghaoyu.flora.rpc.base.service.Service;
 
 public interface ServicePublisher {
     void publishService(Service service);
+
+    void cancelServices();
 }

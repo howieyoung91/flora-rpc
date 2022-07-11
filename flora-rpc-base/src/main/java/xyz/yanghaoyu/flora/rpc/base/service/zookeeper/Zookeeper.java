@@ -19,18 +19,20 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public final class ZooKeeper {
-    private static final Logger logger = LoggerFactory.getLogger(ZooKeeper.class);
+public final class Zookeeper {
+    private static final Logger logger = LoggerFactory.getLogger(Zookeeper.class);
 
-    private          String           zookeeperAddress;
-    private          RetryPolicy      retryPolicy;
+    private final    String           zookeeperAddress;
+    private final    RetryPolicy      retryPolicy;
     private volatile CuratorFramework zookeeperClient;
 
-    ZooKeeper(String zookeeperAddress, RetryPolicy retryPolicy) {
+    Zookeeper(String zookeeperAddress, RetryPolicy retryPolicy) {
         this.zookeeperAddress = zookeeperAddress;
         this.retryPolicy = retryPolicy;
-        client();
+        getClient();
     }
+
+    // ========================================   public methods   =========================================
 
     public void createPersistentNode(String path) {
         try {
@@ -40,29 +42,47 @@ public final class ZooKeeper {
 
             zookeeperClient.create().creatingParentsIfNeeded()
                     .withMode(CreateMode.PERSISTENT).forPath(path);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
             logger.warn("fail to create persistent node: {}", path);
         }
     }
 
+    public void deletePersistentNode(String path) {
+        try {
+            zookeeperClient.delete().forPath(path);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            logger.warn("fail to delete persistent node: {}", path);
+        }
+    }
+
     public List<String> getChildrenNodes(String path) {
-        List<String> result = doGetChildrenNodes(path, client());
+        List<String> result = doGetChildrenNodes(path, getClient());
         return result == null ? new ArrayList<>(0) : result;
     }
 
     public void registerPathChildrenWatcher(String path, Consumer<PathChildrenCacheEvent> consumer) {
         PathChildrenCache pathChildrenCache =
-                new PathChildrenCache(client(), path, true);
+                new PathChildrenCache(getClient(), path, true);
         pathChildrenCache.getListenable().addListener((curator, event) -> consumer.accept(event));
 
         try {
             pathChildrenCache.start();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    // ========================================   public methods   =========================================
+
+
+    // -----------------------------------------------------------------------------------------------------
+    // --------------------------------------    private methods    ----------------------------------------
+    // -----------------------------------------------------------------------------------------------------
     private boolean canCreateNode(String path) throws Exception {
         return zookeeperClient.checkExists().forPath(path) == null;
     }
@@ -70,7 +90,8 @@ public final class ZooKeeper {
     private List<String> doGetChildrenNodes(String servicePath, CuratorFramework client) {
         try {
             return client.getChildren().forPath(servicePath);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
             // throw new ServiceException("fail to get persistent node: " + servicePath);
         }
@@ -78,10 +99,10 @@ public final class ZooKeeper {
     }
 
 
-    private CuratorFramework client() {
+    private CuratorFramework getClient() {
         // double check
         if (zookeeperClient == null) {
-            synchronized (ZooKeeper.class) {
+            synchronized (Zookeeper.class) {
                 if (zookeeperClient == null) {
                     return newCuratorClient();
                 }
@@ -92,6 +113,7 @@ public final class ZooKeeper {
     }
 
     private CuratorFramework newCuratorClient() {
+
         zookeeperClient = CuratorFrameworkFactory.builder()
                 .connectString(zookeeperAddress)
                 .retryPolicy(retryPolicy)
@@ -101,9 +123,14 @@ public final class ZooKeeper {
             if (!zookeeperClient.blockUntilConnected(30, TimeUnit.SECONDS)) {
                 throw new RuntimeException("Time out waiting to connect to zookeeper");
             }
-        } catch (InterruptedException e) {
+        }
+        catch (InterruptedException e) {
             e.printStackTrace();
         }
         return zookeeperClient;
     }
+
+    // -----------------------------------------------------------------------------------------------------
+    // --------------------------------------    private methods    ----------------------------------------
+    // -----------------------------------------------------------------------------------------------------
 }

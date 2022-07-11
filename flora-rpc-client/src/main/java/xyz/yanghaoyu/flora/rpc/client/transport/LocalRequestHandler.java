@@ -6,12 +6,6 @@
 package xyz.yanghaoyu.flora.rpc.client.transport;
 
 import xyz.yanghaoyu.flora.rpc.base.transport.RpcRequestHandler;
-import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestBody;
-import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseConfig;
 
 public interface LocalRequestHandler extends RpcRequestHandler {
-
-
-
-
 }

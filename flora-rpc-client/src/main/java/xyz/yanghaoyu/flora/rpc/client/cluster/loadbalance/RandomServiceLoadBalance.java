@@ -13,7 +13,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class RandomServiceLoadBalance extends AbstractServiceLoadBalance {
     public static final String NAME = "RANDOM";
-    // private static final String WEIGHT_KEY = "RANDOM_LOAD_BALANCE_WEIGHT";
 
     @Override
     protected URL doSelect(List<URL> serverUrls, Invocation invocation) {

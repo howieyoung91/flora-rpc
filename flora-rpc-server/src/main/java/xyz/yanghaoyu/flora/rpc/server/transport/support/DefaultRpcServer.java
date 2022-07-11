@@ -6,11 +6,10 @@
 package xyz.yanghaoyu.flora.rpc.server.transport.support;
 
 import xyz.yanghaoyu.flora.rpc.base.config.ServerConfig;
-import xyz.yanghaoyu.flora.rpc.base.service.Service;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceHandler;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceRegistry;
 
-public class DefaultRpcServer extends AbstractRpcServer {
+public class DefaultRpcServer extends ServicePublishCapableRpcServer {
     private final ServiceRegistry registry;
 
     public DefaultRpcServer(ServerConfig config, ServiceRegistry registry, ServiceHandler handler) {
@@ -19,7 +18,7 @@ public class DefaultRpcServer extends AbstractRpcServer {
     }
 
     @Override
-    public void publishService(Service service) {
-        registry.register(getConfig().address(), service);
+    protected ServiceRegistry getRegistry() {
+        return registry;
     }
 }

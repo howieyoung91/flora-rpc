@@ -16,8 +16,12 @@ public abstract class ServiceUtil {
         return namespace + "/" + serviceName;
     }
 
-    public static String buildServicePathWithAddress(String namespace, String serviceName, InetSocketAddress inetSocketAddress) {
-        return namespace + "/" + serviceName + inetSocketAddress.toString();
+    public static String buildServicePathWithAddress(String namespace, String serviceName, InetSocketAddress address) {
+        return buildServicePathWithAddress(buildNamespacedServiceNodePath(namespace, serviceName), address);
+    }
+
+    public static String buildServicePathWithAddress(String serviceNodePath, InetSocketAddress address) {
+        return serviceNodePath + address.toString();
     }
 
     public static String buildServiceName(String interfaceName, String group, String version) {
@@ -33,7 +37,6 @@ public abstract class ServiceUtil {
         int    port = Integer.parseInt(socketAddressArray[1]);
         return new InetSocketAddress(host, port);
     }
-
 
     public static RpcMessage buildMessage(RpcRequestConfig requestConfig) {
         RpcRequestBody requestBody = buildRpcRequestBody(requestConfig);
@@ -57,7 +60,7 @@ public abstract class ServiceUtil {
 
     public static InetSocketAddress getLocalAddress(int port) {
         try {
-            return new InetSocketAddress(Inet4Address.getLocalHost(), port);
+            return new InetSocketAddress(Inet4Address.getLocalHost().getHostAddress(), port);
         }
         catch (UnknownHostException e) {
             e.printStackTrace();

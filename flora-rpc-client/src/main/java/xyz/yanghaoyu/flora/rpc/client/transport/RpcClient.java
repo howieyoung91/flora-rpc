@@ -12,7 +12,6 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
 
 public interface RpcClient {
-
     CompletableFuture<RpcResponseBody> send(RpcRequestConfig requestConfig, InetSocketAddress target);
 
     void close();

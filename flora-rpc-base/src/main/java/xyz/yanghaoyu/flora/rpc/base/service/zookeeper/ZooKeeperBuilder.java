@@ -11,9 +11,8 @@ public final class ZooKeeperBuilder {
     private String      zookeeperAddress;
     private RetryPolicy retryPolicy;
 
-    private ZooKeeperBuilder() {
-    }
-
+    private ZooKeeperBuilder() {}
+    
     public static ZooKeeperBuilder aNewZooKeeper() {
         return new ZooKeeperBuilder();
     }
@@ -28,7 +27,7 @@ public final class ZooKeeperBuilder {
         return this;
     }
 
-    public ZooKeeper build() {
-        return new ZooKeeper(zookeeperAddress, retryPolicy);
+    public Zookeeper build() {
+        return new Zookeeper(zookeeperAddress, retryPolicy);
     }
 }

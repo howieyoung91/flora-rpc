@@ -38,7 +38,7 @@ public class LocalServiceDiscovery implements ServiceDiscovery {
 
     private InetSocketAddress doDiscover(String serviceName) {
         if (localRegistry.contains(serviceName)) {
-            LOGGER.info("discovered service [{}] at localhost", serviceName);
+            LOGGER.info("discovered service [{}] on localhost", serviceName);
             return localhost;
         }
         return null;

@@ -20,10 +20,7 @@ public class ServiceDiscoveryConfigBuilder {
     private final ServiceDiscoveryConfigurer       configurer;
     private final ServiceDiscoveryConfigProperties properties;
 
-    private ServiceDiscoveryConfigBuilder(
-            ServiceDiscoveryConfigurer configurer,
-            ServiceDiscoveryConfigProperties properties
-    ) {
+    private ServiceDiscoveryConfigBuilder(ServiceDiscoveryConfigurer configurer, ServiceDiscoveryConfigProperties properties) {
         this.configurer = configurer;
         this.properties = properties;
     }

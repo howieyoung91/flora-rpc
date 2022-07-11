@@ -25,8 +25,7 @@ import xyz.yanghaoyu.flora.rpc.base.transport.interceptor.ServiceInterceptor;
 import java.util.TreeSet;
 
 @ChannelHandler.Sharable
-public class DefaultRpcRequestHandler
-        extends ChannelInboundHandlerAdapter implements RpcRequestHandler {
+public class DefaultRpcRequestHandler extends ChannelInboundHandlerAdapter implements RpcRequestHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRpcRequestHandler.class);
 
     private ServiceHandler                           serviceHandler;
@@ -38,23 +37,19 @@ public class DefaultRpcRequestHandler
         this.interceptors = interceptors;
         this.responseAwareInterceptors = new TreeSet<>(OrderComparator.INSTANCE);
         if (interceptors != null) {
-            interceptors.stream()
-                    .filter(interceptor -> interceptor instanceof ResponseAwareServiceInterceptor)
-                    .forEach(interceptor -> responseAwareInterceptors.add((ResponseAwareServiceInterceptor) interceptor));
+            interceptors.stream().filter(interceptor -> interceptor instanceof ResponseAwareServiceInterceptor).forEach(interceptor -> responseAwareInterceptors.add((ResponseAwareServiceInterceptor) interceptor));
         }
     }
+
+    // ========================================   public methods   =========================================
 
     @Override
     public void channelRead(ChannelHandlerContext context, Object body) {
         if (body instanceof RpcRequestBody) {
-            RpcRequestBody requestBody = (RpcRequestBody) body;
-
+            RpcRequestBody    requestBody    = (RpcRequestBody) body;
             RpcResponseConfig responseConfig = null;
-
             responseConfig = handleRequest(requestBody);
-
             RpcMessage<RpcResponseBody> message = buildRpcMessage(requestBody.getId(), responseConfig);
-
             write(context, requestBody, message);
         }
     }
@@ -69,6 +64,33 @@ public class DefaultRpcRequestHandler
         }
         return responseConfig;
     }
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext context, Object event) throws Exception {
+        if (event instanceof IdleStateEvent) {
+            IdleState state = ((IdleStateEvent) event).state();
+            // 太长时间没收到客户端数据 关闭连接
+            if (state == IdleState.READER_IDLE) {
+                context.close();
+            }
+        }
+        else {
+            super.userEventTriggered(context, event);
+        }
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext context, Throwable cause) {
+        cause.printStackTrace();
+        context.close();
+    }
+
+    // ========================================   public methods   =========================================
+
+
+    // -----------------------------------------------------------------------------------------------------
+    // --------------------------------------    private methods    ----------------------------------------
+    // -----------------------------------------------------------------------------------------------------
 
     private void applyInterceptorBeforeResponse(RpcMessage<RpcResponseBody> message) {
         for (ResponseAwareServiceInterceptor interceptor : responseAwareInterceptors) {
@@ -111,8 +133,7 @@ public class DefaultRpcRequestHandler
         }
 
         // write out
-        context.writeAndFlush(message)
-                .addListener(ChannelFutureListener.CLOSE_ON_FAILURE)
+        context.writeAndFlush(message).addListener(ChannelFutureListener.CLOSE_ON_FAILURE)
                 .addListener(future -> applyInterceptorAfterResponse(requestBody, message));
     }
 
@@ -141,7 +162,7 @@ public class DefaultRpcRequestHandler
         return message;
     }
 
-    public RpcResponseBody buildResponseBody(String requestId, RpcResponseConfig responseConfig) {
+    private RpcResponseBody buildResponseBody(String requestId, RpcResponseConfig responseConfig) {
         RpcResponseBody responseBody = new RpcResponseBody();
         responseBody.setMessage("ok");
         responseBody.setCode(200);
@@ -150,23 +171,7 @@ public class DefaultRpcRequestHandler
         return responseBody;
     }
 
-    @Override
-    public void userEventTriggered(ChannelHandlerContext context, Object event) throws Exception {
-        if (event instanceof IdleStateEvent) {
-            IdleState state = ((IdleStateEvent) event).state();
-            // 太长时间没收到客户端数据 关闭连接
-            if (state == IdleState.READER_IDLE) {
-                context.close();
-            }
-        }
-        else {
-            super.userEventTriggered(context, event);
-        }
-    }
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext context, Throwable cause) {
-        cause.printStackTrace();
-        context.close();
-    }
+    // -----------------------------------------------------------------------------------------------------
+    // --------------------------------------    private methods    ----------------------------------------
+    // -----------------------------------------------------------------------------------------------------
 }

@@ -50,26 +50,19 @@ public abstract class AbstractRpcClient implements ConfigurableLocalRequestHandl
         encoder = new MessageEncoder(config.serializerFactory(), config.defaultSerializer(),
                 config.compressorFactory(), config.defaultCompressor());
     }
-
-    @Override
-    public ClientConfig getConfig() {
-        return config;
-    }
+    // ========================================   public methods   =========================================
 
     @Override
     public CompletableFuture<RpcResponseBody> send(RpcRequestConfig requestConfig, InetSocketAddress target) {
         if (target == null) {
             throw new NullPointerException("the target address is null. method: " + requestConfig.getMethodName());
         }
-
         // 服务在本地 直接在本地处理 减少网络开销
         if (canHandleRequestLocally(target)) {
             return handleRequestLocally(requestConfig);
         }
-
         // 连接到服务所在到服务器
         Channel channel = connectService(target);
-
         // 返回 CompletableFuture， 让调用线程去阻塞，提升客户端的吞吐量
         return doSend(requestConfig, channel);
     }
@@ -81,6 +74,23 @@ public abstract class AbstractRpcClient implements ConfigurableLocalRequestHandl
         group.shutdownGracefully();
     }
 
+    @Override
+    public RpcResponseConfig handleRequest(RpcRequestBody requestBody) {
+        // 全部委托给另一个 RpcRequestHandler
+        return getLocalRequestHandler().handleRequest(requestBody);
+    }
+
+    @Override
+    public ClientConfig getConfig() {
+        return config;
+    }
+
+    // ========================================   public methods   =========================================
+
+
+    // -----------------------------------------------------------------------------------------------------
+    // --------------------------------------    private methods    ----------------------------------------
+    // -----------------------------------------------------------------------------------------------------
 
     private CompletableFuture<RpcResponseBody> doSend(RpcRequestConfig requestConfig, Channel channel) {
         // 返回一个 promise 用户线程从这个 promise 中拿到服务器返回的结果
@@ -129,15 +139,19 @@ public abstract class AbstractRpcClient implements ConfigurableLocalRequestHandl
                 });
     }
 
-    @Override
-    public RpcResponseConfig handleRequest(RpcRequestBody requestBody) {
-        // 全部委托给另一个 RpcRequestHandler
-        return getLocalRequestHandler().handleRequest(requestBody);
+    protected RpcRequestHandler getLocalRequestHandler() {
+        return null;
     }
 
-    protected abstract RpcRequestHandler getLocalRequestHandler();
+    protected CompletableFuture<RpcResponseBody> handleRequestLocally(RpcRequestConfig requestConfig) {
+        return null;
+    }
 
-    protected abstract CompletableFuture<RpcResponseBody> handleRequestLocally(RpcRequestConfig requestConfig);
+    protected boolean canHandleRequestLocally(InetSocketAddress target) {
+        return false;
+    }
 
-    protected abstract boolean canHandleRequestLocally(InetSocketAddress target);
+    // -----------------------------------------------------------------------------------------------------
+    // --------------------------------------    private methods    ----------------------------------------
+    // -----------------------------------------------------------------------------------------------------
 }

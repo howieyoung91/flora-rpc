@@ -7,6 +7,7 @@ package xyz.yanghaoyu.flora.rpc.base.event;
 
 import xyz.yanghaoyu.flora.core.context.event.ApplicationEvent;
 
+// todo
 public abstract class FloraRpcEvent extends ApplicationEvent {
     public FloraRpcEvent(Object source) {
         super(source);
