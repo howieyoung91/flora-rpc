@@ -15,4 +15,7 @@ public interface ResponseAwareServiceInterceptor extends ServiceInterceptor {
 
     default void afterResponse(RpcRequestBody requestBody, RpcMessage<RpcResponseBody> message) {
     }
+
+    default void onErrorResponse(RpcResponseBody responseBody) {
+    }
 }

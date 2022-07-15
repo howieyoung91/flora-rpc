@@ -47,35 +47,37 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
     private CompressorFactory compressorFactory;
     private Compressor        defaultCompressor;
 
-    public MessageEncoder(
-            SerializerFactory serializerFactory, String defaultSerializerName,
-            CompressorFactory compressorFactory, String defaultCompressorName) {
+    public MessageEncoder(SerializerFactory serializerFactory, String defaultSerializerName,
+                          CompressorFactory compressorFactory, String defaultCompressorName) {
         this.serializerFactory = serializerFactory;
         this.compressorFactory = compressorFactory;
+        determineDefaultSerializer(defaultSerializerName);
+        determineDefaultCompressor(defaultCompressorName);
+    }
 
+    private void determineDefaultSerializer(String defaultSerializerName) {
         if (defaultSerializerName == null) {
-            this.defaultSerializer = serializerFactory.getSerializer(FLORA_DEFAULT_SERIALIZER_NAME);
+            defaultSerializer = serializerFactory.getSerializer(FLORA_DEFAULT_SERIALIZER_NAME);
+            return;
         }
-        else {
-            this.defaultSerializer = serializerFactory.getSerializer(defaultSerializerName);
-            if (this.defaultSerializer == null) {
-                LOGGER.warn("unknown default serializer [{}]", defaultSerializerName);
-                this.defaultSerializer = serializerFactory.getSerializer(FLORA_DEFAULT_SERIALIZER_NAME);
-            }
-        }
-
-        if (defaultCompressorName == null) {
-            this.defaultCompressor = compressorFactory.getCompressor(FLORA_DEFAULT_COMPRESSOR_NAME);
-        }
-        else {
-            this.defaultCompressor = compressorFactory.getCompressor(defaultCompressorName);
-            if (this.defaultCompressor == null) {
-                LOGGER.warn("unknown default compressor [{}]", defaultCompressorName);
-                this.defaultCompressor = compressorFactory.getCompressor(FLORA_DEFAULT_COMPRESSOR_NAME);
-            }
+        defaultSerializer = serializerFactory.getSerializer(defaultSerializerName);
+        if (defaultSerializer == null) {
+            LOGGER.warn("unknown default serializer [{}]", defaultSerializerName);
+            defaultSerializer = serializerFactory.getSerializer(FLORA_DEFAULT_SERIALIZER_NAME);
         }
     }
 
+    private void determineDefaultCompressor(String defaultCompressorName) {
+        if (defaultCompressorName == null) {
+            defaultCompressor = compressorFactory.getCompressor(FLORA_DEFAULT_COMPRESSOR_NAME);
+            return;
+        }
+        defaultCompressor = compressorFactory.getCompressor(defaultCompressorName);
+        if (defaultCompressor == null) {
+            LOGGER.warn("unknown default compressor [{}]", defaultCompressorName);
+            defaultCompressor = compressorFactory.getCompressor(FLORA_DEFAULT_COMPRESSOR_NAME);
+        }
+    }
 
     @Override
     protected void encode(ChannelHandlerContext context, RpcMessage message, ByteBuf byteBuf) {
@@ -168,6 +170,7 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
         }
         return compressor;
     }
+
 
     // -----------------------------------------------------------------------------------------------------
     // --------------------------------------    private methods    ----------------------------------------

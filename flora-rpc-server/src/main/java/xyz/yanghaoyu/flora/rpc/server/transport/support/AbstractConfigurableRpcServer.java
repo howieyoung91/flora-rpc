@@ -40,7 +40,9 @@ public abstract class AbstractConfigurableRpcServer implements ConfigurableRpcSe
     public AbstractConfigurableRpcServer(ServerConfig config, ServiceHandler handler) {
         this.config = config;
         this.handler = handler;
-        this.encoder = new MessageEncoder(config.serializerFactory(), config.defaultSerializer(), config.compressorFactory(), config.defaultCompressor());
+        this.encoder = new MessageEncoder(
+                config.serializerFactory(), config.defaultSerializer(),
+                config.compressorFactory(), config.defaultCompressor());
     }
 
     private boolean canStart() {

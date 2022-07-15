@@ -56,10 +56,15 @@ public class DefaultRpcRequestHandler extends ChannelInboundHandlerAdapter imple
 
     @Override
     public RpcResponseConfig handleRequest(RpcRequestBody requestBody) {
-        RpcResponseConfig responseConfig = applyAdviseHandle(requestBody);
+        RpcResponseConfig responseConfig = applyInterceptorsAdviseHandle(requestBody);
         if (responseConfig == null) {
             applyInterceptorsBeforeHandle(requestBody);
-            responseConfig = serviceHandler.handle(requestBody);
+            try {
+                responseConfig = serviceHandler.handle(requestBody);
+            }
+            catch (Exception e) {
+                applyInterceptorsOnExceptions(requestBody, e);
+            }
             applyInterceptorsAfterHandle(requestBody, responseConfig);
         }
         return responseConfig;
@@ -92,19 +97,7 @@ public class DefaultRpcRequestHandler extends ChannelInboundHandlerAdapter imple
     // --------------------------------------    private methods    ----------------------------------------
     // -----------------------------------------------------------------------------------------------------
 
-    private void applyInterceptorBeforeResponse(RpcMessage<RpcResponseBody> message) {
-        for (ResponseAwareServiceInterceptor interceptor : responseAwareInterceptors) {
-            interceptor.beforeResponse(message);
-        }
-    }
-
-    private void applyInterceptorsAfterHandle(RpcRequestBody requestBody, RpcResponseConfig responseConfig) {
-        for (ServiceInterceptor interceptor : interceptors) {
-            interceptor.afterHandle(requestBody, responseConfig);
-        }
-    }
-
-    private RpcResponseConfig applyAdviseHandle(RpcRequestBody requestBody) {
+    private RpcResponseConfig applyInterceptorsAdviseHandle(RpcRequestBody requestBody) {
         for (ServiceInterceptor interceptor : interceptors) {
             RpcResponseConfig advisedResponseConfig = interceptor.adviseHandle(requestBody);
             if (advisedResponseConfig != null) {
@@ -114,9 +107,21 @@ public class DefaultRpcRequestHandler extends ChannelInboundHandlerAdapter imple
         return null;
     }
 
+    private void applyInterceptorsOnExceptions(RpcRequestBody requestBody, Exception e) {
+        for (ServiceInterceptor interceptor : interceptors) {
+            interceptor.onExceptions(requestBody, e);
+        }
+    }
+
     private void applyInterceptorsBeforeHandle(RpcRequestBody requestBody) {
         for (ServiceInterceptor interceptor : interceptors) {
             interceptor.beforeHandle(requestBody);
+        }
+    }
+
+    private void applyInterceptorsAfterHandle(RpcRequestBody requestBody, RpcResponseConfig responseConfig) {
+        for (ServiceInterceptor interceptor : interceptors) {
+            interceptor.afterHandle(requestBody, responseConfig);
         }
     }
 
@@ -124,17 +129,30 @@ public class DefaultRpcRequestHandler extends ChannelInboundHandlerAdapter imple
      * 写出消息
      */
     private void write(ChannelHandlerContext context, RpcRequestBody requestBody, RpcMessage<RpcResponseBody> message) {
-        applyInterceptorBeforeResponse(message);
         // check active
         if (!isChannelOK(context)) {
             RpcResponseBody responseBody = buildRpcResponseBodyOnError(requestBody);
+            applyInterceptorOnErrorResponse(responseBody);
             message.setBody(responseBody);
             LOGGER.error("message dropped. cause: channel is not writable");
         }
 
+        applyInterceptorBeforeResponse(message);
         // write out
-        context.writeAndFlush(message).addListener(ChannelFutureListener.CLOSE_ON_FAILURE)
-                .addListener(future -> applyInterceptorAfterResponse(requestBody, message));
+        context.writeAndFlush(message).addListener(ChannelFutureListener.CLOSE_ON_FAILURE).addListener(future -> applyInterceptorAfterResponse(requestBody, message));
+    }
+
+
+    private void applyInterceptorBeforeResponse(RpcMessage<RpcResponseBody> message) {
+        for (ResponseAwareServiceInterceptor interceptor : responseAwareInterceptors) {
+            interceptor.beforeResponse(message);
+        }
+    }
+
+    private void applyInterceptorOnErrorResponse(RpcResponseBody responseBody) {
+        for (ResponseAwareServiceInterceptor interceptor : responseAwareInterceptors) {
+            interceptor.onErrorResponse(responseBody);
+        }
     }
 
     private void applyInterceptorAfterResponse(RpcRequestBody requestBody, RpcMessage<RpcResponseBody> message) {
@@ -143,11 +161,15 @@ public class DefaultRpcRequestHandler extends ChannelInboundHandlerAdapter imple
         }
     }
 
-    private boolean isChannelOK(ChannelHandlerContext context) {
+    // -----------------------------------------------------------------------------------------------------
+    // --------------------------------------    private methods    ----------------------------------------
+    // -----------------------------------------------------------------------------------------------------
+
+    private static boolean isChannelOK(ChannelHandlerContext context) {
         return context.channel().isActive() && context.channel().isWritable();
     }
 
-    private RpcResponseBody buildRpcResponseBodyOnError(RpcRequestBody requestBody) {
+    private static RpcResponseBody buildRpcResponseBodyOnError(RpcRequestBody requestBody) {
         RpcResponseBody responseBody = new RpcResponseBody();
         responseBody.setCode(400);
         responseBody.setMessage("channel is not active or channel cannot write");
@@ -155,14 +177,14 @@ public class DefaultRpcRequestHandler extends ChannelInboundHandlerAdapter imple
         return responseBody;
     }
 
-    private RpcMessage<RpcResponseBody> buildRpcMessage(String id, RpcResponseConfig responseConfig) {
+    private static RpcMessage<RpcResponseBody> buildRpcMessage(String id, RpcResponseConfig responseConfig) {
         RpcMessage<RpcResponseBody> message = RpcMessage.of(RpcMessage.RESPONSE_MESSAGE_TYPE, buildResponseBody(id, responseConfig));
         message.setSerializer(responseConfig.getSerializer());
         message.setCompressor(responseConfig.getCompressor());
         return message;
     }
 
-    private RpcResponseBody buildResponseBody(String requestId, RpcResponseConfig responseConfig) {
+    private static RpcResponseBody buildResponseBody(String requestId, RpcResponseConfig responseConfig) {
         RpcResponseBody responseBody = new RpcResponseBody();
         responseBody.setMessage("ok");
         responseBody.setCode(200);
@@ -171,7 +193,4 @@ public class DefaultRpcRequestHandler extends ChannelInboundHandlerAdapter imple
         return responseBody;
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // --------------------------------------    private methods    ----------------------------------------
-    // -----------------------------------------------------------------------------------------------------
 }

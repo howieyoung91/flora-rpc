@@ -19,4 +19,7 @@ public interface ServiceInterceptor extends Ordered {
 
     default void afterHandle(RpcRequestBody requestBody, RpcResponseConfig responseConfig) {
     }
+
+    default void onExceptions(RpcRequestBody requestBody, Exception e) {
+    }
 }

@@ -9,13 +9,15 @@ import xyz.yanghaoyu.flora.rpc.base.annotation.RpcResponseAttribute;
 import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceAttribute;
 import xyz.yanghaoyu.flora.rpc.base.config.ServerConfig;
 import xyz.yanghaoyu.flora.rpc.base.exception.ServiceException;
+import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.ZookeeperServiceKey;
 import xyz.yanghaoyu.flora.rpc.server.annotation.RpcResponse;
 import xyz.yanghaoyu.flora.rpc.server.annotation.RpcService;
 
 import java.util.Objects;
 
 public abstract class RpcServiceServerUtil {
-    public static ServiceAttribute buildServiceAttribute(RpcService serviceAnn, Class<?> clazz, ServerConfig serverConfig) {
+    public static ServiceAttribute buildServiceAttribute(
+            RpcService serviceAnn, Class<?> clazz, ServerConfig serverConfig) {
         String group = serviceAnn.group();
         if (group.equals(RpcService.EMPTY_GROUP)) {
             String defaultGroup = serverConfig.group();
@@ -38,7 +40,7 @@ public abstract class RpcServiceServerUtil {
             Objects.requireNonNull(defaultVersion, "found no version");
             version = defaultVersion;
         }
-        return new ServiceAttribute(namespace, interfaceName, group, version);
+        return new ServiceAttribute(new ZookeeperServiceKey(namespace, interfaceName, group, version));
     }
 
     private static String determineInterfaceName(RpcService serviceAnn, Class<?> clazz) {
@@ -63,10 +65,7 @@ public abstract class RpcServiceServerUtil {
         return interfaceName;
     }
 
-    public static RpcResponseAttribute buildRpcResponseAttribute(
-            Class<?> clazz, ServerConfig
-            serverConfig
-    ) {
+    public static RpcResponseAttribute buildRpcResponseAttribute(Class<?> clazz, ServerConfig serverConfig) {
         RpcResponse rpcResponseAnn = clazz.getAnnotation(RpcResponse.class);
         if (rpcResponseAnn == null) {
             RpcResponseAttribute attribute = new RpcResponseAttribute();
