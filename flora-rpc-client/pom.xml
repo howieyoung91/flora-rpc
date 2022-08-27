@@ -26,12 +26,6 @@
             <artifactId>flora-rpc-base</artifactId>
             <version>1.0</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.dubbo</groupId>
-            <artifactId>dubbo</artifactId>
-            <version>3.0.7</version>
-        </dependency>
-
     </dependencies>
 
     <build>

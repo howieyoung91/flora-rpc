@@ -7,15 +7,17 @@ package xyz.yanghaoyu.flora.rpc.server.autoconfiguration.support;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xyz.yanghaoyu.flora.annotation.Component;
-import xyz.yanghaoyu.flora.annotation.Inject;
-import xyz.yanghaoyu.flora.core.beans.factory.BeanFactory;
-import xyz.yanghaoyu.flora.core.beans.factory.BeanFactoryAware;
-import xyz.yanghaoyu.flora.core.beans.factory.ConfigurableListableBeanFactory;
-import xyz.yanghaoyu.flora.core.beans.factory.FactoryBean;
-import xyz.yanghaoyu.flora.core.beans.factory.config.BeanDefinition;
-import xyz.yanghaoyu.flora.core.beans.factory.support.InitializingBean;
-import xyz.yanghaoyu.flora.exception.BeansException;
+import xyz.yanghaoyu.flora.framework.annotation.Component;
+import xyz.yanghaoyu.flora.framework.annotation.Inject;
+import xyz.yanghaoyu.flora.framework.core.beans.factory.BeanFactory;
+import xyz.yanghaoyu.flora.framework.core.beans.factory.BeanFactoryAware;
+import xyz.yanghaoyu.flora.framework.core.beans.factory.ConfigurableListableBeanFactory;
+import xyz.yanghaoyu.flora.framework.core.beans.factory.FactoryBean;
+import xyz.yanghaoyu.flora.framework.core.beans.factory.config.BeanDefinition;
+import xyz.yanghaoyu.flora.framework.core.beans.factory.support.InitializingBean;
+import xyz.yanghaoyu.flora.framework.core.context.ApplicationListener;
+import xyz.yanghaoyu.flora.framework.core.context.event.ContextClosedEvent;
+import xyz.yanghaoyu.flora.framework.exception.BeansException;
 import xyz.yanghaoyu.flora.rpc.base.annotation.RpcResponseAttribute;
 import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceAttribute;
 import xyz.yanghaoyu.flora.rpc.base.config.ServerConfig;
@@ -30,7 +32,7 @@ import xyz.yanghaoyu.flora.rpc.server.transport.support.AbstractConfigurableRpcS
 import xyz.yanghaoyu.flora.rpc.server.transport.support.DefaultRpcServer;
 import xyz.yanghaoyu.flora.rpc.server.transport.support.RpcServerBuilder;
 import xyz.yanghaoyu.flora.rpc.server.util.RpcServiceServerUtil;
-import xyz.yanghaoyu.flora.util.ReflectUtil;
+import xyz.yanghaoyu.flora.framework.util.ReflectUtil;
 
 @Component(RpcServerFactoryBean.BEAN_NAME)
 public class RpcServerFactoryBean implements FactoryBean<AbstractConfigurableRpcServer>, InitializingBean, BeanFactoryAware {
@@ -74,11 +76,9 @@ public class RpcServerFactoryBean implements FactoryBean<AbstractConfigurableRpc
 
             Service service = new Service(beanFactory.getBean(beanName), serviceAttribute, responseAttribute);
 
-            LOGGER.info("publish rpc service [{}]", serviceAttribute.getServiceName());
+            LOGGER.info("published rpc service [{}]", serviceAttribute.getServiceName());
             publisher.publishService(service);
         }
-        // 激活所有服务
-        // publisher.finishPublish();
         return server;
     }
 
@@ -99,6 +99,20 @@ public class RpcServerFactoryBean implements FactoryBean<AbstractConfigurableRpc
     @Override
     public boolean isSingleton() {
         return true;
+    }
+
+    /**
+     * 在容器关闭时自动关闭 server
+     */
+    @Component("flora-rpc-server$RpcServerAutoStartSupport$")
+    private static class RpcServerStart implements ApplicationListener<ContextClosedEvent> {
+        @Inject.ByName(RpcServerFactoryBean.BEAN_NAME)
+        private AbstractConfigurableRpcServer server;
+
+        @Override
+        public void onApplicationEvent(ContextClosedEvent event) {
+            server.close();
+        }
     }
 
     @Override

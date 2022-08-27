@@ -8,16 +8,15 @@ package xyz.yanghaoyu.flora.rpc.server.service;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xyz.yanghaoyu.flora.rpc.base.exception.ServiceException;
-import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.Zookeeper;
-import xyz.yanghaoyu.flora.rpc.base.util.ServiceUtil;
 import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceAttribute;
-import xyz.yanghaoyu.flora.rpc.server.config.RegistryConfig;
+import xyz.yanghaoyu.flora.rpc.base.exception.ServiceException;
 import xyz.yanghaoyu.flora.rpc.base.service.Service;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceRegistry;
+import xyz.yanghaoyu.flora.rpc.base.service.support.zookeeper.Zookeeper;
+import xyz.yanghaoyu.flora.rpc.base.util.ServiceUtil;
+import xyz.yanghaoyu.flora.rpc.server.config.RegistryConfig;
 
 import java.net.InetSocketAddress;
-import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -68,11 +67,6 @@ public class ZookeeperServiceRegistry implements ServiceRegistry {
     }
 
     @Override
-    public Collection<Service> services() {
-        return registeredServices.values();
-    }
-
-    @Override
     public boolean contains(String serviceName) {
         return registeredServices.containsKey(serviceName);
     }
@@ -87,7 +81,7 @@ public class ZookeeperServiceRegistry implements ServiceRegistry {
             if (event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED) {
                 String removedServiceName = paths.remove(path);
                 if (removedServiceName != null) {
-                    LOGGER.info("cancel rpc service [{}]", removedServiceName);
+                    LOGGER.info("canceled rpc service [{}]", removedServiceName);
                 }
             }
         });

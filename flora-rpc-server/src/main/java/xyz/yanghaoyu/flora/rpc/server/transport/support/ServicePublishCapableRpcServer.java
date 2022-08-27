@@ -23,6 +23,7 @@ public abstract class ServicePublishCapableRpcServer
 
     /**
      * 发布服务
+     * 先把 bean 全部注册 并不对外暴露
      */
     @Override
     public void publishService(Service service) {

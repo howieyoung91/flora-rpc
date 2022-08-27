@@ -9,38 +9,18 @@ import xyz.yanghaoyu.flora.rpc.base.annotation.RpcResponseAttribute;
 import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceAttribute;
 import xyz.yanghaoyu.flora.rpc.base.config.ServerConfig;
 import xyz.yanghaoyu.flora.rpc.base.exception.ServiceException;
-import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.ZookeeperServiceKey;
+import xyz.yanghaoyu.flora.rpc.base.service.support.zookeeper.ZookeeperServiceKeyBuilder;
+import xyz.yanghaoyu.flora.rpc.base.util.StringUtil;
 import xyz.yanghaoyu.flora.rpc.server.annotation.RpcResponse;
 import xyz.yanghaoyu.flora.rpc.server.annotation.RpcService;
 
-import java.util.Objects;
-
 public abstract class RpcServiceServerUtil {
-    public static ServiceAttribute buildServiceAttribute(
-            RpcService serviceAnn, Class<?> clazz, ServerConfig serverConfig) {
-        String group = serviceAnn.group();
-        if (group.equals(RpcService.EMPTY_GROUP)) {
-            String defaultGroup = serverConfig.group();
-            Objects.requireNonNull(defaultGroup, "found no group");
-            group = defaultGroup;
-        }
-
-        String namespace = serviceAnn.namespace();
-        if (namespace.equals(RpcService.EMPTY_NAMESPACE)) {
-            String defaultNamespace = serverConfig.namespace();
-            Objects.requireNonNull(defaultNamespace, "found no namespace");
-            namespace = defaultNamespace;
-        }
-
+    public static ServiceAttribute buildServiceAttribute(RpcService serviceAnn, Class<?> clazz, ServerConfig serverConfig) {
+        String group         = StringUtil.getStringOrDefaultNonNull(serviceAnn.group(), serverConfig.group(), "no group found");
+        String namespace     = StringUtil.getStringOrDefaultNonNull(serviceAnn.namespace(), serverConfig.namespace(), "no namespace found");
+        String version       = StringUtil.getStringOrDefaultNonNull(serviceAnn.version(), serverConfig.version(), "no version found");
         String interfaceName = determineInterfaceName(serviceAnn, clazz);
-
-        String version = serviceAnn.version();
-        if (version.equals(RpcService.EMPTY_VERSION)) {
-            String defaultVersion = serverConfig.version();
-            Objects.requireNonNull(defaultVersion, "found no version");
-            version = defaultVersion;
-        }
-        return new ServiceAttribute(new ZookeeperServiceKey(namespace, interfaceName, group, version));
+        return new ServiceAttribute(ZookeeperServiceKeyBuilder.aZookeeperServiceKey().group(group).namespace(namespace).interfaceName(interfaceName).version(version).build());
     }
 
     private static String determineInterfaceName(RpcService serviceAnn, Class<?> clazz) {
@@ -68,24 +48,21 @@ public abstract class RpcServiceServerUtil {
     public static RpcResponseAttribute buildRpcResponseAttribute(Class<?> clazz, ServerConfig serverConfig) {
         RpcResponse rpcResponseAnn = clazz.getAnnotation(RpcResponse.class);
         if (rpcResponseAnn == null) {
-            RpcResponseAttribute attribute = new RpcResponseAttribute();
-            attribute.setCompressorName(serverConfig.defaultCompressor());
-            attribute.setSerializerName(serverConfig.defaultSerializer());
-            return attribute;
+            return getDefaultRpcResponseAttribute(serverConfig.defaultCompressor(), serverConfig.defaultSerializer());
         }
-        String compressor = rpcResponseAnn.compressor();
-        if (compressor.equals(RpcResponse.EMPTY_COMPRESSOR)) {
-            String defaultCompressor = serverConfig.defaultCompressor();
-            Objects.requireNonNull(defaultCompressor, "found no compressor");
-            compressor = defaultCompressor;
-        }
+        return doBuildRpcResponseAttribute(serverConfig, rpcResponseAnn);
+    }
 
-        String serializer = rpcResponseAnn.serializer();
-        if (serializer.equals(RpcResponse.EMPTY_SERIALIZER)) {
-            String defaultSerializer = serverConfig.defaultSerializer();
-            Objects.requireNonNull(defaultSerializer, "found no serializer");
-            serializer = defaultSerializer;
-        }
+    private static RpcResponseAttribute getDefaultRpcResponseAttribute(String serverConfig, String serverConfig1) {
+        RpcResponseAttribute attribute = new RpcResponseAttribute();
+        attribute.setCompressorName(serverConfig);
+        attribute.setSerializerName(serverConfig1);
+        return attribute;
+    }
+
+    private static RpcResponseAttribute doBuildRpcResponseAttribute(ServerConfig serverConfig, RpcResponse rpcResponseAnn) {
+        String compressor = StringUtil.getStringOrDefaultNonNull(rpcResponseAnn.compressor(), serverConfig.defaultCompressor(), "no compressor found");
+        String serializer = StringUtil.getStringOrDefaultNonNull(rpcResponseAnn.serializer(), serverConfig.defaultSerializer(), "no serializer found");
 
         RpcResponseAttribute attribute = new RpcResponseAttribute();
         attribute.setCompressorName(compressor);

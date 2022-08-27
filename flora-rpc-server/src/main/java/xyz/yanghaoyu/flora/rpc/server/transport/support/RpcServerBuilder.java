@@ -5,7 +5,7 @@
 
 package xyz.yanghaoyu.flora.rpc.server.transport.support;
 
-import xyz.yanghaoyu.flora.core.OrderComparator;
+import xyz.yanghaoyu.flora.framework.core.OrderComparator;
 import xyz.yanghaoyu.flora.rpc.base.config.ServerConfig;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceHandler;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceRegistry;

@@ -3,10 +3,9 @@
  * Copyright ©2022-2022 杨浩宇，保留所有权利。
  */
 
-package xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance;
+package xyz.yanghaoyu.flora.rpc.base.cluster.loadbalance;
 
-import xyz.yanghaoyu.flora.rpc.client.cluster.Invocation;
-import xyz.yanghaoyu.flora.rpc.client.cluster.URL;
+import xyz.yanghaoyu.flora.rpc.base.cluster.*;
 
 import java.util.List;
 import java.util.Map;
@@ -15,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractLoadBalanceService
         implements LoadBalanceService, LoadBalanceRegistry, LoadBalanceFactory {
-    private Map<String, ServiceLoadBalance> loadBalances = new ConcurrentHashMap<>();
+    private       Map<String, ServiceLoadBalance> loadBalances = new ConcurrentHashMap<>();
 
     @Override
     public URL select(List<URL> urls, Invocation invocation, String loadBalanceName) {

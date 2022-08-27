@@ -9,7 +9,7 @@ import cn.hutool.core.lang.Snowflake;
 import cn.hutool.core.util.IdUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xyz.yanghaoyu.flora.core.OrderComparator;
+import xyz.yanghaoyu.flora.framework.core.OrderComparator;
 import xyz.yanghaoyu.flora.rpc.base.annotation.RpcRequestAttribute;
 import xyz.yanghaoyu.flora.rpc.base.exception.RpcClientException;
 import xyz.yanghaoyu.flora.rpc.base.exception.ServiceNotFoundException;
@@ -37,10 +37,8 @@ public class ServiceReferenceProxy implements InvocationHandler {
     private RpcClient                                      client;
     private ServiceReference                               reference;
     private ServiceDiscovery                               discovery;
-    private Set<ServiceReferenceInterceptor>               interceptors
-            = new TreeSet<>(OrderComparator.INSTANCE);
-    private Set<DiscoveryAwareServiceReferenceInterceptor> discoveryAwareInterceptors
-            = new TreeSet<>(OrderComparator.INSTANCE);
+    private Set<ServiceReferenceInterceptor>               interceptors               = new TreeSet<>(OrderComparator.INSTANCE);
+    private Set<DiscoveryAwareServiceReferenceInterceptor> discoveryAwareInterceptors = new TreeSet<>(OrderComparator.INSTANCE);
 
     ServiceReferenceProxy(RpcClient client, ServiceReference serviceReference, ServiceDiscovery discovery) {
         this.client = client;
@@ -84,7 +82,7 @@ public class ServiceReferenceProxy implements InvocationHandler {
         // 发送 rpc 请求
         CompletableFuture<RpcResponseBody> promise = client.send(requestConfig, target);
 
-        applyInterceptorsAfterRequest();
+        applyInterceptorsAfterRequest(promise, requestConfig);
 
         // 等待服务器响应，代码阻塞在这里
         RpcResponseBody respBody = promise.get();
@@ -125,9 +123,9 @@ public class ServiceReferenceProxy implements InvocationHandler {
         }
     }
 
-    private void applyInterceptorsAfterRequest() {
+    private void applyInterceptorsAfterRequest(CompletableFuture<?> promise, RpcRequestConfig requestConfig) {
         for (ServiceReferenceInterceptor interceptor : interceptors) {
-            interceptor.afterRequest();
+            interceptor.afterRequest(promise, requestConfig);
         }
     }
 
@@ -150,7 +148,7 @@ public class ServiceReferenceProxy implements InvocationHandler {
     }
 
     private RpcRequestConfig buildRpcRequestConfig(Method method, Object[] args) {
-        RpcRequestConfig requestConfig = new RpcRequestConfig();
+        RpcRequestConfig requestConfig = new RpcRequestConfig(method);
 
         // service reference config
         requestConfig.setMethodName(method.getName());

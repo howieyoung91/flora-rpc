@@ -5,17 +5,18 @@
 
 package xyz.yanghaoyu.flora.rpc.client.service.config;
 
-import xyz.yanghaoyu.flora.core.Ordered;
+import xyz.yanghaoyu.flora.framework.core.Ordered;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestConfig;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.CompletableFuture;
 
 public interface ServiceReferenceInterceptor extends Ordered {
     default void beforeRequest(InetSocketAddress target, RpcRequestConfig requestConfig) {
     }
 
-    default void afterRequest() {
+    default void afterRequest(CompletableFuture<?> promise, RpcRequestConfig requestConfig) {
     }
 
     default void afterResponse(RpcResponseBody responseBody) {

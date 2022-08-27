@@ -7,16 +7,23 @@ package xyz.yanghaoyu.flora.rpc.base.transport.dto;
 
 import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceReferenceAttribute;
 
+import java.lang.reflect.Method;
+
 public class RpcRequestConfig {
-    private String                    id;
-    private String                    methodName;
-    private Object[]                  params;
-    private Class<?>[]                paramTypes;
-    private String                    serializer;
-    private String                    compressor;
-    private String                    loadBalance;
-    private boolean                   alwaysRemote;
-    private ServiceReferenceAttribute serviceReferenceAttribute;
+    private       String                    id;
+    private final Method                    method;
+    private       String                    methodName;
+    private       Object[]                  params;
+    private       Class<?>[]                paramTypes;
+    private       String                    serializer;
+    private       String                    compressor;
+    private       String                    loadBalance;
+    private       boolean                   alwaysRemote;
+    private       ServiceReferenceAttribute serviceReferenceAttribute;
+
+    public RpcRequestConfig(Method method) {
+        this.method = method;
+    }
 
     public String getMethodName() {
         return methodName;
@@ -88,5 +95,9 @@ public class RpcRequestConfig {
 
     public void setAlwaysRemote(boolean alwaysRemote) {
         this.alwaysRemote = alwaysRemote;
+    }
+
+    public Method getMethod() {
+        return method;
     }
 }

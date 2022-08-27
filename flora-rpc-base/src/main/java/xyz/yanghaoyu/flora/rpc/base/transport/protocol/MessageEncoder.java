@@ -20,7 +20,7 @@ import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcMessage;
 /*
   自定义一个 rpc 协议
 
-  0       4         5              6                7               8    11      15
+  0       4         5              6                7               8    12      16
   +-------+---------+--------------+----------------+---------------+----+--------+
   | magic | version | message type | serialize type | compress type |  ? | length |
   +-------------------------------------------------------------------------------+
@@ -81,19 +81,19 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
 
     @Override
     protected void encode(ChannelHandlerContext context, RpcMessage message, ByteBuf byteBuf) {
-        byteBuf.writeBytes(RpcMessage.MAGIC_NUMBER);
-        byteBuf.writeByte(RpcMessage.VERSION);
+        byteBuf.writeBytes(RpcMessage.MAGIC_NUMBER); // 4 bytes
+        byteBuf.writeByte(RpcMessage.VERSION); // 1 bytes
 
-        byteBuf.writeByte(message.getType());
+        byteBuf.writeByte(message.getType()); // 1 bytes
 
         final Serializer serializer = getSerializer(message.getSerializer());
-        byteBuf.writeByte(serializer.code());
+        byteBuf.writeByte(serializer.code()); // 1 bybte
 
         final Compressor compressor = getCompressor(message.getCompressor());
-        byteBuf.writeByte(compressor.code());
+        byteBuf.writeByte(compressor.code()); // 1 byte
 
         // 跳过 4 个未使用的字节
-        byteBuf.writeInt(0);
+        byteBuf.writeInt(0); // 4 bytes
 
         // mark length field index
         byteBuf.markWriterIndex();
@@ -106,7 +106,7 @@ public class MessageEncoder extends MessageToByteEncoder<RpcMessage> {
         final int end = byteBuf.writerIndex();
 
         byteBuf.resetWriterIndex();
-        byteBuf.writeInt(length);
+        byteBuf.writeInt(length); // 4 bytes
 
         byteBuf.writerIndex(end);
     }

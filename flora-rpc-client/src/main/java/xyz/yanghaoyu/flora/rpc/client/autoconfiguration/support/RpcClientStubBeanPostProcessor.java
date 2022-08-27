@@ -5,13 +5,13 @@
 
 package xyz.yanghaoyu.flora.rpc.client.autoconfiguration.support;
 
-import xyz.yanghaoyu.flora.annotation.Component;
-import xyz.yanghaoyu.flora.core.beans.factory.BeanFactory;
-import xyz.yanghaoyu.flora.core.beans.factory.BeanFactoryAware;
-import xyz.yanghaoyu.flora.core.beans.factory.ConfigurableListableBeanFactory;
-import xyz.yanghaoyu.flora.core.beans.factory.PropertyValues;
-import xyz.yanghaoyu.flora.core.beans.factory.config.InstantiationAwareBeanPostProcessor;
-import xyz.yanghaoyu.flora.exception.BeansException;
+import xyz.yanghaoyu.flora.framework.annotation.Component;
+import xyz.yanghaoyu.flora.framework.core.beans.factory.BeanFactory;
+import xyz.yanghaoyu.flora.framework.core.beans.factory.BeanFactoryAware;
+import xyz.yanghaoyu.flora.framework.core.beans.factory.ConfigurableListableBeanFactory;
+import xyz.yanghaoyu.flora.framework.core.beans.factory.PropertyValues;
+import xyz.yanghaoyu.flora.framework.core.beans.factory.config.InstantiationAwareBeanPostProcessor;
+import xyz.yanghaoyu.flora.framework.exception.BeansException;
 import xyz.yanghaoyu.flora.rpc.base.annotation.RpcRequestAttribute;
 import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceReferenceAttribute;
 import xyz.yanghaoyu.flora.rpc.base.annotation.ServiceReferenceContext;
@@ -24,7 +24,7 @@ import xyz.yanghaoyu.flora.rpc.client.service.config.ServiceReferenceInterceptor
 import xyz.yanghaoyu.flora.rpc.client.service.proxy.ServiceReferenceProxyFactory;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
 import xyz.yanghaoyu.flora.rpc.client.util.RpcServiceClientUtil;
-import xyz.yanghaoyu.flora.util.ReflectUtil;
+import xyz.yanghaoyu.flora.framework.util.ReflectUtil;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -40,20 +40,6 @@ public class RpcClientStubBeanPostProcessor
     private ServiceDiscovery                        discovery;
     private ClientConfig                            clientConfig;
     private Collection<ServiceReferenceInterceptor> interceptors;
-
-    private void initClientIfNecessary() {
-        if (client == null) {
-            initClient();
-        }
-    }
-
-    private void initClient() {
-        client = beanFactory.getBean("flora-rpc-client$RpcClient$", RpcClient.class);
-        proxyFactory = new ServiceReferenceProxyFactory(client);
-        discovery = beanFactory.getBean("flora-rpc-client$ServiceDiscovery$", ServiceDiscovery.class);
-        clientConfig = beanFactory.getBean("flora-rpc-client$ClientConfig$", ClientConfig.class);
-        interceptors = beanFactory.getBeansOfType(ServiceReferenceInterceptor.class).values();
-    }
 
     @Override
     public PropertyValues postProcessPropertyValues(PropertyValues pvs, Object bean, String beanName) throws BeansException {
@@ -112,9 +98,18 @@ public class RpcClientStubBeanPostProcessor
         return field.getAnnotation(RpcServiceReference.class);
     }
 
+    private void initClientIfNecessary() {
+        if (client == null) {
+            client = beanFactory.getBean("flora-rpc-client$RpcClient$", RpcClient.class);
+            proxyFactory = new ServiceReferenceProxyFactory(client);
+            discovery = beanFactory.getBean("flora-rpc-client$ServiceDiscovery$", ServiceDiscovery.class);
+            clientConfig = beanFactory.getBean("flora-rpc-client$ClientConfig$", ClientConfig.class);
+            interceptors = beanFactory.getBeansOfType(ServiceReferenceInterceptor.class).values();
+        }
+    }
+
     @Override
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
         this.beanFactory = (ConfigurableListableBeanFactory) beanFactory;
     }
 }
-

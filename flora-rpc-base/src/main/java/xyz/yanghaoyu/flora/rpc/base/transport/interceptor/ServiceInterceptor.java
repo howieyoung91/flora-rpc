@@ -5,7 +5,7 @@
 
 package xyz.yanghaoyu.flora.rpc.base.transport.interceptor;
 
-import xyz.yanghaoyu.flora.core.Ordered;
+import xyz.yanghaoyu.flora.framework.core.Ordered;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestBody;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseConfig;
 

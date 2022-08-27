@@ -5,6 +5,8 @@
 
 package xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance;
 
+import xyz.yanghaoyu.flora.rpc.base.cluster.loadbalance.AbstractLoadBalanceService;
+
 public class DefaultLoadBalanceService extends AbstractLoadBalanceService {
     public DefaultLoadBalanceService() {
         addLoadBalance(RandomServiceLoadBalance.NAME, new RandomServiceLoadBalance());

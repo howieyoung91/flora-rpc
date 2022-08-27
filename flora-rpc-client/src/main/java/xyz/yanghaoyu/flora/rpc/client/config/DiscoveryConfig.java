@@ -5,7 +5,7 @@
 
 package xyz.yanghaoyu.flora.rpc.client.config;
 
-import xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance.AbstractLoadBalanceService;
+import xyz.yanghaoyu.flora.rpc.base.cluster.loadbalance.AbstractLoadBalanceService;
 
 public interface DiscoveryConfig {
     AbstractLoadBalanceService loadBalanceService();

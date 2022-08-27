@@ -8,9 +8,9 @@ package xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder;
 import xyz.yanghaoyu.flora.rpc.base.exception.RpcClientException;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ServiceDiscoveryConfigProperties;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ServiceDiscoveryConfigurer;
-import xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance.AbstractLoadBalanceService;
+import xyz.yanghaoyu.flora.rpc.base.cluster.loadbalance.AbstractLoadBalanceService;
 import xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance.DefaultLoadBalanceService;
-import xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance.ServiceLoadBalance;
+import xyz.yanghaoyu.flora.rpc.base.cluster.loadbalance.ServiceLoadBalance;
 import xyz.yanghaoyu.flora.rpc.client.config.DiscoveryConfig;
 
 import java.util.Map;
@@ -46,21 +46,24 @@ public class ServiceDiscoveryConfigBuilder {
         };
     }
 
-
     private AbstractLoadBalanceService getLoadBalanceService() {
         DefaultLoadBalanceService loadBalanceService = new DefaultLoadBalanceService();
-        if (configurer != null) {
-            Map<String, ServiceLoadBalance> loadBalances = configurer.addLoadBalance();
-            if (loadBalances != null) {
-                for (Map.Entry<String, ServiceLoadBalance> entry : loadBalances.entrySet()) {
-                    String name = entry.getKey();
-                    if (loadBalanceService.containsLoadBalance(name)) {
-                        throw new RpcClientException("fail to build load balance config. cause: load balance [" + name + "] has already existed!");
-                    }
-                    loadBalanceService.addLoadBalance(name, entry.getValue());
-                }
-            }
+        if (configurer == null) {
+            return loadBalanceService;
         }
+
+        Map<String, ServiceLoadBalance> loadBalances = configurer.addLoadBalance();
+        if (loadBalances == null) {
+            return loadBalanceService;
+        }
+
+        // do add load balance
+        loadBalances.forEach((name, value) -> {
+            if (loadBalanceService.containsLoadBalance(name)) {
+                throw new RpcClientException("fail to build load balance config. Cause:load balance [" + name + "] has already existed!");
+            }
+            loadBalanceService.addLoadBalance(name, value);
+        });
         return loadBalanceService;
     }
 

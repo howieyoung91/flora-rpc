@@ -3,10 +3,9 @@
  * Copyright ©2022-2022 杨浩宇，保留所有权利。
  */
 
-package xyz.yanghaoyu.flora.rpc.base.service.zookeeper;
+package xyz.yanghaoyu.flora.rpc.base.service.support.zookeeper;
 
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceKey;
-import xyz.yanghaoyu.flora.rpc.base.util.ServiceUtil;
 
 public class ZookeeperServiceKey implements ServiceKey {
     private String interfaceName;
@@ -15,12 +14,20 @@ public class ZookeeperServiceKey implements ServiceKey {
     private String namespace;
     private String serviceName;
 
-    public ZookeeperServiceKey(String namespace, String interfaceName, String group, String version) {
+    ZookeeperServiceKey(String namespace, String interfaceName, String group, String version) {
         this.namespace = namespace;
         this.interfaceName = interfaceName;
         this.group = group;
         this.version = version;
-        this.serviceName = ServiceUtil.buildServiceName(interfaceName, group, version);
+        this.serviceName = buildServiceName(interfaceName, group, version);
+    }
+
+    public static ZookeeperServiceKey of(String namespace, String interfaceName, String group, String version) {
+        return new ZookeeperServiceKey(namespace, interfaceName, group, version);
+    }
+
+    private static String buildServiceName(String interfaceName, String group, String version) {
+        return group + '#' + interfaceName + '@' + version;
     }
 
     @Override

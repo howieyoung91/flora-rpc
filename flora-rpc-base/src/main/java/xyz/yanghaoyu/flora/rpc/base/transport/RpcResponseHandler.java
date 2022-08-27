@@ -40,9 +40,11 @@ public class RpcResponseHandler extends ChannelInboundHandlerAdapter {
 
                 if (promise != null) {
                     promise.complete(response);
+                    waitingRequests.remove(response.getRequestId());
                 }
             }
-        } finally {
+        }
+        finally {
             ReferenceCountUtil.release(msg);
         }
     }
@@ -65,7 +67,8 @@ public class RpcResponseHandler extends ChannelInboundHandlerAdapter {
                     ctx.channel().writeAndFlush(pingMessage).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
                 }
             }
-        } else {
+        }
+        else {
             super.userEventTriggered(ctx, evt);
         }
     }

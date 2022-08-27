@@ -6,7 +6,6 @@
 package xyz.yanghaoyu.flora.rpc.base.service;
 
 import java.net.InetSocketAddress;
-import java.util.Collection;
 
 public interface ServiceRegistry {
     void register(Service service);
@@ -19,8 +18,6 @@ public interface ServiceRegistry {
     void cancelServices();
 
     Service getService(String serviceName);
-
-    Collection<Service> services();
 
     boolean contains(String serviceName);
 }

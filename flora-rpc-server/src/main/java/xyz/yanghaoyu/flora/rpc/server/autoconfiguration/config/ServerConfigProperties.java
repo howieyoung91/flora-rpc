@@ -5,8 +5,8 @@
 
 package xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config;
 
-import xyz.yanghaoyu.flora.annotation.Component;
-import xyz.yanghaoyu.flora.annotation.Value;
+import xyz.yanghaoyu.flora.framework.annotation.Component;
+import xyz.yanghaoyu.flora.framework.annotation.Value;
 
 @Component(ServerConfigProperties.BEAN_NAME)
 public class ServerConfigProperties {

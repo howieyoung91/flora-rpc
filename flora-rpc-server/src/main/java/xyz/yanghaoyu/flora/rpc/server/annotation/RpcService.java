@@ -15,6 +15,7 @@ public @interface RpcService {
     String EMPTY_GROUP          = "";
     String EMPTY_VERSION        = "";
     Class  EMPTY_INTERFACE_TYPE = Object.class;
+    String EMPTY_REGISTRY       = "";
 
     String namespace() default EMPTY_NAMESPACE;
 
@@ -25,4 +26,6 @@ public @interface RpcService {
     String group() default EMPTY_GROUP;
 
     String version() default EMPTY_VERSION;
+
+    String registry() default EMPTY_REGISTRY;
 }

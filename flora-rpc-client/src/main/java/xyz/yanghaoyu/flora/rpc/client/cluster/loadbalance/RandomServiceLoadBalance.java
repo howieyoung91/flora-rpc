@@ -5,8 +5,8 @@
 
 package xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance;
 
-import xyz.yanghaoyu.flora.rpc.client.cluster.Invocation;
-import xyz.yanghaoyu.flora.rpc.client.cluster.URL;
+import xyz.yanghaoyu.flora.rpc.base.cluster.Invocation;
+import xyz.yanghaoyu.flora.rpc.base.cluster.URL;
 
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;

@@ -5,46 +5,37 @@
 
 package xyz.yanghaoyu.flora.rpc.base.annotation;
 
-import xyz.yanghaoyu.flora.rpc.base.util.ServiceUtil;
+import xyz.yanghaoyu.flora.rpc.base.service.ServiceKey;
 
 public class ServiceReferenceAttribute {
-    private String interfaceName;
-    private String group;
-    private String version;
-    private String namespace;
-    private String serviceName;
+    private ServiceKey key;
 
-    public ServiceReferenceAttribute(String namespace, String serviceInterfaceName, String group, String version) {
-        this.namespace = namespace;
-        this.interfaceName = serviceInterfaceName;
-        this.group = group;
-        this.version = version;
-        serviceName = ServiceUtil.buildServiceName(serviceInterfaceName, group, version);
+    public ServiceReferenceAttribute(ServiceKey key) {
+        this.key = key;
     }
 
     public String getInterfaceName() {
-        return interfaceName;
+        return key.interfaceName();
     }
 
     public String getGroup() {
-        return group;
+        return key.group();
     }
 
     public String getVersion() {
-        return version;
+        return key.version();
     }
 
     public String getServiceName() {
-        return serviceName;
+        return key.serviceName();
     }
 
     public String getNamespace() {
-        return namespace;
+        return key.namespace();
     }
 
     @Override
     public String toString() {
         return getServiceName();
     }
-
 }

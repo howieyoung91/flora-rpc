@@ -20,9 +20,7 @@ public class DefaultRpcClient extends AbstractRpcClient {
     private final RpcRequestHandler localRequestHandler;
     private final InetSocketAddress localhost;
 
-    public DefaultRpcClient(ClientConfig config,
-                            InetSocketAddress localServerAddress,
-                            RpcRequestHandler localRequestHandler) {
+    public DefaultRpcClient(ClientConfig config, InetSocketAddress localServerAddress, RpcRequestHandler localRequestHandler) {
         super(config);
         this.localhost = localServerAddress;
         this.localRequestHandler = localRequestHandler;
@@ -34,9 +32,9 @@ public class DefaultRpcClient extends AbstractRpcClient {
         RpcResponseConfig responseConfig = getLocalRequestHandler().handleRequest(requestBody);
         RpcResponseBody   responseBody   = ServiceUtil.buildResponseBody(requestBody.getId(), responseConfig);
         // 返回 promise，直接 complete 即可
-        CompletableFuture<RpcResponseBody> promise = new CompletableFuture<>();
-        promise.complete(responseBody);
-        return promise;
+        // CompletableFuture<RpcResponseBody> promise = new CompletableFuture<>();
+        // promise.complete(responseBody);
+        return CompletableFuture.completedFuture(responseBody);
     }
 
     @Override

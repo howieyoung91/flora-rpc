@@ -5,7 +5,7 @@
 
 package xyz.yanghaoyu.flora.rpc.base.event;
 
-import xyz.yanghaoyu.flora.core.context.event.ApplicationEvent;
+import xyz.yanghaoyu.flora.framework.core.context.event.ApplicationEvent;
 
 // todo
 public abstract class FloraRpcEvent extends ApplicationEvent {

@@ -5,16 +5,13 @@
 
 package xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance;
 
-import xyz.yanghaoyu.flora.rpc.client.cluster.Invocation;
-import xyz.yanghaoyu.flora.rpc.client.cluster.URL;
+import xyz.yanghaoyu.flora.rpc.base.cluster.Invocation;
+import xyz.yanghaoyu.flora.rpc.base.cluster.URL;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConsistentHashLoadBalance extends AbstractServiceLoadBalance {
@@ -44,13 +41,11 @@ public class ConsistentHashLoadBalance extends AbstractServiceLoadBalance {
     }
 
     private static class ConsistentHashCircle {
-        private final TreeMap<Long, URL> virtualInvokers;
+        private final TreeMap<Long, URL> virtualInvokers = new TreeMap<>();
         private final long               hashcode;
 
-        ConsistentHashCircle(List<URL> urls, int replicaNumber, int hashCode) {
-            this.virtualInvokers = new TreeMap<>();
+        private ConsistentHashCircle(List<URL> urls, int replicaNumber, int hashCode) {
             this.hashcode = hashCode;
-
             mapUrls(urls, replicaNumber);
         }
 
@@ -61,21 +56,21 @@ public class ConsistentHashLoadBalance extends AbstractServiceLoadBalance {
             for (URL url : urls) {
                 for (int i = 0; i < replicaNumber / 4; i++) {
                     byte[] digest = md5(url.getAddress() + i);
-                    for (int h = 0; h < 4; h++) {
-                        long m = hash(digest, h);
-                        virtualInvokers.put(m, url);
+                    for (int j = 0; j < 4; j++) {
+                        long h = hash(digest, j);
+                        // todo remove url
+                        virtualInvokers.put(h, url);
                     }
                 }
             }
         }
 
-        public URL select(String key) {
-            System.out.println(key);
+        private URL select(String key) {
             long hash = hash(md5(key), 0);
             return selectForKey(hash);
         }
 
-        public boolean valid(long hashcode) {
+        private boolean valid(long hashcode) {
             return hashcode == this.hashcode;
         }
 
@@ -94,7 +89,7 @@ public class ConsistentHashLoadBalance extends AbstractServiceLoadBalance {
             return entry.getValue();
         }
 
-        static byte[] md5(String key) {
+        private static byte[] md5(String key) {
             MessageDigest md5;
             try {
                 md5 = MessageDigest.getInstance("MD5");

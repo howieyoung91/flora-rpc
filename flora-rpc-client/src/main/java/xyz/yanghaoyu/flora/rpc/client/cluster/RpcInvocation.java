@@ -5,6 +5,9 @@
 
 package xyz.yanghaoyu.flora.rpc.client.cluster;
 
+import xyz.yanghaoyu.flora.rpc.base.cluster.Invocation;
+import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestConfig;
+
 public class RpcInvocation implements Invocation {
     private String     serviceName;
     private String     methodName;
@@ -37,4 +40,10 @@ public class RpcInvocation implements Invocation {
     public Class<?>[] getParamTypes() {
         return paramTypes;
     }
+
+    public static RpcInvocation of(String serviceName, RpcRequestConfig requestConfig) {
+        return new RpcInvocation(serviceName, requestConfig.getMethodName(),
+                requestConfig.getParams(), requestConfig.getParamTypes());
+    }
+
 }

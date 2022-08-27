@@ -5,13 +5,13 @@
 
 package xyz.yanghaoyu.flora.rpc.server.autoconfiguration;
 
-import xyz.yanghaoyu.flora.annotation.Bean;
-import xyz.yanghaoyu.flora.annotation.Configuration;
-import xyz.yanghaoyu.flora.annotation.Enable;
-import xyz.yanghaoyu.flora.annotation.Inject;
+import xyz.yanghaoyu.flora.framework.annotation.Bean;
+import xyz.yanghaoyu.flora.framework.annotation.Configuration;
+import xyz.yanghaoyu.flora.framework.annotation.Enable;
+import xyz.yanghaoyu.flora.framework.annotation.Inject;
 import xyz.yanghaoyu.flora.rpc.base.config.ServerConfig;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceRegistry;
-import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.Zookeeper;
+import xyz.yanghaoyu.flora.rpc.base.service.support.zookeeper.Zookeeper;
 import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.*;
 import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.builder.ServerConfigBuilder;
 import xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config.builder.ServiceRegistryConfigBuilder;
@@ -34,9 +34,7 @@ public class FloraRpcServerAutoConfiguration {
             @Inject.ByType(required = false) ZooKeeperConfigurer configurer,
             @Inject.ByName(ZooKeeperConfigProperties.BEAN_NAME) ZooKeeperConfigProperties properties
     ) {
-        return ZooKeeperBuilderFactory
-                .aZooKeeperConfigBuilder(configurer, properties)
-                .build().build();
+        return ZooKeeperBuilderFactory.aZooKeeperConfigBuilder(configurer, properties).build().build();
     }
 
     @Bean("flora-rpc-server$ServiceRegistryConfiguration$")

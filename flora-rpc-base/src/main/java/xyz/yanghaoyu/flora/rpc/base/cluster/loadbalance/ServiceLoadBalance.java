@@ -3,12 +3,12 @@
  * Copyright ©2022-2022 杨浩宇，保留所有权利。
  */
 
-package xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance;
+package xyz.yanghaoyu.flora.rpc.base.cluster.loadbalance;
 
 
+import xyz.yanghaoyu.flora.rpc.base.cluster.Invocation;
+import xyz.yanghaoyu.flora.rpc.base.cluster.URL;
 import xyz.yanghaoyu.flora.rpc.base.strategy.LoadBalance;
-import xyz.yanghaoyu.flora.rpc.client.cluster.Invocation;
-import xyz.yanghaoyu.flora.rpc.client.cluster.URL;
 
 import java.util.List;
 

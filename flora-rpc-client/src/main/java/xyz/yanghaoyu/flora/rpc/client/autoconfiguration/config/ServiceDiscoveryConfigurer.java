@@ -6,7 +6,7 @@
 package xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config;
 
 
-import xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance.ServiceLoadBalance;
+import xyz.yanghaoyu.flora.rpc.base.cluster.loadbalance.ServiceLoadBalance;
 
 import java.util.Map;
 

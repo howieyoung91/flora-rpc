@@ -6,7 +6,7 @@
 package xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder;
 
 import org.apache.curator.retry.ExponentialBackoffRetry;
-import xyz.yanghaoyu.flora.rpc.base.service.zookeeper.ZooKeeperBuilder;
+import xyz.yanghaoyu.flora.rpc.base.service.support.zookeeper.ZooKeeperBuilder;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ZooKeeperConfigProperties;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ZooKeeperConfigurer;
 

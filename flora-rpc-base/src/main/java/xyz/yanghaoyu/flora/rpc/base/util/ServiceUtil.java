@@ -24,10 +24,6 @@ public abstract class ServiceUtil {
         return serviceNodePath + address.toString();
     }
 
-    public static String buildServiceName(String interfaceName, String group, String version) {
-        return group + '#' + interfaceName + '@' + version;
-    }
-
     public static InetSocketAddress buildAddress(String addressString) {
         return buildAddress(addressString.split(":"));
     }

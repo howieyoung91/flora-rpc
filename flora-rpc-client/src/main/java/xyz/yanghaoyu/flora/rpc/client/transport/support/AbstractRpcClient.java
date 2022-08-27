@@ -26,6 +26,7 @@ import xyz.yanghaoyu.flora.rpc.client.transport.ConfigurableLocalRequestHandlerR
 
 import java.net.InetSocketAddress;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -35,13 +36,15 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * 主要对 transport 做了支持
  */
-public abstract class AbstractRpcClient implements ConfigurableLocalRequestHandlerRpcClient {
+public abstract class AbstractRpcClient
+        implements ConfigurableLocalRequestHandlerRpcClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRpcClient.class);
 
     private final ClientConfig      config;
-    private final NioEventLoopGroup group     = new NioEventLoopGroup();
-    private final Bootstrap         bootstrap = buildBootstrap();
+    private       NioEventLoopGroup group;
+    private       Bootstrap         bootstrap;
     private final MessageEncoder    encoder;
+    private       boolean           started = false;
 
     private final Map<String, CompletableFuture<RpcResponseBody>> waitingRequests = new ConcurrentHashMap<>();
 
@@ -50,13 +53,36 @@ public abstract class AbstractRpcClient implements ConfigurableLocalRequestHandl
         encoder = new MessageEncoder(config.serializerFactory(), config.defaultSerializer(),
                 config.compressorFactory(), config.defaultCompressor());
     }
+
     // ========================================   public methods   =========================================
 
     @Override
-    public CompletableFuture<RpcResponseBody> send(RpcRequestConfig requestConfig, InetSocketAddress target) {
-        if (target == null) {
-            throw new NullPointerException("the target address is null. method: " + requestConfig.getMethodName());
+    public synchronized void start() {
+        if (started) {
+            LOGGER.warn("fail to start rpc client. Cause: rpc client has already been started!");
+            return;
         }
+        started = true;
+        group = new NioEventLoopGroup();
+        bootstrap = buildBootstrap();
+        LOGGER.info("rpc client started");
+    }
+
+
+    @Override
+    public synchronized void close() {
+        if (!started) {
+            return;
+        }
+        started = false;
+        group.shutdownGracefully();
+        LOGGER.info("rpc client closed");
+    }
+
+    @Override
+    public CompletableFuture<RpcResponseBody> send(RpcRequestConfig requestConfig, InetSocketAddress target) {
+        Objects.requireNonNull(target, "fail to send rpc request. Cause: the target address is null. method -> " + requestConfig.getMethodName());
+
         // 服务在本地 直接在本地处理 减少网络开销
         if (canHandleRequestLocally(target)) {
             return handleRequestLocally(requestConfig);
@@ -65,13 +91,6 @@ public abstract class AbstractRpcClient implements ConfigurableLocalRequestHandl
         Channel channel = connectService(target);
         // 返回 CompletableFuture， 让调用线程去阻塞，提升客户端的吞吐量
         return doSend(requestConfig, channel);
-    }
-
-
-    @Override
-    public void close() {
-        LOGGER.info("rpc client close");
-        group.shutdownGracefully();
     }
 
     @Override
@@ -92,36 +111,6 @@ public abstract class AbstractRpcClient implements ConfigurableLocalRequestHandl
     // --------------------------------------    private methods    ----------------------------------------
     // -----------------------------------------------------------------------------------------------------
 
-    private CompletableFuture<RpcResponseBody> doSend(RpcRequestConfig requestConfig, Channel channel) {
-        // 返回一个 promise 用户线程从这个 promise 中拿到服务器返回的结果
-        CompletableFuture<RpcResponseBody> promise = new CompletableFuture<>();
-        waitingRequests.put(requestConfig.getId(), promise);
-
-        // write
-        RpcMessage message = ServiceUtil.buildMessage(requestConfig);
-        channel.writeAndFlush(message).addListener((ChannelFutureListener) future -> {
-            if (future.isSuccess()) {
-                LOGGER.info("request service [{}]", requestConfig.getServiceReferenceAttribute());
-                return;
-            }
-
-            future.channel().close();
-            promise.completeExceptionally(future.cause());
-            LOGGER.error("client fail to send. cause:", future.cause());
-        });
-        return promise;
-    }
-
-    private Channel connectService(InetSocketAddress address) {
-        try {
-            return bootstrap.connect(address).sync().channel();
-        }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-            throw new RpcClientException("fail to connect " + address);
-        }
-    }
-
     private Bootstrap buildBootstrap() {
         Runtime.getRuntime().addShutdownHook(new Thread(this::close));
         return new Bootstrap().group(group).channel(NioSocketChannel.class)
@@ -137,6 +126,35 @@ public abstract class AbstractRpcClient implements ConfigurableLocalRequestHandl
                         pipeline.addLast(new RpcResponseHandler(waitingRequests));
                     }
                 });
+    }
+
+    private CompletableFuture<RpcResponseBody> doSend(RpcRequestConfig requestConfig, Channel channel) {
+        // 返回一个 promise 用户线程从这个 promise 中拿到服务器返回的结果
+        CompletableFuture<RpcResponseBody> promise = new CompletableFuture<>();
+        waitingRequests.put(requestConfig.getId(), promise);
+        // write
+        RpcMessage message = ServiceUtil.buildMessage(requestConfig);
+        channel.writeAndFlush(message).addListener((ChannelFutureListener) future -> {
+            if (future.isSuccess()) {
+                LOGGER.info("requested service [{}]", requestConfig.getServiceReferenceAttribute());
+                return;
+            }
+            // error
+            future.channel().close();
+            promise.completeExceptionally(future.cause());
+            LOGGER.error("rpc client fail to send. Cause:", future.cause());
+        });
+        return promise;
+    }
+
+    private Channel connectService(InetSocketAddress address) {
+        try {
+            return bootstrap.connect(address).sync().channel();
+        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+            throw new RpcClientException("fail to connect " + address);
+        }
     }
 
     protected RpcRequestHandler getLocalRequestHandler() {

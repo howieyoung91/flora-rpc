@@ -5,7 +5,7 @@
 
 package xyz.yanghaoyu.flora.rpc.server.autoconfiguration.config;
 
-import xyz.yanghaoyu.flora.annotation.Component;
+import xyz.yanghaoyu.flora.framework.annotation.Component;
 
 @Component(ServiceRegistryProperties.BEAN_NAME)
 public class ServiceRegistryProperties {
