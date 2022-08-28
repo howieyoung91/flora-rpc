@@ -8,5 +8,5 @@ package xyz.yanghaoyu.flora.rpc.server.transport;
 public interface RpcServer {
     void start();
 
-    void close();
+    void closeGracefully();
 }

@@ -53,7 +53,8 @@ public class RpcServerFactoryBean implements FactoryBean<AbstractConfigurableRpc
 
     @Override
     public void afterPropertiesSet() {
-        DefaultRpcServer s = RpcServerBuilder.aServer(config, registry, handler).addInterceptors(beanFactory.getBeansOfType(ServiceInterceptor.class).values()).build();
+        DefaultRpcServer s = RpcServerBuilder.aServer(config, registry, handler)
+                .addInterceptors(beanFactory.getBeansOfType(ServiceInterceptor.class).values()).build();
         server = s;
         publisher = s;
         DefaultRpcRequestHandler requestHandler = server.getRequestHandler();
@@ -111,7 +112,7 @@ public class RpcServerFactoryBean implements FactoryBean<AbstractConfigurableRpc
 
         @Override
         public void onApplicationEvent(ContextClosedEvent event) {
-            server.close();
+            server.closeGracefully();
         }
     }
 

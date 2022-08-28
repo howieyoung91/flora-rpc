@@ -14,10 +14,10 @@ import io.netty.handler.timeout.IdleStateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.yanghaoyu.flora.framework.core.OrderComparator;
+import xyz.yanghaoyu.flora.rpc.base.service.ServiceHandler;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcMessage;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcRequestBody;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseBody;
-import xyz.yanghaoyu.flora.rpc.base.service.ServiceHandler;
 import xyz.yanghaoyu.flora.rpc.base.transport.dto.RpcResponseConfig;
 import xyz.yanghaoyu.flora.rpc.base.transport.interceptor.ResponseAwareServiceInterceptor;
 import xyz.yanghaoyu.flora.rpc.base.transport.interceptor.ServiceInterceptor;
@@ -37,7 +37,8 @@ public class DefaultRpcRequestHandler extends ChannelInboundHandlerAdapter imple
         this.interceptors = interceptors;
         this.responseAwareInterceptors = new TreeSet<>(OrderComparator.INSTANCE);
         if (interceptors != null) {
-            interceptors.stream().filter(interceptor -> interceptor instanceof ResponseAwareServiceInterceptor).forEach(interceptor -> responseAwareInterceptors.add((ResponseAwareServiceInterceptor) interceptor));
+            interceptors.stream().filter(interceptor -> interceptor instanceof ResponseAwareServiceInterceptor)
+                    .forEach(interceptor -> responseAwareInterceptors.add((ResponseAwareServiceInterceptor) interceptor));
         }
     }
 
