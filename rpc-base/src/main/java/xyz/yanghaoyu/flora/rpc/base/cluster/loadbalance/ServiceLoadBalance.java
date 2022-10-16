@@ -10,8 +10,10 @@ import xyz.yanghaoyu.flora.rpc.base.cluster.Invocation;
 import xyz.yanghaoyu.flora.rpc.base.cluster.URL;
 import xyz.yanghaoyu.flora.rpc.base.strategy.LoadBalance;
 
-import java.util.List;
+import java.util.Collection;
 
 public interface ServiceLoadBalance extends LoadBalance {
-    URL select(List<URL> serverAddresses, Invocation invocation);
+    URL select(Collection<URL> serverAddresses, Invocation invocation);
+
+    String name();
 }

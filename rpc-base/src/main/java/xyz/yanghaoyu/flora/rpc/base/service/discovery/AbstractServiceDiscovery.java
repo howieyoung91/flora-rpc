@@ -14,8 +14,8 @@ import java.util.Objects;
 /**
  * 对负载均衡做实现
  */
-public abstract class AbstractServiceDiscovery
-        extends CacheableServiceDiscovery implements LoadBalanceSupportServiceDiscovery {
+public abstract class AbstractServiceDiscovery extends CacheableServiceDiscovery
+        implements LoadBalanceSupportServiceDiscovery {
     protected LoadBalanceFactory  loadBalanceFactory;
     protected LoadBalanceRegistry loadBalanceRegistry;
     protected String              defaultLoadBalanceName;
@@ -31,8 +31,9 @@ public abstract class AbstractServiceDiscovery
     }
 
     protected ServiceLoadBalance determineLoadBalance(String loadBalanceName) {
-        return loadBalanceName == null ?
-                getDefaultLoadBalance() : loadBalanceFactory.getLoadBalance(loadBalanceName);
+        return loadBalanceName == null
+                ? getDefaultLoadBalance()
+                : loadBalanceFactory.getLoadBalance(loadBalanceName);
     }
 
     @Override

@@ -5,6 +5,8 @@
 
 package xyz.yanghaoyu.flora.rpc.client.service.discovery;
 
+import xyz.yanghaoyu.flora.framework.core.beans.factory.ApplicationEventPublisherAware;
+import xyz.yanghaoyu.flora.framework.core.context.ApplicationEventPublisher;
 import xyz.yanghaoyu.flora.rpc.base.exception.ServiceNotFoundException;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.base.service.ServiceRegistry;
@@ -18,7 +20,7 @@ import java.util.List;
 /**
  * discovery 责任链
  */
-public class DefaultServiceDiscoveryChain implements ServiceDiscovery {
+public class DefaultServiceDiscoveryChain implements ServiceDiscovery, ApplicationEventPublisherAware {
     private List<ServiceDiscovery> discoveries = new LinkedList<>();
 
     private DefaultServiceDiscoveryChain() {}
@@ -32,6 +34,15 @@ public class DefaultServiceDiscoveryChain implements ServiceDiscovery {
             }
         }
         return null;
+    }
+
+    @Override
+    public void setApplicationEventPublisher(ApplicationEventPublisher publisher) {
+        for (ServiceDiscovery discovery : discoveries) {
+            if (discovery instanceof ApplicationEventPublisherAware) {
+                ((ApplicationEventPublisherAware) discovery).setApplicationEventPublisher(publisher);
+            }
+        }
     }
 
     public static final class Builder {

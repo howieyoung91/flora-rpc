@@ -9,7 +9,7 @@ import xyz.yanghaoyu.flora.rpc.base.cluster.loadbalance.AbstractLoadBalanceServi
 
 public class DefaultLoadBalanceService extends AbstractLoadBalanceService {
     public DefaultLoadBalanceService() {
-        addLoadBalance(RandomServiceLoadBalance.NAME, new RandomServiceLoadBalance());
-        addLoadBalance(ConsistentHashLoadBalance.NAME, new ConsistentHashLoadBalance());
+        // addLoadBalance(RandomServiceLoadBalance.NAME, new RandomServiceLoadBalance());
+        // addLoadBalance(ConsistentHashLoadBalance.NAME, new ConsistentHashLoadBalance());
     }
 }

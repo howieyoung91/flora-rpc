@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-@Component
+@Component("flora-rpc-client$DefaultServiceKeyFactory$")
 public class DefaultServiceKeyFactory implements BeanFactoryAware, AggregativeServiceKeyFactory {
     private Map<String, ServiceKeyFactory> factories = new HashMap<>();
 
@@ -43,23 +43,24 @@ public class DefaultServiceKeyFactory implements BeanFactoryAware, AggregativeSe
         return factory.createDefaultKey(interfaceName);
     }
 
-    public void addFactory(String name, ServiceKeyFactory factory) {
-        Objects.requireNonNull(factory, "Cannot add null into ServiceKeyFactory");
-        if (factory == this) {
-            throw new UnsupportedOperationException();
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        ConfigurableListableBeanFactory factory = (ConfigurableListableBeanFactory) beanFactory;
+        addServiceKeyFactory(factory);
+    }
+
+    private void addServiceKeyFactory(ConfigurableListableBeanFactory factory) {
+        Collection<ConfigurableServiceKeyFactory> beans = factory.getBeansOfType(ConfigurableServiceKeyFactory.class).values();
+        for (ConfigurableServiceKeyFactory bean : beans) {
+            doAddFactory(bean.getName(), bean);
         }
+    }
+
+    private void doAddFactory(String name, ServiceKeyFactory factory) {
+        Objects.requireNonNull(factory, "Cannot add null into ServiceKeyFactory");
         if (factories.containsKey(name)) {
             throw new ServiceKeyException("duplicate factory [" + name + "]");
         }
         factories.put(name, factory);
-    }
-
-    @Override
-    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-        ConfigurableListableBeanFactory           factory = (ConfigurableListableBeanFactory) beanFactory;
-        Collection<ConfigurableServiceKeyFactory> beans   = factory.getBeansOfType(ConfigurableServiceKeyFactory.class).values();
-        for (ConfigurableServiceKeyFactory bean : beans) {
-            factories.put(bean.getName(), bean);
-        }
     }
 }

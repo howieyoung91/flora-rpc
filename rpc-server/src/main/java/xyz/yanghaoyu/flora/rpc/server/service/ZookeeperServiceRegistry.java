@@ -77,7 +77,7 @@ public class ZookeeperServiceRegistry implements ServiceRegistry {
         paths.put(path, serviceName);
         zookeeper.createPersistentNode(path);
         // 从缓存移除结点
-        zookeeper.registerPathChildrenWatcher(serviceNodePath, event -> {
+        zookeeper.registerPathChildrenWatcher(path, event -> {
             if (event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED) {
                 String removedServiceName = paths.remove(path);
                 if (removedServiceName != null) {

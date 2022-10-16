@@ -44,17 +44,6 @@ public class RpcServiceReferenceProxyPostProcessor
     private ClientConfig                            clientConfig;
     private Collection<ServiceReferenceInterceptor> interceptors;
 
-    // /**
-    //  * 对 ClientConfigAware 做支持
-    //  */
-    // @Override
-    // public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-    //     if (bean instanceof ClientConfigAware) {
-    //         ((ClientConfigAware) bean).setClientConfig(clientConfig);
-    //     }
-    //     return bean;
-    // }
-
     @Override
     public PropertyValues postProcessPropertyValues(PropertyValues pvs, Object bean, String beanName) throws BeansException {
         Class<?> clazz  = ReflectUtil.getBeanClassFromCglibProxyIfNecessary(bean.getClass());

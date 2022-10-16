@@ -7,9 +7,12 @@ package xyz.yanghaoyu.flora.rpc.base.event;
 
 import xyz.yanghaoyu.flora.framework.core.context.event.ApplicationEvent;
 
-// todo
-public abstract class FloraRpcEvent extends ApplicationEvent {
-    public FloraRpcEvent(Object source) {
+public abstract class ServiceEvent extends ApplicationEvent {
+    public ServiceEvent(Object source) {
         super(source);
+    }
+
+    public final RemoteService getService() {
+        return ((RemoteService) getSource());
     }
 }

@@ -5,16 +5,17 @@
 
 package xyz.yanghaoyu.flora.rpc.base.cluster.loadbalance;
 
-import xyz.yanghaoyu.flora.rpc.base.cluster.*;
+import xyz.yanghaoyu.flora.rpc.base.cluster.Invocation;
+import xyz.yanghaoyu.flora.rpc.base.cluster.URL;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractLoadBalanceService
         implements LoadBalanceService, LoadBalanceRegistry, LoadBalanceFactory {
-    private       Map<String, ServiceLoadBalance> loadBalances = new ConcurrentHashMap<>();
+    private Map<String, ServiceLoadBalance> loadBalances = new HashMap<>();
 
     @Override
     public URL select(List<URL> urls, Invocation invocation, String loadBalanceName) {

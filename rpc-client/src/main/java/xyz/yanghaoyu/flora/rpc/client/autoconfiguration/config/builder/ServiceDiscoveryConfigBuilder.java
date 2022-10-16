@@ -5,28 +5,32 @@
 
 package xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder;
 
+import xyz.yanghaoyu.flora.framework.core.beans.factory.ConfigurableListableBeanFactory;
+import xyz.yanghaoyu.flora.framework.core.beans.factory.support.DefaultListableBeanFactory;
+import xyz.yanghaoyu.flora.rpc.base.cluster.loadbalance.AbstractLoadBalanceService;
+import xyz.yanghaoyu.flora.rpc.base.cluster.loadbalance.ServiceLoadBalance;
+import xyz.yanghaoyu.flora.rpc.base.config.DiscoveryConfig;
 import xyz.yanghaoyu.flora.rpc.base.exception.RpcClientException;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ServiceDiscoveryConfigProperties;
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.ServiceDiscoveryConfigurer;
-import xyz.yanghaoyu.flora.rpc.base.cluster.loadbalance.AbstractLoadBalanceService;
 import xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance.DefaultLoadBalanceService;
-import xyz.yanghaoyu.flora.rpc.base.cluster.loadbalance.ServiceLoadBalance;
-import xyz.yanghaoyu.flora.rpc.base.config.DiscoveryConfig;
 
-import java.util.Map;
+import java.util.Collection;
 import java.util.Objects;
 
 public class ServiceDiscoveryConfigBuilder {
+    private final ConfigurableListableBeanFactory  beanFactory;
     private final ServiceDiscoveryConfigurer       configurer;
     private final ServiceDiscoveryConfigProperties properties;
 
-    private ServiceDiscoveryConfigBuilder(ServiceDiscoveryConfigurer configurer, ServiceDiscoveryConfigProperties properties) {
+    private ServiceDiscoveryConfigBuilder(ConfigurableListableBeanFactory beanFactory, ServiceDiscoveryConfigurer configurer, ServiceDiscoveryConfigProperties properties) {
+        this.beanFactory = beanFactory;
         this.configurer = configurer;
         this.properties = properties;
     }
 
-    public static ServiceDiscoveryConfigBuilder aServiceDiscoveryConfig(ServiceDiscoveryConfigurer configurer, ServiceDiscoveryConfigProperties properties) {
-        return new ServiceDiscoveryConfigBuilder(configurer, properties);
+    public static ServiceDiscoveryConfigBuilder aServiceDiscoveryConfig(ConfigurableListableBeanFactory beanFactory, ServiceDiscoveryConfigurer configurer, ServiceDiscoveryConfigProperties properties) {
+        return new ServiceDiscoveryConfigBuilder(beanFactory, configurer, properties);
     }
 
     public DiscoveryConfig build() {
@@ -47,23 +51,22 @@ public class ServiceDiscoveryConfigBuilder {
     }
 
     private AbstractLoadBalanceService getLoadBalanceService() {
+        DefaultListableBeanFactory beanFactory = (DefaultListableBeanFactory) this.beanFactory;
+
+        // register default load balances
+        // beanFactory.registerBeanDefinition("flora-rpc-client$ConsistentHashLoadBalance$", new BeanDefinition(ConsistentHashLoadBalance.class));
+        // beanFactory.registerBeanDefinition("flora-rpc-client$RandomServiceLoadBalance$", new BeanDefinition(RandomServiceLoadBalance.class));
+
         DefaultLoadBalanceService loadBalanceService = new DefaultLoadBalanceService();
-        if (configurer == null) {
-            return loadBalanceService;
-        }
-
-        Map<String, ServiceLoadBalance> loadBalances = configurer.addLoadBalance();
-        if (loadBalances == null) {
-            return loadBalanceService;
-        }
-
-        // do add load balance
-        loadBalances.forEach((name, value) -> {
+        // add load balances
+        Collection<ServiceLoadBalance> loadBalances = beanFactory.getBeansOfType(ServiceLoadBalance.class).values();
+        for (ServiceLoadBalance loadBalance : loadBalances) {
+            String name = loadBalance.name();
             if (loadBalanceService.containsLoadBalance(name)) {
-                throw new RpcClientException("fail to build load balance config. Cause:load balance [" + name + "] has already existed!");
+                throw new RpcClientException("Fail to build load balance config. Cause:load balance [" + name + "] has already existed!");
             }
-            loadBalanceService.addLoadBalance(name, value);
-        });
+            loadBalanceService.addLoadBalance(name, loadBalance);
+        }
         return loadBalanceService;
     }
 
@@ -78,5 +81,4 @@ public class ServiceDiscoveryConfigBuilder {
         Objects.requireNonNull(loadBalance, "found no load balance");
         return loadBalance;
     }
-
 }

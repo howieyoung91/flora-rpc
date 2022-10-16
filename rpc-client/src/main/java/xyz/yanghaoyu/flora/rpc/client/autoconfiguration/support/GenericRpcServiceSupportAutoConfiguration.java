@@ -16,15 +16,14 @@ import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
  * @since 1.0 [2022/10/09 00:27]
  */
 @Configuration("flora-rpc-client$GenericRpcServiceInvokeAutoConfiguration$")
-public class GenericRpcServiceInvokeAutoConfiguration {
+public class GenericRpcServiceSupportAutoConfiguration {
     @Bean("flora-rpc-client$GenericRpcServiceReference$")
     @Scope.Prototype
     public GenericRpcServiceReference genericRpcServiceReference(
             @Inject.ByName("flora-rpc-client$RpcClient$")
             RpcClient client,
             @Inject.ByName("flora-rpc-client$ServiceDiscovery$")
-            ServiceDiscovery discovery
-    ) {
+            ServiceDiscovery discovery) {
         return new GenericRpcServiceReference(client, discovery);
     }
 }

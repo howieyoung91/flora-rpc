@@ -13,6 +13,4 @@ public abstract class ConfigurableServiceKeyFactory implements ServiceKeyFactory
     public ConfigurableServiceKeyFactory(ClientConfig clientConfig) {
         this.clientConfig = clientConfig;
     }
-
-    // public abstract String getName();
 }

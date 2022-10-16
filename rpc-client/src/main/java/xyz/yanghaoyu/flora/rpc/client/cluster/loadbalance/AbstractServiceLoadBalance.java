@@ -6,22 +6,22 @@
 package xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance;
 
 import xyz.yanghaoyu.flora.rpc.base.cluster.Invocation;
-import xyz.yanghaoyu.flora.rpc.base.cluster.loadbalance.ServiceLoadBalance;
 import xyz.yanghaoyu.flora.rpc.base.cluster.URL;
+import xyz.yanghaoyu.flora.rpc.base.cluster.loadbalance.ServiceLoadBalance;
 
-import java.util.List;
+import java.util.Collection;
 
 public abstract class AbstractServiceLoadBalance implements ServiceLoadBalance {
     @Override
-    public URL select(List<URL> serverAddresses, Invocation invocation) {
+    public URL select(Collection<URL> serverAddresses, Invocation invocation) {
         if (serverAddresses.isEmpty()) {
             return null;
         }
         if (serverAddresses.size() == 1) {
-            return serverAddresses.get(0);
+            return serverAddresses.iterator().next();
         }
         return doSelect(serverAddresses, invocation);
     }
 
-    protected abstract URL doSelect(List<URL> serverAddresses, Invocation invocation);
+    protected abstract URL doSelect(Collection<URL> serverAddresses, Invocation invocation);
 }
