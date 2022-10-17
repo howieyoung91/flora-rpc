@@ -27,6 +27,7 @@ import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder.ServiceDi
 import xyz.yanghaoyu.flora.rpc.client.autoconfiguration.config.builder.ZooKeeperBuilderFactory;
 import xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance.ConsistentHashLoadBalance;
 import xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance.RandomServiceLoadBalance;
+import xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance.RoundRobinLoadBalance;
 import xyz.yanghaoyu.flora.rpc.client.service.discovery.DefaultServiceDiscoveryChain;
 import xyz.yanghaoyu.flora.rpc.client.service.discovery.ZookeeperServiceDiscovery;
 import xyz.yanghaoyu.flora.rpc.client.transport.RpcClient;
@@ -69,6 +70,11 @@ public class RpcClientAutoConfiguration implements BeanFactoryAware {
     @Bean("flora-rpc-client$ConsistentHashLoadBalance$")
     public ConsistentHashLoadBalance consistentHashLoadBalance() {
         return new ConsistentHashLoadBalance();
+    }
+
+    @Bean("flora-rpc-client$RoundRobinLoadBalance$")
+    public RoundRobinLoadBalance roundRobinLoadBalance() {
+        return new RoundRobinLoadBalance();
     }
 
     @Bean("flora-rpc-client$ServiceDiscoveryConfig$")

@@ -5,8 +5,6 @@
 
 package xyz.yanghaoyu.flora.rpc.client.cluster.loadbalance;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import xyz.yanghaoyu.flora.framework.core.context.ApplicationListener;
 import xyz.yanghaoyu.flora.rpc.base.cluster.Invocation;
 import xyz.yanghaoyu.flora.rpc.base.cluster.URL;
@@ -21,11 +19,12 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class ConsistentHashLoadBalance extends AbstractServiceLoadBalance
         implements ApplicationListener<ServiceCanceledEvent> {
-    public static final  String NAME   = "CONSISTENT_HASH";
-    private static final Logger logger = LoggerFactory.getLogger(ConsistentHashLoadBalance.class);
+    public static final String NAME = "CONSISTENT_HASH";
 
     private final Map<String, ConsistentHashCircle> circles = new ConcurrentHashMap<>();
     private       Object[]                          NULL    = new Object[0];
@@ -38,7 +37,7 @@ public class ConsistentHashLoadBalance extends AbstractServiceLoadBalance
     @Override
     public void onApplicationEvent(ServiceCanceledEvent event) {
         RemoteService service = event.getService();
-        circles.remove(service.getName());
+        removeServiceCache(service.getName(), service.getUrls());
     }
 
     @Override
@@ -47,12 +46,24 @@ public class ConsistentHashLoadBalance extends AbstractServiceLoadBalance
         ConsistentHashCircle circle      = circles.get(serviceName);
         int                  hashcode    = System.identityHashCode(serverAddresses);
         if (circle == null || !circle.validate(hashcode)) {
-            circles.put(serviceName, new ConsistentHashCircle(serverAddresses, 10, hashcode));
-            circle = circles.get(serviceName); // 这里要先 put 再 get, 最大限度保证数据一致, 因为当前线程 put 完之后，其他线程可能覆盖掉数据
+            circle = addServiceCache(serverAddresses, serviceName, hashcode);
         }
 
         String key = buildKey(serviceName, invocation.getArguments());
         return circle.select(key);
+    }
+
+    private ConsistentHashCircle addServiceCache(Collection<URL> urls, String serviceName, int hashcode) {
+        circles.put(serviceName, new ConsistentHashCircle(urls, 10, hashcode));
+        // 这里要先 put 再 get, 最大限度保证数据一致, 因为当前线程 put 完之后，其他线程可能覆盖掉数据
+        return circles.get(serviceName);
+    }
+
+    private void removeServiceCache(String serviceName, Collection<URL> urls) {
+        ConsistentHashCircle circle = circles.get(serviceName);
+        if (circle != null) {
+            circle.removeUrl(urls, 10);
+        }
     }
 
     private String buildKey(String serviceName, Object[] args) {
@@ -75,24 +86,25 @@ public class ConsistentHashLoadBalance extends AbstractServiceLoadBalance
          * 把每个 Provider 的 url 映射到哈希环上
          */
         private void mapUrls(Collection<URL> urls, int replicaNumber) {
-            for (URL url : urls) {
-                for (int i = 0; i < replicaNumber / 4; i++) {
-                    byte[] digest = md5(url.getAddress() + i);
-                    for (int j = 0; j < 4; j++) {
-                        long h = hash(digest, j);
-                        virtualInvokers.put(h, url);
-                    }
-                }
-            }
+            forEachUrl(urls, replicaNumber, url -> digest -> hashcode -> {
+                virtualInvokers.put(hashcode, url);
+            });
         }
 
         private void removeUrl(Collection<URL> urls, int replicaNumber) {
+            forEachUrl(urls, replicaNumber, url -> digest -> hashcode -> {
+                virtualInvokers.remove(hashcode);
+            });
+        }
+
+        private void forEachUrl(Collection<URL> urls, int replicaNumber,
+                                Function<URL, Function<byte[], Consumer<Long>>> f) {
             for (URL url : urls) {
                 for (int i = 0; i < replicaNumber / 4; i++) {
                     byte[] digest = md5(url.getAddress() + i);
                     for (int j = 0; j < 4; j++) {
                         long h = hash(digest, j);
-                        virtualInvokers.remove(h);
+                        f.apply(url).apply(digest).accept(h);
                     }
                 }
             }
